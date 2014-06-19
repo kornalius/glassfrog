@@ -69,6 +69,9 @@ app = angular.module('app', [
   'app.filters'
   'app.services'
 
+  'components'
+  'nodes'
+
   'select.services'
   'switch.services'
   'twolist.services'
@@ -103,11 +106,27 @@ app = angular.module('app', [
 .run([
   '$rootScope'
   'Globals'
+  'Node'
   'Rest'
 
-  ($rootScope, globals, Rest) ->
+  ($rootScope, globals, Node, Rest) ->
     globals.modules = modules
     $rootScope.globals = globals
+
+    require(['Component_Data', 'Node_Data'], (Component_Data, Node_Data) ->
+      globals.Node_Data = Node_Data
+      globals.Component_Data = Component_Data
+      Component_Data.rest = new Rest('component')
+      Node_Data.rest = new Rest('node')
+
+      console.log "Loading components..."
+      Component_Data.rest.fetch({}, ->
+        for c in Component_Data.rest.rows
+          Component_Data.makeComponent(c)
+
+        Node.refresh()
+      )
+    )
 
 #    $rootScope.$on('$locationChangeSuccess', () ->
 #      console.log "$locationChangeSuccess"

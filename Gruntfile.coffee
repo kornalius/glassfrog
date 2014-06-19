@@ -212,21 +212,6 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out_dev + 'js/humanize.js'
-        ,
-          expand: true
-          cwd: 'blockly'
-          src: '*.js'
-          dest: out_dev + 'js/blockly/'
-        ,
-          expand: true
-          cwd: 'blockly/media/'
-          src: '*'
-          dest: out_dev + 'js/blockly/media'
-        ,
-          expand: true
-          cwd: 'blockly/msg/'
-          src: '**/*'
-          dest: out_dev + 'js/blockly/msg'
         ]
 
       prod:
@@ -254,21 +239,6 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out + 'js/humanize.js'
-        ,
-          expand: true
-          cwd: 'blockly'
-          src: '*.js'
-          dest: out + 'js/blockly/'
-        ,
-          expand: true
-          cwd: 'blockly/media/'
-          src: '*'
-          dest: out + 'js/blockly/media'
-        ,
-          expand: true
-          cwd: 'blockly/msg/'
-          src: '**/*'
-          dest: out + 'js/blockly/msg'
         ]
 
       server_dev:
@@ -346,7 +316,6 @@ module.exports = (grunt) ->
           dest: out_dev + 'js/index.js'
         ,
           src: [
-            'node_modules/blockly/lib/style.css'
             'bower_components/select2/select2.css'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css'
             'bower_components/yamm3/yamm/yamm.css'
@@ -403,7 +372,6 @@ module.exports = (grunt) ->
           dest: out + 'js/index.js'
         ,
           src: [
-            'node_modules/blockly/lib/style.css'
             'bower_components/select2/select2.css'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css'
             'bower_components/yamm3/yamm/yamm.css'

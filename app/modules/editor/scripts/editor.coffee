@@ -1,58 +1,4 @@
-angular.module('editor', ['editor.preview'])
-
-.controller('EditorCtrl', [
-  '$scope'
-  '$rootScope'
-  'Globals'
-  '$window'
-  '$timeout'
-
-  ($scope, $rootScope, globals, $window, $timeout) ->
-    $timeout(->
-      console.log "$window.Blockly", $window.Blockly
-      $window.Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout')
-    , 3000)
-])
-
-.factory('Editor', [
-  '$window'
-
-  ($window) ->
-
-    code: () ->
-      if $window.Blockly
-        $window.Blockly.JavaScript.INFINITE_LOOP_TRAP = null
-        code = $window.Blockly.JavaScript.workspaceToCode()
-      else
-        code = ''
-      alert(code)
-      return code
-
-    save: () ->
-      if $window.Blockly
-        dom = $window.Blockly.Xml.workspaceToDom($window.Blockly.getMainWorkspace())
-        xml = $window.Blockly.Xml.domToText(dom)
-      else
-        xml = ''
-      return xml
-      
-    load: (xml) ->
-      if $window.Blockly
-        dom = $window.Blockly.Xml.textToDom(xml)
-        $window.Blockly.Xml.domToWorkspace($window.Blockly.getMainWorkspace(), dom)
-
-    run: () ->
-      if $window.Blockly
-        $window.LoopTrap = 1000;
-        $window.Blockly.JavaScript.INFINITE_LOOP_TRAP = 'if (--window.LoopTrap == 0) throw "Infinite loop.";\n'
-        code = $window.Blockly.JavaScript.workspaceToCode()
-        $window.Blockly.JavaScript.INFINITE_LOOP_TRAP = null
-        try
-          eval(code)
-        catch e
-          alert(e)
-
-])
+angular.module('editor', ['components', 'nodes', 'editor.component', 'editor.node', 'editor.preview'])
 
 .config([
   '$stateProvider'
@@ -60,8 +6,62 @@ angular.module('editor', ['editor.preview'])
   ($stateProvider) ->
     $stateProvider
 
+    .state('editor_root',
+      abstract: true
+      templateUrl: '/partials/editor.html'
+      controller: ($scope) ->
+        $scope.localVariable = "HELLO WORLD!"
+#      onEnter: () ->
+#        console.log "enter test"
+    )
+
     .state('editor',
       url: '/editor'
-      templateUrl: '/partials/editor.html'
+      parent: 'editor_root'
+      data:
+        root: 'editor'
+      views:
+        components:
+          templateUrl: '/partials/editor.component.html'
+          controller: 'EditorComponentCtrl'
+        nodes:
+          templateUrl: '/partials/editor.node.html'
+          controller: 'EditorNodeCtrl'
     )
+
+#    .state('editor.preview',
+#      url: '/preview'
+#      parent: 'editor_root'
+#      data:
+#        root: 'editor'
+#      views:
+#        preview:
+#          templateUrl: '/partials/editor.preview.html'
+#          controller: 'EditorPreviewCtrl'
+#    )
+])
+
+.factory('Editor', [
+
+  () ->
+    over: null
+    drag: null
+    dragOver: null
+
+    isOver: (o) ->
+      @over == o
+
+    setOver: (o) ->
+      @over = o
+
+    isDragOver: (o) ->
+      @dragover == o
+
+    setDragOver: (o) ->
+      @dragover = o
+])
+
+.run([
+
+  () ->
 ])

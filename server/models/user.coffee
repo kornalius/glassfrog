@@ -141,6 +141,12 @@ UserSchema = mongoose.Schema(
     type: String
     label: 'JSON custom data'
 
+  root:
+    type: mongoose.Schema.ObjectId
+    ref: 'Node'
+    label: 'Root node'
+    readOnly: true
+
   roles:
     type: [
       type: mongoose.Schema.ObjectId
@@ -381,6 +387,67 @@ UserSchema.method(
     j[key] = value
     @data = JSON.stringify(j)
     @save()
+
+  getRootNode: (cb) ->
+    id = @root
+    mongoose.model('Node').findById(id, (err, n) ->
+      cb(n) if cb
+    )
+
+  getSchemas: (cb) ->
+    @getRootNode((root) ->
+      s = null
+      if root
+        s = root.childrenOfKind('Schema', true)
+      cb(s) if cb
+    )
+
+  generate: (nodes, cb) ->
+    s = ""
+    errors = []
+    async.eachSeries(nodes, (n, callback) ->
+      ok = true
+      name = n.name.toLowerCase()
+      for m in mongoose.models
+        if m.name.toLowerCase() == name
+          ok = false
+      if !ok
+        errors = new Error(n.name + ' is a reserved schema name')
+      if ok and n.component?
+        n.component.getServerCode((sc) ->
+          if sc
+            sc = app.safeEval(sc, errors)
+            if sc and sc.generate
+              s += sc.generate.call(n)
+          callback()
+        )
+      else
+        callback()
+    , (err) ->
+      cb(s, errors) if cb
+    )
+
+  generateAllSchemas: (cb) ->
+    errors = []
+
+    @getConnection((plan, c, prefix) ->
+      schemas = @getSchemas()
+      async.eachSeries(schemas, (n, callback) ->
+        @generate([n], (schema, err) ->
+          if err
+            errors.concat(err)
+          if schema?
+            m = c.model(prefix + n.name, JSON.parse(schema))
+            if m
+              endpoints.register(name)
+          callback()
+        )
+      , (err) ->
+        if err
+          errors.push(err)
+        cb(schemas, errors) if cb
+      )
+    )
 
   getConnection: (cb) ->
     @populate('plan', (plan) ->

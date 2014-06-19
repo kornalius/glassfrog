@@ -1,0 +1,66 @@
+.component{
+//  width: 250px;
+  background: whitesmoke;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.component-highlighted {
+  background: lightsteelblue;
+}
+
+.component-selected {
+  background: lightsteelblue;
+}
+
+.component-selected-highlighted {
+  background: #ccd9ea;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.strikethrough {
+  text-decoration: line-through;
+}
+
+#editor-toolbar {
+//  background-color: rgba(100, 200, 100, 0.25);
+  margin: 0px !important;
+  padding: 0px !important;
+  overflow-y: auto;
+}
+
+#editor-toolbar > span > ul > li > a {
+  margin: 0px !important;
+  padding: 2px 2px !important;
+}
+
+@media screen and (max-width: 768px) {
+  .row-toolbar-offcanvas {
+    position: relative;
+    -webkit-transition: all 0.25s ease-out;
+    -moz-transition: all 0.25s ease-out;
+    transition: all 0.25s ease-out;
+  }
+
+  .row-toolbar-offcanvas-left.active {
+    left: 33%;
+  }
+
+  .row-toolbar-offcanvas-left.active .toolbar-offcanvas {
+    left: -33%;
+    position: absolute;
+    top: 0;
+    width: 41%;
+  }
+}

@@ -1,6 +1,7 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
 findOrCreate = require('mongoose-findorcreate')
+Node_Data = require("../app").Node_Data
 
 ShareSchema = mongoose.Schema(
   owner:
@@ -8,6 +9,13 @@ ShareSchema = mongoose.Schema(
     ref: 'User'
     required: true
     label: 'From user'
+
+  node:
+    type: mongoose.Schema.ObjectId
+    ref: 'Node'
+    required: true
+    label: 'Project'
+    populate: true
 
   hostData:
     type: Boolean
