@@ -1,0 +1,16 @@
+div(ng-controller="dynModalCtrl", ng-init="fi = fieldIndex;")
+  .modal-header
+    button.close(type="button", ng-click="modalCancel()") &times;
+    h4.modal-title Preview
+
+  .modal-body
+    #editor-preview
+      //.row#editor-preview-toolbar
+      //  .navbar.navbar-default#editor-preview-toolbar-menu(role="navigation", style="padding-left: 8px; margin-bottom: 8px;")
+      //    button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
+      //      span.text-muted.cic.cic-refresh(style="font-size: 16px;")
+
+      .preview#editor-preview-main
+
+  .modal-footer
+    input.btn.btn-default(type='button', ng-click="modalCancel()", value="Close")

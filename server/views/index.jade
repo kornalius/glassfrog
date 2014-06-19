@@ -1,0 +1,21 @@
+extends layout
+
+block head
+
+block head_javascripts
+
+block stylesheets
+  link(rel='stylesheet', href='/css/vendor.css')
+
+block content
+  .container
+    #index-page
+      img(src='/img/logo.png', width='160')
+      h1 Welcome
+      h4 Your only source for all your business or personal needs.
+      br
+      p
+        a(href='/learnmore').btn.btn-lg.btn-primary Learn more...
+
+block javascripts
+  script(src='/js/index.js')

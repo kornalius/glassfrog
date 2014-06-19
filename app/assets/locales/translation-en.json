@@ -1,0 +1,16 @@
+{
+  "welcome": "welcome to Glassfrog",
+  "app": "Application",
+  "copyright": "copyright",
+  "nav": {
+    "home": "home",
+    "todo": "todos",
+    "view1": "page one",
+    "view2": "page two",
+    "test": "test",
+    "suggestions": "suggestions"
+   },
+   "tab": {
+     "test.po": "purchase orders"
+   }
+}

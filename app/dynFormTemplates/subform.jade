@@ -1,0 +1,17 @@
+div(ng-controller="dynFormCtrl", ng-init="fi = fieldIndex;")
+  div(ng-init="subformInit()")
+
+    .panel-subform
+      .panel.panel-default(container="form.container")
+        .panel-heading.accordion-toggle.collapsed(data-toggle="collapse", data-target="#{{$parent.fields[fi].domId('input', $index)}}")
+          .panel-title
+            | {{$parent.fields[fi].label}}...
+
+        .panel-collapse.collapse(id="{{$parent.fields[fi].domId('input', $index)}}")
+          .panel-body
+            .container-fluid
+              .row-fluid
+                //p {{form.name + ',' + $index + ',' + fields[fieldIndex].fieldname + ',' + rows[0]._id}}
+                ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in rows track by $index", novalidate)
+                  // <row>
+              .row-fluid

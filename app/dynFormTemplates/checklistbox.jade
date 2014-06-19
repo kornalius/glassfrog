@@ -1,0 +1,5 @@
+.checklistbox.btn-group-vertical(data-toggle="buttons", name="{{field.domName('input', $index)}}", ng-disabled="!isEditing($index)", attributes="fields[fieldIndex]", style="width: 100%;")
+  label.btn.btn-default(ng-repeat="item in fields[fieldIndex].options", ng-click="check(item)")
+    input(type="radio", name="{{fields[fieldIndex].domName('input', $index)}}", ng-model="row[fields[fieldIndex].fieldname]", value="{{item.value}}")
+    span.pull-left.cic(ng-class="{ 'cic-checkbox-checked text-info': item.checked, 'cic-checkbox-unchecked text-muted': !item.checked}", style="font-size: 18px; margin-right: 8px;")
+    | {{item.label}}

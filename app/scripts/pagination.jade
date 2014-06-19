@@ -1,0 +1,21 @@
+ul.pagination
+  li(ng-class="{disabled: currentPage == 1}", ng-click="firstPage()")
+    a(href="")
+      i.cic.cic-double-angle-left
+  //li(ng-class="{disabled: currentPage == 1}", ng-click="pageUp()")
+  //  a(href="")
+  //    i.cic.cic-double-angle-up
+  li(ng-class="{disabled: currentPage == 1}", ng-click="prevPage()")
+    a(href="")
+      i.cic.cic-angle-left
+  li(ng-repeat="n in range()", ng-class="{active: n == currentPage}", ng-click="setPage()")
+    a(href="") {{n}}
+  li(ng-class="{disabled: currentPage == pageCount()}", ng-click="nextPage()")
+    a(href="")
+      i.cic.cic-angle-right
+  //li(ng-class="{disabled: currentPage == pageCount()}", ng-click="pageDown()")
+  //  a(href="")
+  //    i.cic.cic-double-angle-down
+  li(ng-class="{disabled: currentPage == pageCount()}", ng-click="lastPage()")
+    a(href="")
+      i.cic.cic-double-angle-right

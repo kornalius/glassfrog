@@ -1,0 +1,46 @@
+script.
+  function blocklyLoaded(blockly) {
+    console.log("blocklyLoaded()", blockly);
+    // Called once Blockly is fully loaded.
+    window.Blockly = blockly;
+  }
+
+#editor(ng-controller="EditorCtrl")
+
+  .row#editor-toolbar
+    .navbar.navbar-default#editor-toolbar-menu(role="navigation", style="padding-left: 8px; margin-bottom: 8px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="save()")
+        span.text-muted.cic.cic-save(style="font-size: 16px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
+        span.text-muted.cic.cic-refresh(style="font-size: 16px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
+        span.text-muted.cic.cic-preview(style="font-size: 18px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="rebuild()")
+        span.text-muted.cic.cic-uniF002(style="font-size: 18px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="alert()")
+        span.text-muted.cic.cic-form(style="font-size: 18px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="choose()")
+        span.text-muted.cic.cic-list-alt(style="font-size: 18px;")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="quickForm()")
+        span.text-muted.cic.cic-fastforward(style="font-size: 18px;")
+
+  .row#editor-main
+    iframe(src="/partials/editor.frame.html")
+
+script.
+  function resize_now() {
+    var h = $(window).height();
+    $('#editor-main').height(h - 164);
+  };
+
+  $(document).ready(function() {
+    setTimeout(function() {
+      resize_now();
+    }, 100);
+  });
+
+  $(window).resize(function() {
+    setTimeout(function() {
+      resize_now();
+    }, 10);
+  });

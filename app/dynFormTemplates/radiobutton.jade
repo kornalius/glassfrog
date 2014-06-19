@@ -1,0 +1,4 @@
+.radiobuttons.btn-group(data-toggle="buttons", name="{{field.domName('input', $index)}}", ng-disabled="!isEditing($index)", attributes="fields[fieldIndex]")
+  label.btn.btn-default.btn-sm(ng-repeat="item in fields[fieldIndex].options")
+    input(type="radio", name="{{fields[fieldIndex].domName('input', $index)}}", ng-model="row[fields[fieldIndex].fieldname]", value="{{item.value}}")
+    | {{item.label}}

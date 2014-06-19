@@ -1,0 +1,13 @@
+{
+  "welcome": "bienvenue chez Glassfrog",
+  "app": "logiciel",
+  "copyright": "tout droits réservés",
+  "nav": {
+    "home": "maison",
+    "todo": "à faires",
+    "view1": "page un",
+    "view2": "page deux",
+    "test": "teste",
+    "suggestions": "suggestions"
+  }
+}

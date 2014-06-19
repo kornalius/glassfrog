@@ -1,0 +1,9 @@
+select2(name="{{form.domName('input', $index)}}", field="fields[fieldIndex]", ng-model="row[fields[fieldIndex].fieldname]", style="width=100% !important;", ng-class="{'static': !isEditing($index)}", ng-disabled="!isEditing($index)", attributes="fields[fieldIndex]")
+  //option(ng-repeat="item in items", value="{{$index}}") {{item.text}}
+
+//ui-select.form-control(ng-controller="selectCtrl", name="{{f.domName('input')}}", theme="select2", ng-model="f.rows[$parent.$$index][f.fieldname]", ng-class="{'static': !f.isEditing($parent.$$index)}", ng-disabled="!f.isEditing($parent.$$index)", reset-search-input="false", style="width: 100% !important;")
+//  ui-select-match(placeholder="Select...") {{$select.selected.text}}
+//  ui-select-choices(ng-repeat="item in items")
+//    div(ng-bind="item.text")
+//    //div(ng-bind-html="item.text | highlight: $select.search")
+//    //small(ng-bind-html="item.id | highlight: $select.search")

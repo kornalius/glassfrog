@@ -1,0 +1,4 @@
+div(ng-class="{'input-group': isEditing($index)}", style="min-width:100%;", attributes="fields[fieldIndex]")
+  select(multiple="multiple", name="{{fields[fieldIndex].domName('input', $index)}}", ng-model="row[fields[fieldIndex].fieldname]", twolist, field="fields[fieldIndex]")
+    option(ng-repeat="item in fields[fieldIndex].options", value="{{item.value}}") {{item.label}}
+  //pre {{row[fields[fieldIndex].fieldname]}}

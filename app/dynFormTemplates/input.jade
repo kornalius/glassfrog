@@ -1,0 +1,3 @@
+div(ng-class="{'input-group': isEditing($index)}", style="min-width:100%;", attributes="fields[fieldIndex]")
+  input.form-control.input(name="{{fields[fieldIndex].domName('input', $index)}}", ng-model="row[fields[fieldIndex].fieldname]", ng-class="{'static': !isEditing($index)}", ng-disabled="!isEditing($index)", type="text", ng-change="validateField(fields[fieldIndex], $index)", ng-blur="validateField(fields[fieldIndex], $index)")
+  span(ng-show="isEditing($index)")

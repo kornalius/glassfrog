@@ -1,0 +1,4 @@
+#tabbar(ng-controller="TabbarCtrl")
+  ul.nav.nav-tabs(ng-show="globals.tabsCount")
+    li(ui-sref-active="active", ng-repeat="m in tabs()")
+      a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}") {{"tab." + m.name | i18next}}

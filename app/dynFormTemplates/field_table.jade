@@ -1,0 +1,7 @@
+td(ng-controller="dynFormObjectCtrl", ng-click="edit($index)")
+
+  div(ng-class="{'has-error' : fields[fieldIndex].hasErrors($index)}")
+    // <input>
+
+  .help-block(ng-show="fields[fieldIndex].hasErrors($index)")
+    .label.label-danger(ng-repeat="e in fields[fieldIndex].errors($index)") {{e.message}}

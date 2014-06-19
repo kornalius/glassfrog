@@ -1,0 +1,96 @@
+doctype html
+html(lang='en', ng-app='app')
+  head
+    meta(charset='utf-8')
+    meta(http-equiv="X-UA-Compatible", content="IE=edge,chrome=1")
+    meta(name='viewport', content='width=device-width', initial-scale='1.0', maximum-scale='1.0')
+    meta(name='description', content='')
+    meta(name='author', content='')
+
+    title Glassfrog
+
+    link(rel='stylesheet', href='/css/app.css')
+    link(rel='stylesheet', href='/css/colors.css')
+    //link(rel='stylesheet', href='/css/font-awesome.css')
+    link(rel='stylesheet', href='/css/cicons.css')
+
+    block stylesheets
+
+    link(rel="shortcut icon", href="/favicon.ico", type="image/x-icon")
+    link(rel="shortcut icon", href="/bootstrap/img/favicon.ico")
+    link(rel="apple-touch-icon", href="/bootstrap/img/apple-touch-icon.png")
+    link(rel="apple-touch-icon", sizes="72x72", href="/bootstrap/img/apple-touch-icon-72x72.png")
+    link(rel="apple-touch-icon", sizes="114x114", href="/bootstrap/img/apple-touch-icon-114x114.png")
+
+    block head_javascripts
+
+    block head
+
+body#body(ng-init="user=#{JSON.stringify(user)};")
+
+  #loader
+    if user && user.isVerified
+      .panel.panel-default.load_animation.loader(ng-show="globals.loadingTracker.active()")
+        .panel-body(style="padding: 10px; margin:0px;")
+          span.text-muted Loading...
+          .progress.progress-striped.active(style="height:14px; margin:0px;")
+            .progress-bar(style="width: 100%")
+
+  .wrapper(ng-controller='AppCtrl')
+    .box
+      if user && user.isVerified
+        .row.row-offcanvas.row-offcanvas-left
+
+          .column.col-sm-2.col-xs-1.sidebar-offcanvas#sidebar
+            div(ng-include="'/partials/sidebar.html'")
+
+          .column.col-sm-10.col-xs-11#main
+            div(ng-include="'/partials/navbar.html'")
+
+            //div(ng-include="'/partials/tabbar.html'")
+
+            .padding
+
+              .full
+
+                .row
+
+                  block intro
+
+                  include errors
+
+                .row
+
+                  div(ui-view, ng-cloak)
+                    block content
+
+      else
+        .row
+
+          .column.col-sm-12.col-xs-12#index-main
+            include navbar
+
+            .padding
+              .full
+
+                .row
+
+                  block intro
+
+                  include errors
+
+                .row
+                  block content
+
+  #footer
+    .navbar.navbar-default.navbar-static-bottom.navbar-fixed-bottom(role="navigation")
+      .container-fluid.navbar-inner
+        span.text-muted
+          span.proper= t('copyright')
+          | &nbsp;
+          script document.write(new Date().getFullYear().toString())
+          a(href='http://arianesoft.ca', target='_blank')
+            | &nbsp;ArianeSoft Inc.
+
+
+  block javascripts

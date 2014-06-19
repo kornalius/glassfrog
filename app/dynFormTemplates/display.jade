@@ -1,0 +1,13 @@
+div(ng-controller="dynFormCtrl", ng-init="fi = fieldIndex;")
+  .panel.panel-info(container="form.container")
+    .panel-heading
+      .panel-title {{form.label}}
+
+    .panel-body(style="line-height:24px;")
+      ng-form(name="{{domName()}}", ng-class="getClass()", ng-repeat="row in rows track by $index", novalidate)
+        // <row>
+
+    //.panel-footer
+    //  input.btn.btn-primary(type="button", ng-click="submit()", value="Save", ng-disabled="form.hasErrors()")
+    //  span(style="padding:4px;")
+    //  input.btn.btn-danger(type='button', ng-click="cancel()", value="Cancel")

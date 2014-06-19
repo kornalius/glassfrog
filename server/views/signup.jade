@@ -1,0 +1,39 @@
+extend layout
+
+block content
+  .container
+    #registerbox.mainbox.col-md-6.col-md-offset-3.col-sm-8.col-sm-offset-2
+      .panel.panel-default
+        .panel-heading
+          .panel-title Register
+          div(style='float: right; font-size: 85%; position: relative; top: -10px;')
+            a#signinlink(href='/login') Sign In
+        .panel-body
+          form#signupform.form-horizontal(role='form', action="/signup", method="post")
+            #signupalert.alert.alert-danger(style='display: none;')
+              p Error:
+              span
+            input(type="hidden", name="_csrf", value="#{csrftoken}")
+            .form-group
+              label.col-md-3.control-label(for='username') Username
+              .col-md-9
+                input.form-control(type='text', name='username', placeholder='Username', required)
+            .form-group
+              label.col-md-3.control-label(for='firstname') First Name
+              .col-md-9
+                input.form-control(type='text', name='firstname', placeholder='First Name', required)
+            .form-group
+              label.col-md-3.control-label(for='lastname') Last Name
+              .col-md-9
+                input.form-control(type='text', name='lastname', placeholder='Last Name', required)
+            .form-group
+              label.col-md-3.control-label(for='email') Email
+              .col-md-9
+                input.form-control(type='email', name='email', placeholder='Email Address', required)
+            .form-group
+              label.col-md-3.control-label(for='password') Password
+              .col-md-9
+                input.form-control(type='password', name='password', placeholder='Password', required)
+            .form-group
+              .col-md-offset-3.col-md-9
+                input.btn.btn-success(type="submit", value="Register")
