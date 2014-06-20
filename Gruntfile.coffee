@@ -214,17 +214,17 @@ module.exports = (grunt) ->
           dest: out_dev + 'js/humanize.js'
         ,
           expand: true
-          cwd: 'blockly'
+          cwd: 'blockly/static'
           src: '*.js'
           dest: out_dev + 'js/blockly/'
         ,
           expand: true
-          cwd: 'blockly/media/'
+          cwd: 'blockly/static/media/'
           src: '*'
           dest: out_dev + 'js/blockly/media'
         ,
           expand: true
-          cwd: 'blockly/msg/'
+          cwd: 'blockly/static/msg/'
           src: '**/*'
           dest: out_dev + 'js/blockly/msg'
         ]
@@ -256,17 +256,17 @@ module.exports = (grunt) ->
           dest: out + 'js/humanize.js'
         ,
           expand: true
-          cwd: 'blockly'
+          cwd: 'blockly/static'
           src: '*.js'
           dest: out + 'js/blockly/'
         ,
           expand: true
-          cwd: 'blockly/media/'
+          cwd: 'blockly/static/media/'
           src: '*'
           dest: out + 'js/blockly/media'
         ,
           expand: true
-          cwd: 'blockly/msg/'
+          cwd: 'blockly/static/msg/'
           src: '**/*'
           dest: out + 'js/blockly/msg'
         ]
@@ -346,7 +346,6 @@ module.exports = (grunt) ->
           dest: out_dev + 'js/index.js'
         ,
           src: [
-            'node_modules/blockly/lib/style.css'
             'bower_components/select2/select2.css'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css'
             'bower_components/yamm3/yamm/yamm.css'
@@ -403,7 +402,6 @@ module.exports = (grunt) ->
           dest: out + 'js/index.js'
         ,
           src: [
-            'node_modules/blockly/lib/style.css'
             'bower_components/select2/select2.css'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css'
             'bower_components/yamm3/yamm/yamm.css'
@@ -495,6 +493,10 @@ module.exports = (grunt) ->
       server_config:
         files: ['server/config/**']
         tasks: ['coffee:server_dev', 'copy:server_dev', 'express:dev', 'reload']
+
+      blockly:
+        files: ['blockly/static/done.txt']
+        tasks: ['copy:dev', 'reload']
 
     express:
       options:

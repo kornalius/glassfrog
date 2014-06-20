@@ -14,7 +14,6 @@
     "async": "^0.7.0",
     "auto-reload-brunch": ">= 1.0 < 1.8",
     "bcrypt": "^0.7.7",
-    "blockly": "0.0.6",
     "coffee-loader": "^0.7.2",
     "coffee-script": "^1.6.3",
     "coffeeify": "^0.6.0",
