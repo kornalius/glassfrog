@@ -6,8 +6,13 @@ angular.module('editor', ['editor.preview'])
   'Globals'
   '$window'
   '$timeout'
+  'Editor'
 
-  ($scope, $rootScope, globals, $window, $timeout) ->
+  ($scope, $rootScope, globals, $window, $timeout, Editor) ->
+
+    $scope.showCode = () ->
+      alert(Editor.code())
+
     $timeout(->
       console.log "$window.Blockly", $window.Blockly
       $window.Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout')
@@ -25,7 +30,6 @@ angular.module('editor', ['editor.preview'])
         code = $window.Blockly.JavaScript.workspaceToCode()
       else
         code = ''
-      alert(code)
       return code
 
     save: () ->

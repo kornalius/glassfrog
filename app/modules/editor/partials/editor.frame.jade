@@ -92,18 +92,9 @@ html
 
     xml(id="toolbox", style="display: none").
       <category name="Schema">
-        <block type="glassfrog_schema">
-          <value name="fields"><block type="lists_create_with"></block></value>
-          <value name="methods"><block type="lists_create_with"></block></value>
-        </block>
-        <block type="glassfrog_field">
-          <value name="label"><block type="text"></block></value>
-          <value name="default"><block type="text"></block></value>
-          <value name="options"><block type="lists_create_with"></block></value>
-        </block>
-        <block type="glassfrog_fieldOption">
-          <value name="value"><block type="logic_boolean"></block></value>
-        </block>
+        <block type="glassfrog_schema"></block>
+        <block type="glassfrog_field"></block>
+        <block type="glassfrog_fieldoption"></block>
       </category>
 
       <category name="Logic">

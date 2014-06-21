@@ -13,7 +13,7 @@ script.
         span.text-muted.cic.cic-save(style="font-size: 16px;")
       button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
         span.text-muted.cic.cic-refresh(style="font-size: 16px;")
-      button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
+      button.btn.btn-default.navbar-btn(type="button", ng-click="showCode()")
         span.text-muted.cic.cic-preview(style="font-size: 18px;")
       button.btn.btn-default.navbar-btn(type="button", ng-click="rebuild()")
         span.text-muted.cic.cic-uniF002(style="font-size: 18px;")
@@ -25,7 +25,7 @@ script.
         span.text-muted.cic.cic-fastforward(style="font-size: 18px;")
 
   .row#editor-main
-    iframe(src="/partials/editor.frame.html", style="width:100%;")
+    iframe(src="/partials/editor.frame.html", style="width:100%; height:100%;")
 
 script.
   function resize_now() {
