@@ -1,5 +1,7 @@
 .row#editor-content-toolbar
+
   .navbar.navbar-default#editor-content-toolbar-menu(role="navigation", style="padding-left: 8px; margin-bottom: 8px;")
+
     button.btn.btn-default.navbar-btn(type="button", ng-click="save()")
       span.text-muted.cic.cic-save(style="font-size: 16px;")
     button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
@@ -18,94 +20,6 @@
 
 .row.nodes#editor-content-main(ng-click="clearSelection()")
 
-  ul#nodes-table(ng-repeat="n in list()", style="list-style-type:none; padding: 0px !important; margin: 0px !important;")
+  ul#nodes-table(ng-repeat="n in module().getRoot().list()", style="list-style-type:none; padding: 0px !important; margin: 0px !important;")
 
-    .dropzone(id="dropzone_{{n._id}}")
-
-    li(id="node-line_{{n._id}}", style="padding-left: {{24 * (n.$data.level() - 1)}}px")
-
-      table(id="node-tile_{{n._id}}", ng-mouseover="setOver(n)", ng-mouseleave="setOver(null)")
-
-        td(id="node-expand-icon-col_{{n._id}}", width="24px")
-          span.node-expand.cic(id="node-expand-icon_{{n._id}}", ng-show="n.$data.hasChildren()", ng-class="{ 'cic-arrow-right8': n.$data.isClosed(), 'cic-arrow-down8': n.$data.isOpened(), 'node-expand-highlighted': Node.expandOver == n}", ng-mouseover="Node.expandOver = n", ng-mouseleave="Node.expandOver = null", ng-click="n.$data.toggleExpandCollapse($event.altKey); $event.stopPropagation();", style="font-size: 21px;")
-
-        td
-          table.node(id="node-element_{{n._id}}", draggable, droppable, ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.$data.toggleExpandCollapse(); $event.stopPropagation();", ng-class="{ 'node-highlighted': n.$data.isOver() && !n.$data.isSelected(), 'node-selected': n.$data.isSelected() && !n.$data.isOver(), 'node-selected-highlighted': n.$data.isSelected() && n.$data.isOver() }", ng-model="n")
-
-            td.node-color(id="node-color_{{n._id}}", width="10px", class="{{n.$data.color()}}-back")
-
-            td.node-icon-col(id="node-icon-col_{{n._id}}", width="24px")
-              span.text-muted.node-icon.cic(id="node-icon_{{n._id}}", class="cic-{{n.$data.icon()}}")
-
-            td.node-label-col(id="node-label-col_{{n._id}}", ng-click="n.$data.edit(); $event.stopPropagation();")
-              span.node-label(id="node-label_{{n._id}}", ng-show="!n.$data.isEditing()") {{n.$data.displayName()}}
-              //|  ({{n.$data.flatOrder()}})
-
-              input.node-input.form-control.input-sm(type="text", id="node-input_{{n._id}}", ng-click="$event.stopPropagation()", ng-blur="n.$data.cancelEdit()", ng-model="n.name", ng-keyup="keyup($event)", ng-show="n.$data.isEditing() && !n.$data.component.valueKind")
-
-              select2.node-input(id="node-select_{{n._id}}", ng-blur="n.$data.cancelEdit()", ng-model="n.name", ng-keyup="keyup($event)", style="width=98% !important;", field="{width: 'element', options: {{n.$data.editOptions()}} }", ng-change="n.$data.saveEdit()", ng-show="n.$data.isEditing() && n.$data.component.valueKind")
-
-            td.node-parentIcons-col(id="node-parentIcons-col_{{n._id}}", align="right", width="1%")
-              span.text-muted.node-link-icon.cic(id="node-link-icon_{{n._id}}", class="cic-link", ng-show="n.$data.isLink() && !n.$data.isShared()")
-              span.text-muted.node-shared-icon.cic(id="node-shared-icon_{{n._id}}", class="cic-share23", ng-show="n.$data.isShared()")
-              span.text-muted.node-sharing-icon.cic(id="node-sharing-icon_{{n._id}}", class="cic-cloud32", ng-show="n.$data.isSharing()")
-
-              span.node-parentIcons(ng-show="n.$data.hasParentIcons()")
-                span.node-icon.node-parentIcon.cic(ng-repeat="cn in n.$data.children()", ng-show="cn.$data.component.$data.parentIcon()", class="cic-{{cn.$data.icon()}}")
-
-            td.node-modified-color(id="node-modified-color_{{n._id}}", width="6px", ng-show="n.$data.isModified()")
-
-        td.tool-menu.node-tool-menu-col(id="node-tool-menu-col_{{n._id}}", style="padding-left: 8px;")
-          .btn-group(ng-show="n.$data.isOver()")
-            button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.remove()", ng-hide="n._system")
-              span.text-muted.cic.cic-trashcan2(style="font-size: 16px;")
-
-            button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.copy()")
-              span.text-muted.cic.cic-copy(style="font-size: 16px;")
-
-            button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.cut()", ng-hide="n._system")
-              span.text-muted.cic.cic-cut(style="font-size: 16px;")
-
-            button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.paste()")
-              span.text-muted.cic.cic-paste(style="font-size: 16px;")
-
-            button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.share()", ng-hide="!n.$data.canShare()")
-              span.text-muted.cic.cic-cloud32(style="font-size: 16px;")
-
-            button.btn.btn-default.btn-sm.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}")
-              span.text-muted.cic.cic-menu23(style="font-size: 16px;")
-
-            ul.dropdown-menu(id="node-menu", role="menu")
-
-              li(id="node-menu-generate")
-                a(href="", ng-click="n.$data.generate()")
-                  span.text-muted.cic.cic-code2(style="font-size: 14px; margin-right: 8px;")
-                  | Generate code...
-
-              li.divider
-
-              li(id="node-menu-moveUp")
-                a(href="", ng-click="n.$data.moveUp()")
-                  span.text-muted.cic.cic-uniF48A(style="font-size: 14px; margin-right: 8px;")
-                  | Move up
-
-              li(id="node-menu-moveDown")
-                a(href="", ng-click="n.$data.moveDown()")
-                  span.text-muted.cic.cic-uniF48B(style="font-size: 14px; margin-right: 8px;")
-                  | Move down
-
-              li.divider
-
-              li(id="node-menu-expandAll")
-                a(href="", ng-click="n.$data.expandAll()")
-                  span.text-muted.cic.cic-plus32(style="font-size: 14px; margin-right: 8px;")
-                  | Expand All
-
-              li(id="node-menu-collapseAll")
-                a(href="", ng-click="n.$data.collapseAll()")
-                  span.text-muted.cic.cic-minus42(style="font-size: 14px; margin-right: 8px;")
-                  | Collapse All
-
-    //.dropzone(ng-show="$last", style="margin-left: 32px;")
-
-    span(ng-init="n.$data.render()")
+    include includes/node-template

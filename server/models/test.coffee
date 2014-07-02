@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 ownable = require('mongoose-ownable')
 async = require('async')
 
@@ -42,7 +41,6 @@ TestSchema = mongoose.Schema(
 )
 
 TestSchema.plugin(timestamps)
-TestSchema.plugin(findOrCreate)
 TestSchema.plugin(ownable)
 
 TestSchema.method(

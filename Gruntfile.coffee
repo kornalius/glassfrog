@@ -212,6 +212,9 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out_dev + 'js/humanize.js'
+        ,
+          src: 'bower_components/safejson/dist/safejson.js'
+          dest: out_dev + 'js/safejson.js'
         ]
 
       prod:
@@ -239,6 +242,9 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out + 'js/humanize.js'
+        ,
+          src: 'bower_components/safejson/dist/safejson.min.js'
+          dest: out + 'js/safejson.js'
         ]
 
       server_dev:
@@ -274,7 +280,7 @@ module.exports = (grunt) ->
             'bower_components/lodash/dist/lodash.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
-            'bower_components/underscore/underscore.js'
+#            'bower_components/underscore/underscore.js'
             'bower_components/moment/moment.js'
             'bower_components/moment/lang/en_ca.js'
             'bower_components/moment/lang/fr.js'
@@ -304,9 +310,11 @@ module.exports = (grunt) ->
           dest: out_dev + 'js/vendor.js'
         ,
           src: [
+            'bower_components/lodash/dist/lodash.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
-            'bower_components/underscore/underscore.js'
+            'bower_components/safejson/dist/safejson.js'
+#            'bower_components/underscore/underscore.js'
             'bower_components/moment/moment.js'
             'bower_components/bootstrap/dist/js/bootstrap.js'
             'bower_components/i18next/i18next.js'
@@ -331,9 +339,11 @@ module.exports = (grunt) ->
       prod:
         files: [
           src: [
+            'bower_components/lodash/dist/lodash.min.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/minified/jquery-ui.min.js'
-            'bower_components/underscore/underscore.js'
+#            'bower_components/underscore/underscore.js'
+            'bower_components/safejson/dist/safejson.min.js'
             'bower_components/moment/min/moment-with-langs.min.js'
             'bower_components/bootstrap/dist/js/bootstrap.min.js'
             'bower_components/angular/angular.min.js'
@@ -360,9 +370,11 @@ module.exports = (grunt) ->
           dest: out + 'js/vendor.js'
         ,
           src: [
+            'bower_components/lodash/dist/lodash.min.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/jquery-ui.min.js'
-            'bower_components/underscore/underscore.js'
+            'bower_components/safejson/dist/safejson.min.js'
+#            'bower_components/underscore/underscore.js'
             'bower_components/moment/moment-with-langs.min.js'
             'bower_components/bootstrap/dist/js/bootstrap.min.js'
             'bower_components/i18next/i18next.min.js'
@@ -410,15 +422,15 @@ module.exports = (grunt) ->
     watch:
       options:
         spawn: false
-        interrupt: true
-        reload: true
-#        livereload: true
+        livereload: true
+        debounceDelay: 1000
 
       gruntfile:
         files: ['Gruntfile.coffee']
         tasks: ['default']
         options:
           interrupt: true
+          reload: true
 
       jade:
         files: ['app/**/*.jade']
@@ -454,7 +466,7 @@ module.exports = (grunt) ->
 
       server_js:
         files: ['server/**/*.js']
-        tasks: ['copy:server_dev', 'reload']
+        tasks: ['copy:server_dev']
 
       html:
         files: ['app/**/*.html', 'server/**/*.html']
@@ -477,11 +489,13 @@ module.exports = (grunt) ->
           node_env: 'development'
           debug: true
 
-#    reload:
-#      port: 3000
-#      proxy:
-#        host: 'localhost'
-#        port: 3001
+#    curl:
+#      dev: 'http://localhost:35729/changed?files=/js/app.js'
+
+#    open:
+#      dev:
+#        path: 'http://localhost:3000'
+#        app: '/Applications/Firefox.app'
   )
 
   d = grunt.config.data['file-creator'].dev
@@ -508,14 +522,30 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-express-server')
   grunt.loadNpmTasks('grunt-file-creator')
+#  grunt.loadNpmTasks('grunt-open')
+#  grunt.loadNpmTasks('grunt-curl')
 
-  grunt.registerTask("reload", "reload Chrome on OS X", () ->
-    require("child_process").exec("osascript " +
-        "-e 'delay 0.5' " +
-        "-e 'tell application \"Google Chrome\" " +
-          "to tell the active tab of its first window' " +
-        "-e 'reload' " +
-        "-e 'end tell'")
+#  grunt.registerTask("reload", "reload Chrome on OS X", () ->
+#    require("child_process").exec("osascript " +
+#        "-e 'delay 0.5' " +
+#        "-e 'tell application \"Google Chrome\" " +
+#          "to tell the active tab of its first window' " +
+#        "-e 'reload' " +
+#        "-e 'end tell'")
+#  )
+
+  grunt.registerTask("reload", "reload browser", () ->
+#    console.log "reload triggered"
+#    setTimeout( ->
+#      http = require('http')
+#      console.log "livereload call"
+#      http.get('http://localhost:35729/changed?files=/js/app.js', (res) ->
+#        console.log "livereload called successfuly"
+#      ).on('error', (e) ->
+#        console.log e
+#      )
+#    , 500)
+#    grunt.task.run('curl')
   )
 
   #  Default task(s).

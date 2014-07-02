@@ -1,0 +1,10 @@
+div(id="component-popover_{{c._id}}", data-content="{{c.desc}}", data-container="body")
+  table(id="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)")
+
+    include component-color-template
+
+    include component-icon-template
+
+    include component-label-template
+
+    span(ng-show="c.doRender(); return(true);")

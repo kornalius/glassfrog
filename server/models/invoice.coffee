@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 Currency = require('mongoose-currency')
 payment = require('../mongoose_plugins/mongoose-payment')
 autoIncrement = require('mongoose-auto-increment')
@@ -35,7 +34,6 @@ InvoiceSchema = mongoose.Schema(
 )
 
 InvoiceSchema.plugin(timestamps)
-InvoiceSchema.plugin(findOrCreate)
 InvoiceSchema.plugin(payment)
 InvoiceSchema.plugin(autoIncrement.plugin,
   model: 'Invoice'

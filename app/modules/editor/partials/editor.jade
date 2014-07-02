@@ -4,7 +4,9 @@
 
       .col-sm-2.col-xs-1.toolbar-offcanvas.pull-left#editor-toolbar(ui-view="components")
 
-      .col-sm-10.col-xs-11#editor-content(ui-view="nodes")
+      .col-sm-8.col-xs-9#editor-content(ui-view="nodes")
+
+      .col-sm-2.col-xs-2#editor-modules(ui-view="modules")
 
 script.
   function resize_now() {
@@ -12,7 +14,7 @@ script.
     $('#editor-toolbar').height(h - 104);
     $('#editor-main').height(h - 92);
     $('#editor-content-main').height(h - 168);
-    $('#editor-preview-main').height(h - 168);
+    $('#editor-modules').height(h - 104);
   };
 
   $(document).ready(function() {

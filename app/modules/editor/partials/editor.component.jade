@@ -13,19 +13,15 @@ ul.nav
             span.cic.cic-search
 
   .component#editor-components-list(ng-repeat="c in list() | filter: search", draggable)
-    table(id="component-element_{{c._id}}", width="100%", ng-model="c")
-      td(id="component-color_{{c._id}}", width="8px", class="{{c.$data.color()}}-back")
-
-      td.text-center(id="component-icon-col_{{c._id}}", width="13%", valign="middle", style="padding:2px;")
-        span.text-muted.cic(id="component-icon_{{c._id}}", class="cic-{{c.$data.icon()}}", style="font-size: 18px;")
-
-      td(id="component-label-col_{{c._id}}", style="padding:2px;")
-        span(id="component-label_{{c._id}}") {{c.name}}
-    span(ng-init="c.$data.render(null, true)")
+    ng-include(src="'/partials/component-template.html'")
 
 .visible-xs#xs-toolbar-menu
   .component(ng-repeat="c in list() | filter: search", draggable)
-    table(id="component-element_{{c._id}}", width="100%", ng-model="c")
+
+    table(id="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)")
+
       td.text-center(id="component-icon-col_{{c._id}}", valign="middle", style="padding-top: 2px; padding-bottom: 2px;")
-        span.text-muted.cic(id="component-icon_{{c._id}}", class="cic-{{c.$data.icon()}}", style="font-size: 14px;")
-    span(ng-init="c.$data.render(null, true)")
+
+        span.text-muted.cic(id="component-icon_{{c._id}}", class="cic-{{c.getIcon()}}", style="font-size: 14px;")
+
+    span(ng-init="c.render(null, true)")

@@ -3,11 +3,10 @@ angular.module('user.shares', ['dynamicForm'])
 .controller('UserSharesCtrl', [
   '$scope'
   '$rootScope'
-  '$injector'
   'dynForm'
   'Rest'
 
-($scope, $rootScope, $injector, dynForm, Rest) ->
+($scope, $rootScope, dynForm, Rest) ->
 
   $scope.invoice = new Rest('invoice')
 

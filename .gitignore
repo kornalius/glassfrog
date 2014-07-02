@@ -4,3 +4,4 @@ _public
 server/data
 node_modules
 bower_components
+blockly/closure-library-read-only

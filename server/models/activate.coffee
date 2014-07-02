@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 
 ActivateSchema = mongoose.Schema(
   email:
@@ -20,7 +19,6 @@ ActivateSchema = mongoose.Schema(
 )
 
 ActivateSchema.plugin(timestamps)
-ActivateSchema.plugin(findOrCreate)
 
 ActivateSchema.method(
 )

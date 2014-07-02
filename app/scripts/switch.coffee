@@ -31,7 +31,7 @@ angular.module('switch.services', ['app', 'app.globals'])
           field =
             options: {}
 
-        o = angular.extend({ show_labels: false, width: 40, height: 20, button_width: 20 }, field.options)
+        o = angular.extend({ show_labels: false, width: 40, height: 16, button_width: 20 }, field.options)
 
         $timeout( ->
           element.switchButton(o)

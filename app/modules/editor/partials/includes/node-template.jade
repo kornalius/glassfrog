@@ -1,0 +1,26 @@
+.dropzone(id="dropzone_{{n.id()}}")
+
+li(id="node-line_{{n.id()}}", style="padding-left: {{24 * (n.level() - 1)}}px")
+
+  table(id="node-tile_{{n.id()}}", ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
+
+    tr
+
+      td(id="node-expand-icon-col_{{n.id()}}", width="24px")
+        span.node-expand.cic(id="node-expand-icon_{{n.id()}}", ng-show="n.hasChildren()", ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'node-expand-highlighted': isExpandOver(n)}", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="toggleExpandCollapse(n, $event.altKey); $event.stopPropagation();", style="font-size: 21px;")
+
+      td
+
+        table.node(id="node-element_{{n.id()}}", draggable, droppable, ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="toggleExpandCollapse(n); $event.stopPropagation();", ng-class="{ 'node-highlighted': isOver(n) && !isSelection(n), 'node-selected': isSelection(n) && !isOver(n), 'node-selected-highlighted': isSelected(n) && isOver(n) }", ng-model="n", style="min-width: {{n.getWidth();}}px; min-height: {{n.getHeight(true);}}px;")
+
+          tr
+
+            include node-color-template
+
+            include node-label-template
+
+            include node-modified-template
+
+            span(ng-show="n.doRender(); return(true);")
+
+        include node-menu-template

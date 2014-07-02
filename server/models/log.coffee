@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 User = require('./user')
 
 LogSchema = mongoose.Schema(
@@ -43,7 +42,6 @@ LogSchema = mongoose.Schema(
 )
 
 LogSchema.plugin(timestamps)
-LogSchema.plugin(findOrCreate)
 
 LogSchema.static(
   log: (user, action, schema, comment, ip, url) ->

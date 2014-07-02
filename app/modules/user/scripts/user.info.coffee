@@ -3,11 +3,10 @@ angular.module('user.info', ['dynamicForm'])
 .controller('UserInfoCtrl', [
   '$scope'
   '$rootScope'
-  '$injector'
   'dynForm'
   'Rest'
 
-($scope, $rootScope, $injector, dynForm, Rest) ->
+($scope, $rootScope, dynForm, Rest) ->
 
   $scope.usr = new Rest('user')
 

@@ -29,7 +29,8 @@ version = ((schema, options) ->
 
   schema.method(
     displayString: ->
-      "{0}.{1}.{2}-{3}".format(@version.major, @version.minor, @version.maintenance, @version.build)
+      "v{0}.{1}.{2}{3}".format(@version.major, @version.minor, @version.build, @version.maintenance)
+#      "{0}.{1}.{2}-{3}".format(@version.major, @version.minor, @version.maintenance, @version.build)
 
     alpha: (notes) ->
       @version.minor += 1

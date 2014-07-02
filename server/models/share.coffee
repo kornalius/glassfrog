@@ -1,23 +1,15 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
-Node_Data = require("../app").Node_Data
 
 ShareSchema = mongoose.Schema(
-  owner:
+  module:
     type: mongoose.Schema.ObjectId
-    ref: 'User'
+    ref: 'Module'
     required: true
-    label: 'From user'
-
-  node:
-    type: mongoose.Schema.ObjectId
-    ref: 'Node'
-    required: true
-    label: 'Project'
+    label: 'Module'
     populate: true
 
-  hostData:
+  host:
     type: Boolean
     required: true
     default: false
@@ -41,21 +33,19 @@ ShareSchema = mongoose.Schema(
     ]
     label: 'User(s)'
     populate: true
-
 ,
   label: 'Shares'
 )
 
 ShareSchema.plugin(timestamps)
-ShareSchema.plugin(findOrCreate)
 
-ShareSchema.post('save', (doc) ->
-  mongoose.model('Share').refreshShares()
-)
-
-ShareSchema.post('remove', (doc) ->
-  mongoose.model('Share').refreshShares()
-)
+#ShareSchema.post('save', (doc) ->
+#  mongoose.model('Share').refreshShares()
+#)
+#
+#ShareSchema.post('remove', (doc) ->
+#  mongoose.model('Share').refreshShares()
+#)
 
 ShareSchema.method(
 
@@ -72,18 +62,26 @@ ShareSchema.method(
 
 ShareSchema.static(
 
-  share: (userId, host, nodeId, userIds, cb) ->
-    console.log "share()", "userId", userId, "host", host, "nodeId", nodeId, "userIds", userIds
-    mongoose.model('Share').findById(nodeId, (err, node) ->
-      if node
-        if node.owner_id? and node.owner_id.toString() == userId.toString()
-          mongoose.model('Share').create({ owner: userId, hostData: host, users: userIds.map((u) -> {user: u, state: 'disabled'}), node: nodeId }, (err, share) ->
-            cb(err, share) if cb
-          )
-        else
-          cb(new Error('You must be the owner of the node to share it'), null) if cb
+  share: (userId, host, moduleId, userIds, cb) ->
+    console.log "share()", "userId", userId, "host", host, "module", module, "userIds", userIds
+    mongoose.model('Share').find({module: moduleId}, (err, share) ->
+      if !share
+        mongoose.model('Module').findById(moduleId, (err, module) ->
+          if module
+            if module.owner_id? and module.owner_id.toString() == userId.toString()
+              mongoose.model('Share').create({ module: moduleId, hostData: host, users: userIds.map((u) -> {user: u, state: 'disabled'}) }, (err, share) ->
+                if share
+                  module.share = share.id
+                  module.save()
+                cb(err, share) if cb
+              )
+            else
+              cb(new Error('You must be the owner of the module to share it'), null) if cb
+          else
+            cb(new Error('Module not found'), null) if cb
+        )
       else
-        cb(new Error('Node not found'), null) if cb
+        cb(new Error('Module already shared'), null) if cb
     )
 )
 

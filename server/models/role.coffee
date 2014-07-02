@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 async = require('async')
 
 RoleSchema = mongoose.Schema(
@@ -41,7 +40,6 @@ RoleSchema = mongoose.Schema(
 )
 
 RoleSchema.plugin(timestamps)
-RoleSchema.plugin(findOrCreate)
 
 RoleSchema.method(
 

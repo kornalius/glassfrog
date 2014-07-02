@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 
 SettingSchema = mongoose.Schema(
   key:
@@ -22,7 +21,6 @@ SettingSchema = mongoose.Schema(
 )
 
 SettingSchema.plugin(timestamps)
-SettingSchema.plugin(findOrCreate)
 
 SettingSchema.static(
   getValue: (key, cb) ->

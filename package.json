@@ -9,12 +9,12 @@
     "url": ""
   },
   "dependencies": {
-    "angular-expressions": "^0.2.1",
     "assurance": "^0.2.4",
     "async": "^0.7.0",
     "auto-reload-brunch": ">= 1.0 < 1.8",
     "bcrypt": "^0.7.7",
     "blockly": "0.0.6",
+    "coffee-fn": "^0.1.2",
     "coffee-loader": "^0.7.2",
     "coffee-script": "^1.6.3",
     "coffeeify": "^0.6.0",
@@ -31,10 +31,11 @@
     "helmet": "^0.2.1",
     "humanize-plus": "^1.4.2",
     "humanquery": "^0.1.0",
-    "i18next": "^1.7.1",
+    "i18next": "^1.7.4",
     "jade": "^0.33.0",
     "lodash": "^2.4.1",
-    "moment": "^2.5.1",
+    "mathjs": "^0.24.1",
+    "moment": "^2.7.0",
     "mongoose": "3.8.12",
     "mongoose-account-locking": "0.0.1",
     "mongoose-auto-increment": "^3.0.2",
@@ -55,12 +56,16 @@
     "nodemailer": "^0.6.1",
     "passport": "^0.2.0",
     "passport-local": "^0.1.6",
+    "safejson": "^1.0.0",
     "sugar": "^1.4.1",
     "through": "^2.3.4",
-    "tracer": "^0.6.2"
+    "tracer": "^0.6.2",
+    "verbal-expressions": "^0.1.2"
   },
   "devDependencies": {
+    "debowerify": "^0.7.1",
     "grunt": "^0.4.4",
+    "grunt-browserify": "^2.1.1",
     "grunt-contrib-clean": "^0.5.0",
     "grunt-contrib-coffee": "^0.10.1",
     "grunt-contrib-commands": "^0.1.6",
@@ -83,7 +88,9 @@
     "grunt-contrib-translate": "0.0.1",
     "grunt-contrib-uglify": "^0.4.0",
     "grunt-contrib-watch": "^0.6.1",
+    "grunt-curl": "^2.0.2",
     "grunt-express-server": "^0.4.13",
+    "grunt-open": "^0.2.3",
     "grunt-reload": "^0.2.0",
     "grunt-shell": "^0.6.4"
   }

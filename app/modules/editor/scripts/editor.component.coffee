@@ -1,16 +1,16 @@
-angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.node', 'components'])
+angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.node'])
 
 .controller('EditorComponentCtrl', [
   '$scope'
   'Rest'
   'Editor'
   'EditorNode'
-  'Component'
   '$parse'
   '$document'
   'Globals'
+  '$timeout'
 
-  ($scope, Rest, Editor, EditorNode, Component, $parse, $document, globals) ->
+  ($scope, Rest, Editor, EditorNode, $parse, $document, globals, $timeout) ->
 
     $($document).ready(() ->
       $('[data-toggle=toolbar-offcanvas]').click(() ->
@@ -23,28 +23,33 @@ angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.n
       )
     )
 
-    require(['Component_Data'], (Component_Data) ->
+    require(['vc_global', 'vc_component'], (VCGlobal, Component) ->
 #      $scope.setOver = Editor.setOver
 #      $scope.isOver = Editor.isOver
       $scope.search = Editor.search
-      $scope.getComponent = Component_Data.getComponent
-      $scope.getComponentById = Component_Data.getComponentById
-      $scope.getComponentByName = Component_Data.getComponentByName
+      $scope.findComponent = VCGlobal.findComponent
+
+      $scope.list = () ->
+        if EditorNode.selection()
+          selected = EditorNode.selection()
+        else
+          selected = null
+        return Component.list(selected)
     )
 
-    $scope.list = () ->
-      l = []
+    $scope.showpopup = (c) ->
+      if $scope.popup
+        $timeout.cancel($scope.popup)
+      $scope.popup = $timeout(->
+        $('#component-popover_' + c._id).popover('show')
+      , 1500)
 
-      if EditorNode.selection()
-        selected = EditorNode.selection().$data
-      else
-        selected = null
-
-      if globals.Component_Data and globals.Component_Data.rest
-        for c in globals.Component_Data.rest.rows
-          if c.$data.isVisible() and (!selected or selected.component.$data.doAccept(selected.node, c))
-            l.push(c)
-      return l
+    $scope.hidepopup = (c) ->
+      if $scope.popup
+        $timeout.cancel($scope.popup)
+      $timeout(->
+        $('#component-popover_' + c._id).popover('hide')
+      , 1)
 
 #    $scope.onStart = (e, ui) ->
 #      if !Editor.drag

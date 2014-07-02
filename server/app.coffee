@@ -14,10 +14,7 @@ exts = require("./exts")
 endpoints = require("./endpoints")
 autoIncrement = require('mongoose-auto-increment')
 secure = require("node-secure")
-expressions = require("angular-expressions")
 mongoose = require('mongoose')
-Node_Data = require("./node_data")
-Component_Data = require("./component_data")
 
 logErrors = (err, req, res, next) ->
   console.error(err.stack)
@@ -209,9 +206,6 @@ exports.mongoose = mongoose
 db = mongoose.connection
 exports.db = db
 
-exports.Node_Data = Node_Data
-exports.Component_Data = Component_Data
-
 autoIncrement.initialize(mongoose.connection)
 
 models_paths = __dirname + '/models'
@@ -309,17 +303,6 @@ secure.on("insecure", (problems) ->
 secure.securePrivates(exports, {configurable: false})
 secure.secureMethods(exports, {configurable: false})
 
-safeEval = (code, errors) ->
-  try
-    e = expressions.compile(code)
-    return e()
-  catch err
-    console.log err
-    if errors?
-      errors.push(err)
-    return null
-exports.safeEval = safeEval
-
 
 app.all('/api/*', (req, res, next) ->
   if !validUser(req)
@@ -355,10 +338,5 @@ db.on('error', console.error.bind(console, 'connection error:'))
 db.once('open', () ->
   http.createServer(app).listen(app.get('port'), () ->
     console.log 'Express server listening on port ' + app.get('port')
-
-    mongoose.model('Component').components(() ->
-      mongoose.model('Node').nodes()
-    )
-
   )
 )

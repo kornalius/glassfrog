@@ -60,8 +60,11 @@ angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
           when 500
             Globals.showMessage("Server internal error: " + errorResponse.data, "alert-danger", 10000)
           else
-            if errorResponse.status? and errorResponse.data?
-              Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, "alert-danger", 10000)
+            if errorResponse.status
+              if errorResponse.data
+                Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, "alert-danger", 10000)
+              else
+                Globals.showMessage("Error " + errorResponse.status, "alert-danger", 10000)
         $q.reject(errorResponse)
       )
   )

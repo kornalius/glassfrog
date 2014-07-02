@@ -11,7 +11,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 
   $scope.test = new Rest('test')
 
-  $scope.test.fetch('53a057ffd0d6ed0000401270', ->
+  $scope.test.fetch('53a5c1429186770dd391c377', ->
 #  $scope.test.new( ->
     testForm =
       label: "Super form"

@@ -1,17 +1,15 @@
-angular.module('editor.preview', ['app.globals', 'dragdrop.service', 'editor.node', 'nodes', 'components'])
+angular.module('editor.preview', ['app.globals', 'dragdrop.service', 'editor.node'])
 
 .controller('EditorPreviewCtrl', [
   '$scope'
   'Rest'
   'Editor'
   'EditorNode'
-  'Node'
-  'Component'
   '$parse'
   '$document'
   'Globals'
 
-  ($scope, Rest, Editor, EditorNode, Node, Component, $parse, $document, globals) ->
+  ($scope, Rest, Editor, EditorNode, $parse, $document, globals) ->
 
     $($document).ready(() ->
     )
@@ -22,8 +20,5 @@ angular.module('editor.preview', ['app.globals', 'dragdrop.service', 'editor.nod
     $scope.close = () ->
 
     $scope.preview = () ->
-      require(['Node_Data', 'Component_Data'], (Node_Data, Component_Data) ->
-
-      )
 
 ])

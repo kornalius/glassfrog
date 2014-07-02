@@ -1,6 +1,5 @@
 mongoose = require("../app").mongoose
 timestamps = require('mongoose-time')()
-findOrCreate = require('mongoose-findorcreate')
 Currency = require('mongoose-currency')
 User = require('./user')
 
@@ -56,7 +55,6 @@ PlanSchema = mongoose.Schema(
 )
 
 PlanSchema.plugin(timestamps)
-PlanSchema.plugin(findOrCreate)
 
 PlanSchema.method(
 

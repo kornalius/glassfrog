@@ -6,6 +6,7 @@ payment = require('../mongoose_plugins/mongoose-payment')
 async = require('async')
 bcrypt = require('bcrypt')
 endpoints = require('../endpoints')
+safejson = require('safejson')
 
 UserSchema = mongoose.Schema(
   username:
@@ -140,12 +141,6 @@ UserSchema = mongoose.Schema(
   data:
     type: String
     label: 'JSON custom data'
-
-  root:
-    type: mongoose.Schema.ObjectId
-    ref: 'Node'
-    label: 'Root node'
-    readOnly: true
 
   roles:
     type: [
@@ -378,76 +373,85 @@ UserSchema.method(
   getData: (key) ->
     if !@data?
       @data = '{}'
-    JSON.parse(@data)[key]
+    safejson.parse(@data)[key]
 
   setData: (key, value) ->
     if !@data?
       @data = '{}'
-    j = JSON.parse(@data)
+    j = safejson.parse(@data)
     j[key] = value
-    @data = JSON.stringify(j)
-    @save()
-
-  getRootNode: (cb) ->
-    id = @root
-    mongoose.model('Node').findById(id, (err, n) ->
-      cb(n) if cb
-    )
-
-  getSchemas: (cb) ->
-    @getRootNode((root) ->
-      s = null
-      if root
-        s = root.childrenOfKind('Schema', true)
-      cb(s) if cb
-    )
-
-  generate: (nodes, cb) ->
-    s = ""
-    errors = []
-    async.eachSeries(nodes, (n, callback) ->
-      ok = true
-      name = n.name.toLowerCase()
-      for m in mongoose.models
-        if m.name.toLowerCase() == name
-          ok = false
-      if !ok
-        errors = new Error(n.name + ' is a reserved schema name')
-      if ok and n.component?
-        n.component.getServerCode((sc) ->
-          if sc
-            sc = app.safeEval(sc, errors)
-            if sc and sc.generate
-              s += sc.generate.call(n)
-          callback()
-        )
+    that = @
+    safejson.stringify(j, (err, json) ->
+      if !err
+        that.data = json
+        that.save()
       else
-        callback()
-    , (err) ->
-      cb(s, errors) if cb
+        throw err
     )
 
-  generateAllSchemas: (cb) ->
-    errors = []
+  modules: (cb) ->
+    that = @
+    r = []
+    mongoose.model('Module').find({owner_id: that.id}, (err, modules) ->
+      if modules
+        for m in modules
+          r.push(m)
 
-    @getConnection((plan, c, prefix) ->
-      schemas = @getSchemas()
-      async.eachSeries(schemas, (n, callback) ->
-        @generate([n], (schema, err) ->
-          if err
-            errors.concat(err)
-          if schema?
-            m = c.model(prefix + n.name, JSON.parse(schema))
-            if m
-              endpoints.register(name)
-          callback()
-        )
-      , (err) ->
-        if err
-          errors.push(err)
-        cb(schemas, errors) if cb
+      mongoose.model('Share').find({ $and: [{'users.user': that.id}, {'users.state': 'active'}] }).populate('module').exec((err, shares) ->
+        if shares
+          for s in shares
+            r.push(s.module)
+
+        cb(r) if cb
       )
     )
+
+#  generate: (nodes, cb) ->
+#    s = ""
+#    errors = []
+#    async.eachSeries(nodes, (n, callback) ->
+#      ok = true
+#      name = n.name.toLowerCase()
+#      for m in mongoose.models
+#        if m.name.toLowerCase() == name
+#          ok = false
+#      if !ok
+#        errors = new Error(n.name + ' is a reserved schema name')
+#      if ok and n.component?
+#        n.component.getServerCode((sc) ->
+#          if sc
+#            sc = app.safeEval(sc, errors)
+#            if sc and sc.generate
+#              s += sc.generate.call(n)
+#          callback()
+#        )
+#      else
+#        callback()
+#    , (err) ->
+#      cb(s, errors) if cb
+#    )
+#
+#  generateAllSchemas: (cb) ->
+#    errors = []
+#
+#    @getConnection((plan, c, prefix) ->
+#      schemas = @getSchemas()
+#      async.eachSeries(schemas, (n, callback) ->
+#        @generate([n], (schema, err) ->
+#          if err
+#            errors.concat(err)
+#          if schema?
+#            m = c.model(prefix + n.name, JSON.parse(schema))
+#            if m
+#              endpoints.register(name)
+#          callback()
+#        )
+#      , (err) ->
+#        if err
+#          errors.push(err)
+#        cb(schemas, errors) if cb
+#      )
+#    )
 
   getConnection: (cb) ->
     @populate('plan', (plan) ->

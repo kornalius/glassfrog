@@ -45,6 +45,7 @@
     "angular-webstorage": "~0.10.3",
     "jquery-switchbutton": "*",
     "angular-bootstrap": "~0.11.0",
-    "multiselect": "~0.9.11"
+    "multiselect": "~0.9.11",
+    "safejson": "~1.0.0"
   }
 }
