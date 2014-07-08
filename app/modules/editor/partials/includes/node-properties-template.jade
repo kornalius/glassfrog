@@ -1,7 +1,0 @@
-td.node-properties(colspan="2", id="node-properties_{{n.id()}}", ng-init="properties = n.getProperties(true)")
-
-  table(width="99%")
-
-    tr.node-property(id="node-property_{{np.id()}}", ng-repeat="np in properties", ng-model="np", droppable)
-
-      include node-property-template
