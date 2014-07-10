@@ -305,7 +305,10 @@ module.exports = (grunt) ->
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
             'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
             'bower_components/multiselect/js/jquery.multi-select.js'
-            'bower_components/angular-ui-tree/dist/angular-ui-tree.js'
+            'bower_components/angular-form-builder/dist/angular-form-builder.js'
+            'bower_components/angular-form-builder/dist/angular-form-builder-components.js'
+            'bower_components/angular-tree-repeat/angular-tree-repeat.js'
+            'bower_components/ng-contenteditable/dist/ng-contenteditable.js'
             'bower_components/angular-filters/dist/angular-filters.js'
             'bower_components/angular-lodash/angular-lodash.js'
             'bower_components/angular-underscore-string/angular-underscore-string.js'
@@ -338,7 +341,7 @@ module.exports = (grunt) ->
             'bower_components/angular-ui/build/angular-ui.css'
             'bower_components/jquery-switchbutton/jquery.switchButton.css'
             'bower_components/multiselect/css/multi-select.css'
-            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.css'
+            'bower_components/angular-form-builder/dist/angular-form-builder.css'
           ]
           dest: out_dev + 'css/vendor.css'
         ]
@@ -372,7 +375,10 @@ module.exports = (grunt) ->
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
             'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'
             'bower_components/multiselect/js/jquery.multi-select.js'
-            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.js'
+            'bower_components/angular-form-builder/dist/angular-form-builder.min.js'
+            'bower_components/angular-form-builder/dist/angular-form-builder-components.min.js'
+            'bower_components/angular-tree-repeat/angular-tree-repeat.min.js'
+            'bower_components/ng-contenteditable/dist/ng-contenteditable.min.js'
             'bower_components/angular-filters/dist/angular-filters.min.js'
             'bower_components/angular-lodash/angular-lodash.js'
             'bower_components/angular-underscore-string/angular-underscore-string.js'
@@ -405,7 +411,7 @@ module.exports = (grunt) ->
             'bower_components/angular-ui/build/angular-ui.min.css'
             'bower_components/jquery-switchbutton/jquery.switchButton.css'
             'bower_components/multiselect/css/multi-select.css'
-            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.css'
+            'bower_components/angular-form-builder/dist/angular-form-builder.css'
           ]
           dest: out + 'css/vendor.css'
         ]

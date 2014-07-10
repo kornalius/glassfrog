@@ -4,6 +4,38 @@
 
 .node-line {
   vertical-align: middle;
+  background-color: none;
+}
+
+ul.tree {
+  list-style-type: none;
+}
+
+li.tree {
+  list-style-type: none;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}
+
+.tree-drag {
+  padding: 16px;
+  z-index: 999;
+}
+
+.tree-drag .node {
+  opacity: .8;
+  -webkit-transform: rotate(1.5deg);
+  -moz-transform: rotate(1.5deg);
+  -o-transform: rotate(1.5deg);
+  -ms-transform: rotate(1.5deg);
+  transform: rotate(1.5deg);
+}
+
+.tree-drag-over {
+  background-color: @gray-lighter;
+  opacity: .75;
+//  border: 1px dotted whitesmoke;
+  border-radius: @border-radius-base;
 }
 
 .node {
@@ -23,6 +55,8 @@
 //  padding-left: 4px;
 //  padding-right: 8px;
   text-align: center;
+  width: 24px;
+  min-width: 24px;
 }
 
 .node-icon {
@@ -216,76 +250,4 @@
 #editor-toolbar > span > ul > li > a {
   margin: 0px !important;
   padding: 2px 2px !important;
-}
-
-.nodes .angular-ui-tree {
-
-}
-
-.nodes .angular-ui-tree-empty {
-  border: none !important;
-  min-height: 100px;
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-.nodes .angular-ui-tree-nodes {
-  display: block;
-  position: relative;
-  margin: 0px;
-  padding: 0px;
-  list-style: none;
-}
-
-.nodes .angular-ui-tree-nodes .angular-ui-tree-nodes {
-  padding-left: 20px !important;
-}
-
-.nodes .angular-ui-tree-node, .nodes .angular-ui-tree-placeholder {
-  display: block;
-  position: relative;
-  background-color: transparent;
-  margin: 0 !important;
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-  padding-top: 1px !important;
-  padding-bottom: 1px !important;
-  min-width: @node-width !important;
-  width: @node-width !important;
-  min-height: @node-height !important;
-  line-height: @node-height !important;
-}
-
-.nodes .angular-ui-tree-hidden {
-  display: none;
-}
-
-.nodes .angular-ui-tree-placeholder {
-  margin: 5px 0px 5px 32px !important;
-  padding: 0px;
-  background-color: #d4d4d4;
-  opacity: 0.5;
-  border-radius: @border-radius-base;
-  border: thin dashed black;
-}
-
-.nodes .angular-ui-tree-handle {
-  cursor: pointer;
-  text-decoration: none !important;
-  font-weight: normal !important;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-
-.angular-ui-tree-drag {
-  position: absolute;
-  pointer-events: none;
-  z-index: 999;
-  opacity: .8;
-  -webkit-transform: rotate(2.5deg);
-  -moz-transform: rotate(2.5deg);
-  -o-transform: rotate(2.5deg);
-  -ms-transform: rotate(2.5deg);
-  transform: rotate(2.5deg);
 }

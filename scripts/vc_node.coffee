@@ -193,41 +193,21 @@ NodeClass =
         return scope
       return null
 
-    n.isOpened = () ->
-      scope = @scope()
-      if scope
-        return !scope.collapsed
-      else
-        return @hasState('o')
+    n.isExpanded = () ->
+      return @hasState('o')
 
-    n.isClosed = () ->
-      scope = @scope()
-      if scope
-        return scope.collapsed
-      else
-        return !@hasState('o')
+    n.isCollapsed = () ->
+      return !@hasState('o')
 
-    n.open = (recursive) ->
+    n.expand = (recursive) ->
       @addState('o')
-      scope = @scope()
-      if scope
-        if recursive
-          scope.expandAll()
-        else
-          scope.expand()
       if recursive
-        @foreachChild((n) -> @open(true))
+        @foreachChild((n) -> @expand(true))
 
-    n.close = (recursive) ->
+    n.collapse = (recursive) ->
       @delState('o')
-      scope = @scope()
-      if scope
-        if recursive
-          scope.collapseAll()
-        else
-          scope.collapse()
       if recursive
-        @foreachChild((n) -> @close(true))
+        @foreachChild((n) -> @collapse(true))
 
     n.isModified = () ->
       @hasState('m')

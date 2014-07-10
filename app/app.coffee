@@ -46,7 +46,9 @@ app = angular.module('app', [
   'ui.config'
   'ui.directives'
   'ui.filters'
-  'ui.tree'
+  'angular.treerepeat'
+  'ContentEditable'
+  'builder.controller'
 
   'pagination.services'
 
