@@ -2,14 +2,10 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
 .factory('EditorNode', [
   'Editor'
+  'EditorComponent'
   '$timeout'
-  'Globals'
-  '$http'
-  'dynForm'
-  'dynModal'
-  '$rootScope'
 
-  (Editor, $timeout, globals, $http, dynForm, dynModal, $rootScope) ->
+  (Editor, EditorComponent, $timeout) ->
     currentEdit: null
     expandOver: null
     toolIconOver: null
@@ -73,21 +69,32 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 #          )
 
 
+    refreshComponents: (selected) ->
+      EditorComponent.refresh(selected)
+
+    refresh: () ->
+
     module: () ->
       Editor.module
 
     clearSelection: () ->
-      @selected = null
+      @setSelection(null)
 
     setSelection: (n) ->
       that = @
       require(['vc_global'], (VCGlobal) ->
-        that.clearSelection()
+        n = VCGlobal.findNode(Editor.module, n)
+        that.selected = n
+
         if n
-          n = VCGlobal.findNode(n)
-          if n
-            that.selected = n
-            n.makeVisible()
+          that.makeVisible(n)
+        else if Editor.module
+          n = Editor.module.getRoot()
+
+        that.refreshComponents(n)
+
+        if n and n.scope()
+          n.scope().$apply()
       )
 
     selection: () ->
@@ -108,44 +115,8 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     setExpandOver: (n) ->
       @expandOver = n
 
-    getWidth: (n) ->
-      w = 100
-      n.foreachProperty(true, (p) ->
-        w += p.width()
-      )
-      return w
-
-    getHeight: (n, recursive) ->
-      h = 24
-      if recursive
-        n.foreachChild((n) ->
-          h += n.height(true)
-        )
-      n.foreachProperty(true, (p) ->
-        h += p.height(recursive)
-      )
-      return h
-
-    toggleExpandCollapse: (n, all) ->
-      if n.isClosed()
-        @expand(n, all)
-      else
-        @collapse(n, all)
-
-    expand: (n, all) ->
-      n.open(all)
-
-    expandAll: (n) ->
-      @expand(n, true)
-
-    collapse: (n, all) ->
-      n.close(all)
-
-    collapseAll: (n) ->
-      @collapse(n, true)
-
     nodeElement: (n) ->
-      angular.element('#node-element_' + n.id())
+      n.element()
 
     labelElement: (n) ->
       angular.element('#node-label_' + n.id())
@@ -157,26 +128,33 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       angular.element('#node-attributes_' + n.id())
 
     canEdit: (n) ->
-      if n and n.$data.isNode
+      if n and n.$data and n.$data.isNode
         return n.canEdit()
       else
         return false
 
-    editOptions: (n) ->
+    hasEnum: (n) ->
+      n.hasEnum()
+
+    getEnum: (n) ->
       l = []
-      m = n.module().getRoot()
-      cc = n.getComponent()
-      if m and cc and cc.valueKind()
-        nl = m.childrenOfKind(cc.valueKind().name, true)
-        for nn in nl
+      x = 0
+      for nn in n.getEnum()
+        if nn and nn.$data and nn.$data.isNode
+          l.push({ id: nn.id(), text: nn.getPath(true) })
+        else if nn and nn.$data and nn.$data.isComponent
           l.push({ id: nn.id(), text: nn.name })
+        else if nn and nn.$data and nn.$data.isModule
+          l.push({ id: nn.id(), text: nn.name })
+        else if typeof nn is 'string'
+          l.push({ id: x++, text: nn })
       return l
 
     edit: (n) ->
       if @canEdit(n)
         @currentEdit = n
         @oldEditValue = n.name
-        if n.isValueKind()
+        if n.hasEnum()
           i = angular.element('#node-select_' + n.id())
           if i
             i.select2('data', { id: n.id(), text: n.name })
@@ -191,13 +169,16 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
           , 100)
 
     saveEdit: () ->
-#      if @isValueKind()
-#        if @id
-#          @node.name = @node.name.id
-#        @setLink(@id())
       n = @currentEdit
-      if n
-        n.setModified(@oldEditValue != n.name)
+      if n and @oldEditValue and @oldEditValue != n.name
+        if n.hasEnum() and typeof n.name != 'string'
+          id = n.name.id
+          n.name = null
+          require(['vc_global'], (VCGlobal) ->
+            n.setLink(id)
+          )
+        else
+          n.setName(n.name)
       @currentEdit = null
       @oldEditValue = null
 
@@ -214,11 +195,11 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     makeVisible: (n) ->
       p = n.getParent()
       while p
-        p.expand()
+        p.open()
         p = p.getParent()
 
     copy: (n) ->
-#     @clipboard = angular.copy(@)
+#     @clipboard = _.cloneDeep(@)
 
     cut: (n) ->
 #      @copy()
@@ -320,8 +301,57 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
   'dynForm'
   'dynModal'
   '$rootScope'
+  '$timeout'
 
-  ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope) ->
+  ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope, $timeout) ->
+
+    $scope.treeOptions =
+      accept: (sourceNodeScope, destNodesScope, destIndex) ->
+        s = sourceNodeScope.$modelValue
+        t = destNodesScope.$nodeScope
+        if t
+          p = t.$modelValue
+        else if Editor.module
+          p = Editor.module.getRoot()
+        else
+          p = null
+
+        ok = false
+        if p and p.$data and p.$data.isNode and s and s.$data
+          if s.$data.isComponent
+            ok = p.getComponent().doAccept(null, s)
+          else
+            ok = p.getComponent().doAccept(s, s.getComponent())
+
+        return Editor.module and ok
+
+      beforeDrag: (sourceNodeScope) ->
+        return true
+
+      dropped: (event) ->
+        n = event.source.nodeScope.$modelValue
+        if n and n.$data and Editor.module
+          d = event.dest.nodesScope.$nodeScope
+          if d and d.$data and d.$data.isNode
+            p = d.$modelValue
+          else if !d
+            p = Editor.module.getRoot()
+          else
+            p = null
+
+          if n.$data._parent != p
+            if n.$data._parent and n.$data._parent.$data
+              n.$data._parent.setModified(true)
+            n.$data._parent = p
+            n.setModified(true)
+
+      dragStart: (event) ->
+
+      dragMove: (event) ->
+
+      dragStop: (event) ->
+
+      beforeDrop: (event) ->
 
     $scope.module = () ->
       EditorNode.module()
@@ -347,21 +377,6 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.setExpandOver = (n) ->
       EditorNode.setExpandOver(n)
 
-    $scope.toggleExpandCollapse = (n, all) ->
-      EditorNode.toggleExpandCollapse(n, all)
-
-    $scope.expand = (n, all) ->
-      EditorNode.expand(n, all)
-
-    $scope.expandAll = (n) ->
-      EditorNode.expandAll(n)
-
-    $scope.collapse = (n, all) ->
-      EditorNode.collapse(n, all)
-
-    $scope.collapseAll = (n) ->
-      EditorNode.collapseAll(n)
-
     $scope.nodeElement = (n) ->
       EditorNode.nodeElement(n)
 
@@ -377,8 +392,11 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.canEdit = (n) ->
       EditorNode.canEdit(n)
 
-    $scope.editOptions = (n) ->
-      EditorNode.editOptions(n)
+    $scope.hasEnum = (n) ->
+      EditorNode.hasEnum(n)
+
+    $scope.getEnum = (n) ->
+      EditorNode.getEnum(n)
 
     $scope.edit = (n) ->
       EditorNode.edit(n)
@@ -403,6 +421,9 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.paste = (n) ->
       EditorNode.paste(n)
+
+    $scope.refresh = (selected) ->
+      EditorNode.refresh(selected)
 
     #    $scope.save = (cb) ->
     #      require(['async'], (async) ->
@@ -455,12 +476,6 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
         )
       )
 
-    $scope.refresh = (cb) ->
-      EditorNode.refresh(cb)
-
-    $scope.rebuild = (cb) ->
-      EditorNode.rebuild(cb)
-
     $scope.keyup = ($event) ->
       if @n and @isEditing(@n)
         if $event.keyCode == 13
@@ -469,79 +484,14 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
           @cancelEdit(@n)
 ])
 
-.controller('EditorNodePropertyCtrl', [
-  '$scope'
-  'Rest'
-  'Editor'
-  'EditorNode'
-  'Globals'
-  'dynForm'
-  'dynModal'
-  '$rootScope'
+.directive('renderNode', [
+  '$parse'
 
-  ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope) ->
+  ($parse) ->
+    restrict: 'A'
 
-    $scope.setOver = (n) ->
-      EditorNode.setOver(n)
-
-    $scope.isOver = (n) ->
-      EditorNode.isOver(n)
-
-    $scope.clearSelection = () ->
-      EditorNode.clearSelection()
-
-    $scope.setSelection = (n) ->
-      EditorNode.setSelection(n)
-
-    $scope.isSelection = (n) ->
-      EditorNode.isSelection(n)
-
-    $scope.isExpandOver = (n) ->
-      EditorNode.isExpandOver(n)
-
-    $scope.setExpandOver = (n) ->
-      EditorNode.setExpandOver(n)
-
-    $scope.toggleExpandCollapse = (n, all) ->
-      EditorNode.toggleExpandCollapse(n, all)
-
-    $scope.expand = (n, all) ->
-      EditorNode.expand(n, all)
-
-    $scope.expandAll = (n) ->
-      EditorNode.expandAll(n)
-
-    $scope.collapse = (n, all) ->
-      EditorNode.collapse(n, all)
-
-    $scope.collapseAll = (n) ->
-      EditorNode.collapseAll(n)
-
-    $scope.canEdit = (n) ->
-      EditorNode.canEdit(n)
-
-    $scope.editOptions = (n) ->
-      EditorNode.editOptions(n)
-
-    $scope.edit = (n) ->
-      EditorNode.edit(n)
-
-    $scope.saveEdit = () ->
-      EditorNode.saveEdit()
-
-    $scope.cancelEdit = () ->
-      EditorNode.cancelEdit()
-
-    $scope.isEditing = (n) ->
-      EditorNode.isEditing(n)
-
-    $scope.makeVisible = (n) ->
-      EditorNode.makeVisible(n)
-
-    $scope.keyup = ($event) ->
-      if @n and @isEditing(@n)
-        if $event.keyCode == 13
-          @saveEdit(@n)
-        else if $event.keyCode == 27
-          @cancelEdit(@n)
+    link: (scope, element, attrs) ->
+      n = $parse(attrs.renderNode)(scope)
+      if n
+        n.doRender()
 ])

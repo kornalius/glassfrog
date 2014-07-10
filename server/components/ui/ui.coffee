@@ -14,7 +14,7 @@ module.exports = [
     inherit: 'UI'
     icon: 'canvasrulers'
     accepts: ['View', 'Menubar']
-    default_children: 'View, Menubar'
+    default_children: ['View', 'Menubar']
     color: 'lightpurple'
 ,
 
@@ -24,7 +24,7 @@ module.exports = [
     inherit: 'UI'
     icon: 'article2'
     accepts: ['Control']
-    default_children: 'Label'
+    default_children: ['Label']
     color: 'blue'
 
 ]

@@ -7,28 +7,35 @@
       span.icon-bar
 
     a.navbar-brand.proper(href='/')
-      span.cic.cic-home42
       | &nbsp;Glassfrog
 
   nav.collapse.navbar-collapse
 
     ul.nav.navbar-nav(ng-repeat="m in navs()")
       li(ui-sref-active="active")
-        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}") {{"nav." + m.name | i18next}}
+        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden") {{"nav." + m.name | i18next}}
 
     ul.nav.navbar-nav.navbar-right
       li.dropdown
         a.dropdown-toggle(data-toggle="dropdown")
           span.cic.cic-user32(style="font-size: 18px;")
+
         ul.dropdown-menu
-          li
-            a.navbar-link(ui-sref="user.profile")
-              span.cic.cic-user32
-              | &nbsp;Profile
-          li
-            a.navbar-link(href='/logout')
-              span.cic.cic-signout
-              | &nbsp;Sign Out
+          li: a.navbar-link(ui-sref="user.profile")
+            span.cic.cic-user32
+            | &nbsp;Profile
+
+          li.divider
+
+          li: a.navbar-link(ui-sref="editor")
+            span.cic.cic-tools2
+            | &nbsp;Visual Editor
+
+          li.divider
+
+          li: a.navbar-link(href='/logout')
+            span.cic.cic-signout
+            | &nbsp;Sign Out
 
 //form.navbar-form.navbar-right(role='search')
 //  .form-group

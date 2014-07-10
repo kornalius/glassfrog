@@ -66,16 +66,25 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
           else if dft['field']
             f += dft['field']
 
+          prevCol = null
+
           fieldsTemplate = ""
           if form.fields.length > 0
             for fieldIndex in [0..form.fields.length - 1]
               field = dynForm.populateField(form, form.fields[fieldIndex])
+
+              if field.column? or field.column_xs? or field.column_sm? or field.column_md? or field.column_lg?
+                if prevCol
+                  fieldsTemplate += '</div>\n</div>\n'
+                fieldsTemplate += '<div class="col ' + field.getColClass() + '">\n<div class="column-back">\n'
+                prevCol = field
 
               if field.type == 'subform'
                 t = f
                 subform = dynForm.populateForm(field.subform)
                 field.subform = subform
                 t = t.replace(/\<\!-- \<input\>--\>/g, generate(subform) + '\n')
+
               else
                 t = ""
                 if field.autolabel
@@ -93,6 +102,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
                 rr = '<div ng-controller="dynFormObjectCtrl">\n<!-- <fields>-->\n</div>'
               t = t.replace(/fieldIndex/g, fieldIndex.toString())
               fieldsTemplate += rr.replace(/\<\!-- \<fields\>--\>/g, t + '\n')
+
+            if prevCol
+              fieldsTemplate += '</div>\n</div>\n'
 
           return template.replace(/\<\!-- \<row\>--\>/g, fieldsTemplate)
 
@@ -112,6 +124,41 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
     populateForm: (form) ->
       form = _.clone(form, true)
       form.model = null
+
+      navButtons1 = [
+        icon: 'double-angle-left'
+        url: ''
+      ,
+        icon: 'angle-left'
+        url: ''
+      ]
+
+      navButtons2 = [
+        icon: 'angle-right'
+        url: ''
+      ,
+        icon: 'double-angle-right'
+        url: ''
+      ]
+
+      nav = false
+      fb = []
+      if form.buttons
+        for b in form.buttons
+          if typeof b is 'string'
+            if b.toLowerCase() == 'nav'
+              nav = true
+            if b.toLowerCase() == 'edit'
+              fb.push({ icon: 'pencil', url: 'edit' })
+            else if b.toLowerCase() == 'add'
+              fb.push({ icon: 'plus32', url: 'add' })
+            else if b.toLowerCase() == 'delete'
+              fb.push({ icon: 'trash3', url: 'delete' })
+          else
+            fb.push(b)
+      form.buttons = fb
+      if nav
+        form.buttons = navButtons1.concat(form.buttons).concat(navButtons2)
 
       if form.layout.type != 'display'
         if form.editMode == undefined
@@ -177,33 +224,62 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
         return @form.domName() + '_' + type + '_' + @fieldname + '_' + idx + '_id'
 
       field.getLabelClass = () ->
-        return 'col-sm-3 col-md-3 col-lg-2'
+        if @input?
+          xs = @input
+          sm = @input
+          md = @input
+          lg = @input
 
-      field.getColClass = () ->
-        if @col?
-          xs = @col
-          sm = @col
-          md = @col
-          lg = @col
+        else
+          xs = 3
+          sm = 3
+          md = 3
+          lg = 2
+
+        if @input_xs?
+          xs = @input_xs
+        if @input_sm?
+          sm = @input_sm
+        if @input_md?
+          md = @input_md
+        if @input_lg?
+          lg = @input_lg
+
+        c = []
+        c.push('col-xs-{0}'.format(xs)) if xs
+        c.push('col-sm-{0}'.format(sm)) if sm
+        c.push('col-md-{0}'.format(md)) if md
+        c.push('col-lg-{0}'.format(lg)) if lg
+
+        return c.join(' ')
+
+      field.getInputClass = () ->
+        if @input?
+          xs = @input
+          sm = @input
+          md = @input
+          lg = @input
+
         else if @type == 'subform' or !@autolabel
           xs = 12
           sm = 12
           md = 12
           lg = 12
+
         else
           xs = 0
           sm = 9
           md = 9
           lg = 10
 
-        if @col_xs?
-          xs = @col_xs
-        if @col_sm?
-          sm = @col_sm
-        if @col_md?
-          md = @col_md
-        if @col_lg?
-          lg = @col_lg
+        if @input_xs?
+          xs = @input_xs
+        if @input_sm?
+          sm = @input_sm
+        if @input_md?
+          md = @input_md
+        if @input_lg?
+          lg = @input_lg
 
         c = []
 
@@ -213,6 +289,36 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
         if @type == 'caption'
           c.push('text-center')
 
+        c.push('col-xs-{0}'.format(xs)) if xs
+        c.push('col-sm-{0}'.format(sm)) if sm
+        c.push('col-md-{0}'.format(md)) if md
+        c.push('col-lg-{0}'.format(lg)) if lg
+
+        return c.join(' ')
+
+      field.getColClass = () ->
+        if @column?
+          xs = @column
+          sm = @column
+          md = @column
+          lg = @column
+
+        else
+          xs = 6
+          sm = 6
+          md = 6
+          lg = 6
+
+        if @column_xs?
+          xs = @column_xs
+        if @column_sm?
+          sm = @column_sm
+        if @column_md?
+          md = @column_md
+        if @column_lg?
+          lg = @column_lg
+
+        c = []
         c.push('col-xs-{0}'.format(xs)) if xs
         c.push('col-sm-{0}'.format(sm)) if sm
         c.push('col-md-{0}'.format(md)) if md
@@ -844,7 +950,6 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
         $scope.modalCancel = () ->
           $modalInstance.dismiss()
 
-
       modalTemplate =
         '<div ng-controller="dynModalCtrl">' +
         '  <div class="modal-header">' +
@@ -935,7 +1040,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
       formDefinition =
         label: title
         name: "modalForm"
-        size: 'sm'
+        size: 'md'
         layout: {type: 'modal', style: 'horizontal'}
         buttons: ['YES', 'NO']
         autolabel: false
@@ -1097,7 +1202,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
 
 #    $scope.$on('updateInput', ->
 #      f = $scope.f
-#      f.input = angular.copy(f.row[f.field.model])
+#      f.input = _.cloneDeep(f.row[f.field.model])
 #    )
 #
 #    $scope.$watch('f.input', (newValue, oldValue) ->

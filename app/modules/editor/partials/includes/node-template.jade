@@ -1,26 +1,28 @@
-.dropzone(id="dropzone_{{n.id()}}")
+table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
 
-li(id="node-line_{{n.id()}}", style="padding-left: {{24 * (n.level() - 1)}}px")
+  td(style="min-width: 32px;")
 
-  table(id="node-tile_{{n.id()}}", ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
+    a.btn.btn-xs(type="button", ng-click="toggle()", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", style="margin: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important;")
+      //ng-click="toggleExpandCollapse(n, $event.altKey); $event.stopPropagation();"
+      span.node-expand.cic(ng-class="{ 'cic-arrow-right8': collapsed, 'cic-arrow-down8': !collapsed, 'node-expand-highlighted': isExpandOver(n)}", style="font-size: 21px;")
 
-    tr
+  td
 
-      td(id="node-expand-icon-col_{{n.id()}}", width="24px")
-        span.node-expand.cic(id="node-expand-icon_{{n.id()}}", ng-show="n.hasChildren()", ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'node-expand-highlighted': isExpandOver(n)}", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="toggleExpandCollapse(n, $event.altKey); $event.stopPropagation();", style="font-size: 21px;")
+    div(ui-tree-handle)
 
-      td
+      table.node(id="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="toggleExpandCollapse(n); $event.stopPropagation();", ng-class="{ 'node-highlighted': isOver(n) && !isSelection(n), 'node-selected': isSelection(n) && !isOver(n), 'node-selected-highlighted': isSelection(n) && isOver(n) }", ng-model="n", render-node="n")
 
-        table.node(id="node-element_{{n.id()}}", draggable, droppable, ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="toggleExpandCollapse(n); $event.stopPropagation();", ng-class="{ 'node-highlighted': isOver(n) && !isSelection(n), 'node-selected': isSelection(n) && !isOver(n), 'node-selected-highlighted': isSelected(n) && isOver(n) }", ng-model="n", style="min-width: {{n.getWidth();}}px; min-height: {{n.getHeight(true);}}px;")
+        include node-color-template
 
-          tr
+        include node-label-template
 
-            include node-color-template
+        include node-modified-template
 
-            include node-label-template
+  include node-menu-template
 
-            include node-modified-template
 
-            span(ng-show="n.doRender(); return(true);")
+//ul(ng-if="!n.collapsed && n.hasChildren()", frang-tree-insert-children="n.children()")
 
-        include node-menu-template
+ol(ui-tree-nodes="", ng-model="n.nodes", ng-class="{hidden: collapsed}")
+  li(ng-repeat="n in n.nodes", ui-tree-node, data-collapsed, ng-include="'/partials/node-template.html'")
+

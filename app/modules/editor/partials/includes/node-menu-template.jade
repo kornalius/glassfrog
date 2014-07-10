@@ -1,42 +1,65 @@
-td.tool-menu.node-tool-menu-col(id="node-tool-menu-col_{{n.id()}}", style="padding-left: 8px;")
+td.node-button-menu.node-tool-menu-col(id="node-tool-menu-col_{{n.id()}}", style="padding-left: 8px;")
 
   .btn-group(ng-show="isOver(n)")
-    button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.remove()", ng-hide="n._system")
-      span.tool-icon.cic.cic-trashcan2(style="font-size: 16px;")
-    button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.copy()")
-      span.tool-icon.cic.cic-copy(style="font-size: 16px;")
-    button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.cut()", ng-hide="n._system")
-      span.tool-icon.cic.cic-cut(style="font-size: 16px;")
-    button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.paste()")
-      span.tool-icon.cic.cic-paste(style="font-size: 16px;")
-    button.btn.btn-default.btn-sm(type="button", ng-click="n.$data.share()", ng-hide="!n.$data.canShare()")
-      span.tool-icon.cic.cic-cloud32(style="font-size: 16px;")
-    button.btn.btn-default.btn-sm.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}")
-      span.tool-icon.cic.cic-menu23(style="font-size: 16px;")
 
-    ul.dropdown-menu(id="node-menu", role="menu")
-      li(id="node-menu-generate")
-        a(href="", ng-click="n.$data.generate()")
-          span.text-muted.cic.cic-code2(style="font-size: 14px; margin-right: 8px;")
+    button.btn.btn-sm.node-button-item(type="button", ng-click="n.$data.remove()", ng-hide="n._system")
+      span.node-button-icon.cic.cic-trashcan2
+
+    button.btn.btn-sm.node-button-item.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}")
+      span.node-button-icon.cic.cic-menu23
+
+
+    ul.dropdown-menu.node-menu(id="node-menu", role="menu")
+
+      li.node-menu-item(id="node-menu-copy")
+        a(href="", ng-click="copy(n)")
+          span.node-menu-icon.cic.cic-copy
+          | Copy
+
+      li.node-menu-item(id="node-menu-cut")
+        a(href="", ng-click="cut(n)", ng-hide="n._system")
+          span.node-menu-icon.cic.cic-cut
+          | Cut
+
+      li.node-menu-item(id="node-menu-paste")
+        a(href="", ng-click="paste(n)")
+          span.node-menu-icon.cic.cic-paste
+          | Paste
+
+      li.divider(ng-hide="!n.canShare()")
+
+      li.node-menu-item(id="node-menu-share")
+        a(href="", ng-click="share(n)", ng-hide="!n.canShare()")
+          span.node-menu-icon.cic.cic-cloud32
+          | Share...
+
+      li.divider
+
+      li.node-menu-item(id="node-menu-generate")
+        a(href="", ng-click="n.generate()")
+          span.node-menu-icon.cic.cic-code2
           | Generate code...
-      li.divider
-      li(id="node-menu-moveUp")
-        a(href="", ng-click="n.$data.moveUp()")
-          span.text-muted.cic.cic-uniF48A(style="font-size: 14px; margin-right: 8px;")
-          | Move up
-      li(id="node-menu-moveDown")
-        a(href="", ng-click="n.$data.moveDown()")
-          span.text-muted.cic.cic-uniF48B(style="font-size: 14px; margin-right: 8px;")
-          | Move down
-      li.divider
-      li(id="node-menu-expandAll")
-        a(href="", ng-click="expandAll(n)")
-          span.text-muted.cic.cic-plus32(style="font-size: 14px; margin-right: 8px;")
-          | Expand All
-      li(id="node-menu-collapseAll")
-        a(href="", ng-click="collapseAll(n)")
-          span.text-muted.cic.cic-minus42(style="font-size: 14px; margin-right: 8px;")
-          | Collapse All
 
-  //.dropzone(ng-show="$last", style="margin-left: 32px;")
-  span(ng-init="n.$data.render()")
+      li.divider
+
+      li.node-menu-item(id="node-menu-moveUp")
+        a(href="", ng-click="moveUp(n)")
+          span.node-menu-icon.cic.cic-uniF48A
+          | Move up
+
+      li.node-menu-item(id="node-menu-moveDown")
+        a(href="", ng-click="moveDown(n)")
+          span.node-menu-icon.cic.cic-uniF48B
+          | Move down
+
+      li.divider
+
+      li.node-menu-item(id="node-menu-expandAll")
+        a(href="", ng-click="expandAll(n)")
+          span.node-menu-icon.cic.cic-plus32
+          | Expand All
+
+      li.node-menu-item(id="node-menu-collapseAll")
+        a(href="", ng-click="collapseAll(n)")
+          span.node-menu-icon.cic.cic-minus42
+          | Collapse All

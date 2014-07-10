@@ -8,17 +8,13 @@ td
 
       td.node-label-col(id="node-label-col_{{n.id()}}", ng-click="edit(n); $event.stopPropagation();")
 
-        .node-label(id="node-label_{{n.id()}}", ng-show="!isEditing(n) || !canEdit(n)") {{n.displayName()}}
+        .node-label(id="node-label_{{n.id()}}", ng-show="!isEditing(n)") {{n.displayName()}}
         //|  ({{n.flatOrder()}})
 
-        input.node-input.form-control.input-small(type="text", id="node-input_{{n.id()}}", style="height: 24px !important; width:98% !important;", ng-click="$event.stopPropagation()", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", ng-show="canEdit(n) && isEditing(n) && !n.getComponent().valueKind()")
+        span(ng-show="isEditing(n)")
 
-        select2.node-input.input-small(id="node-select_{{n.id()}}", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", style="width:98% !important;", field="{width: 'element', options: {{editOptions(n)}} }", ng-change="saveEdit(n)", ng-show="canEdit(n) && isEditing(n) && n.getComponent().valueKind()")
+          input.node-input.form-control.input-small(type="text", id="node-input_{{n.id()}}", ng-click="$event.stopPropagation()", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", ng-show="!n.hasEnum()")
+
+          select2.node-input.node-select.input-small(id="node-select_{{n.id()}}", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", field="{config: { dropdownAutoWidth: true }, options: {{getEnum(n)}} }", ng-change="saveEdit(n)", ng-show="n.hasEnum()")
 
       include node-parenticons-template
-
-    tr(ng-if="n.hasProperties(true)")
-
-      td(width="24px")
-
-      include node-properties-template

@@ -1,7 +1,12 @@
-.component{
-//  width: 250px;
-  background: whitesmoke;
+@component-color: whitesmoke;
+@component-width: 200px;
+@component-height: 24px;
+
+.component {
+//  width: @component-width;
+  background: @component-color;
   font-size: 12px;
+//  max-width: @component-width;
   cursor: pointer;
 }
 
@@ -15,6 +20,70 @@
 
 .component-selected-highlighted {
   background: #ccd9ea;
+}
+
+.component-color {
+  width: 8px;
+  min-width: 8px;
+}
+
+.component-icon-col {
+  padding-left: 2px;
+  padding-right: 2px;
+  width: 24px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.component-icon {
+  font-size: medium;
+  vertical-align: middle;
+  color: @gray-light;
+}
+
+.component-label-col {
+  padding: 2px;
+  min-width: 75px;
+}
+
+.component-label {
+  font-size: small;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 4px;
+}
+
+.component-xs {
+//  width: @component-width;
+  background: @component-color;
+  font-size: x-small;
+//  max-width: @component-width;
+  cursor: pointer;
+}
+
+.component-xs-highlighted {
+  background: lightsteelblue;
+}
+
+.component-xs-selected {
+  background: lightsteelblue;
+}
+
+.component-xs-selected-highlighted {
+  background: #ccd9ea;
+}
+
+.component-xs-icon-col {
+//  width: 24px;
+//  min-width: 24px;
+  text-align: center;
+}
+
+.component-xs-icon {
+  font-size: small;
+  vertical-align: middle;
+  color: @gray-light;
 }
 
 .bold {
@@ -42,13 +111,139 @@
   }
 
   .row-toolbar-offcanvas-left.active {
-    left: 33%;
+    left: 30%;
   }
 
-  .row-toolbar-offcanvas-left.active .toolbar-offcanvas {
-    left: -33%;
+  .row-toolbar-offcanvas-left.active .components-offcanvas {
+    left: -30%;
     position: absolute;
     top: 0;
-    width: 41%;
+    width: 30%;
   }
+}
+
+#editor-components {
+}
+
+#editor-components-xs {
+}
+
+#editor-components {
+}
+
+#editor-components-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#editor-components-xs-list {
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-width: 36px;
+}
+
+.components .angular-ui-tree {
+
+}
+
+.components .angular-ui-tree-empty {
+  border: none !important;
+//  min-height: 100px;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+.components .angular-ui-tree-nodes {
+  display: block;
+  position: relative;
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+}
+
+.components .angular-ui-tree-nodes .angular-ui-tree-nodes {
+  padding-left: 0px;
+}
+
+.components .angular-ui-tree-node, .components .angular-ui-tree-placeholder {
+  display: block;
+  position: relative;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0px !important;
+//  min-width: @component-width !important;
+//  width: @component-width !important;
+  min-height: @component-height !important;
+  line-height: @component-height !important;
+}
+
+.components .angular-ui-tree-hidden {
+  display: none;
+}
+
+.components .angular-ui-tree-placeholder {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
+.components .angular-ui-tree-handle {
+  cursor: pointer;
+  text-decoration: none !important;
+  font-weight: normal !important;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.components-xs .angular-ui-tree {
+
+}
+
+.components-xs .angular-ui-tree-empty {
+  border: none !important;
+//  min-height: 100px;
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+.components-xs .angular-ui-tree-nodes {
+  display: block;
+  position: relative;
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
+}
+
+.components-xs .angular-ui-tree-nodes .angular-ui-tree-nodes {
+  padding-left: 0px;
+}
+
+.components-xs .angular-ui-tree-node, .components-xs .angular-ui-tree-placeholder {
+  display: block;
+  position: relative;
+  background-color: transparent !important;
+  margin: 0 !important;
+  padding: 0px !important;
+//  min-width: @component-width !important;
+//  width: @component-width !important;
+  min-height: @component-height !important;
+  line-height: @component-height !important;
+}
+
+.components-xs .angular-ui-tree-hidden {
+  display: none;
+}
+
+.components-xs .angular-ui-tree-placeholder {
+  margin: 0px !important;
+  padding: 0px !important;
+}
+
+.components-xs .angular-ui-tree-handle {
+  cursor: pointer;
+  text-decoration: none !important;
+  font-weight: normal !important;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }

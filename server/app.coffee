@@ -16,6 +16,9 @@ autoIncrement = require('mongoose-auto-increment')
 secure = require("node-secure")
 mongoose = require('mongoose')
 
+global._ = require('lodash')
+_.str = require("underscore.string")
+
 logErrors = (err, req, res, next) ->
   console.error(err.stack)
   next(err)

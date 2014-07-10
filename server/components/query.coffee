@@ -5,7 +5,7 @@ module.exports = [
   extra:
     inherit: 'Object'
     icon: 'filter'
-    default_children: 'Select,Where,OrderBy,Limit'
+    default_children: ['Select','Where','OrderBy','Limit']
     accepts: ['QueryAction']
     color: 'lightgray'
     code: 'query.js'
@@ -14,7 +14,6 @@ module.exports = [
   name: 'QueryAction'
   desc: 'Query action'
   extra:
-    inherit: 'Statement'
     options: 'hp'
     icon: 'filter'
     color: 'darkgray'

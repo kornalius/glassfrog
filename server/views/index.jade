@@ -8,15 +8,125 @@ block stylesheets
   link(rel='stylesheet', href='/css/vendor.css')
 
 block content
-  .container
-    #index-page
-      img(src='/img/logo.png', width='160')
-      h1 Welcome
-      h4 Your only source for all your business or personal needs.
-      br
-      p
-        a(href='/learnmore').btn.btn-lg.btn-primary Learn more...
+  .main-content#index-page
+
+    .banner#banner
+      .container
+        h2 Responsive, Multi-Layout, Web App
+        a.btn.btn-download.btn-lg(href="http://www.arianesoft.ca/glassfrog/demo", target="_blank") Try the demo
+        br
+        img.preview-img(src="/img/preview-simple.png", alt="preview")
+
+    .features#features
+      header
+        h3.text-center Responsive multi-layout admin built with AngularJS.
+      .container
+        .row
+          .feature-item.col-md-4.text-center
+            i.cic.cic-enlarge
+            h3 Responsive Design
+            .desc
+              p
+                | Auto adjust layout according to screen size. Looks good on desktop, tablet and phone.
+          .feature-item.col-md-4.text-center
+            i.cic.cic-columns
+            h3 Multiple Layouts
+            .desc
+              p
+                | Wide and boxed layout.
+                br
+                | vertical and horizaon navigation，
+                br
+                | toggle for fixed top header and sidebar menu.
+          .feature-item.col-md-4.text-center
+            i.cic.cic-desktop
+            h3 Web App
+            .desc
+              p
+                | Single Page Application Built with AngularJS.
+                br
+                | Fully AJAX powered, never refresh the entire page again. Faster, smoother.
+
+      .details#details
+        ul.list-details.list-unstyled
+          li
+            .container
+              .detail-item.clearfix
+                .detail-desc
+                  h2 Responsive Design
+                  p
+                    | Auto adjust layout according to screen size.
+                    br
+                    | Looks good on desktop, tablet and phone.
+                .detail-img
+                  img(src='/img/feat-responsive-alt.png', alt='img')
+          li.alt
+            .container
+              .detail-item.clearfix
+                .detail-desc
+                  h2 Multiple Layouts
+                  p
+                    | Wide and boxed layou.
+                    br
+                    | vertical and horizaon navigation，
+                    br
+                    | toggle for fixed top header and sidebar menu.
+                .detail-img
+                  img(src='/img/feat-layouts.png', alt='img')
+          li
+            .container
+              .detail-item.clearfix
+                .detail-desc
+                  h2 Web App
+                  p
+                    | Single Page Application Built with AngularJS.
+                    br
+                    | Fully AJAX powered, never refresh the entire page again.
+                    br
+                    | Faster, smoother.
+                .detail-img
+                  img(src='/img/feat-app2.png', alt='img')
+
+      .testimonials#testimonials
+        #testimonials-carousel.carousel.slide(data-ride='carousel')
+          ol.carousel-indicators
+            li.active(data-target='#testimonials-carousel', data-slide-to='0')
+            li(data-target='#testimonials-carousel', data-slide-to='1')
+            li(data-target='#testimonials-carousel', data-slide-to='2')
+            li(data-target='#testimonials-carousel', data-slide-to='3')
+            li(data-target='#testimonials-carousel', data-slide-to='4')
+          .carousel-inner.text-center
+            .item.active
+              p Great job! It's simply wonderful!
+              small - Comments from buyer
+            .item
+              p
+                | Very impresive for being the first project here at wrapBootstrap and the very first angularjs theme amazing! Lot of plugins that are useful and not just inflate the package.
+              small - Comments from buyer
+            .item
+              p Great Job! First Angular JS Template on wrapBootstrap!
+              small - Comments from buyer
+            .item
+              p
+                | Really awesome that you're the first one who creates an AngularJS for wrapBootstrap. I've been looking for one for a long time, and it's really annoying to convert a non AngularJS theme to an AngularJS theme, so thanks for making my life easier.
+              small - Comments from buyer
+            .item
+              p Amazing! Exact what I looking for.
+              small - Comments from buyer
+
+  //.container
+  //  #index-page
+  //    img(src='/img/logo.png', width='160')
+  //    h1 Welcome
+  //    h4 Your only source for all your business or personal needs.
+  //    br
+  //    p
+  //      a(href='/learnmore').btn.btn-lg.btn-primary Learn more...
 
 block javascripts
   script(src="/js/index.js")
+  script(src="/js/jquery.smooth-scroll.min.js")
   script(src="//localhost:35729/livereload.js")
+
+  //script.
+  //  $(".smooth-link").smoothScroll();

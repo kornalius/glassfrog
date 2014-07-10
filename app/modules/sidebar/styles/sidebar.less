@@ -1,24 +1,64 @@
-#sidebar {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
+.sidebar {
+  padding-top: 4px !important;
+  padding-bottom: 4px;
 }
 
-#sidebar, #sidebar a, #sidebar-footer a {
-  color: #ffffff;
-  background-color: transparent;
-//  text-shadow:0 0 2px #000000;
-  padding: 4px;
-}
-
-#sidebar .nav li>a:hover {
-  background-color:#393939;
-}
-
-#sidebar-footer {
+.sidebar-footer {
   background-color: #444;
   position: absolute;
-  bottom: 5px;
-  padding: 5px;
+  bottom: 4px;
+//  padding: 4px;
+}
+
+.sidebar-menu-lg {
+}
+
+.sidebar-menu-xs {
+  text-align: center;
+}
+
+.sidebar-menu-line {
+  line-height: 20px !important;
+}
+
+.sidebar-menu-xs .sidebar-menu-line {
+  line-height: 28px !important;
+}
+
+.sidebar-menu {
+  color: whitesmoke;
+  background-color: transparent;
+//  text-shadow:0 0 2px #000000;
+  padding: 2px !important;
+}
+
+.sidebar-menu.active {
+  color: #555555;
+  background-color: whitesmoke;
+//  text-shadow:0 0 2px #000000;
+  padding: 2px !important;
+}
+
+.sidebar-menu:hover {
+  color: whitesmoke !important;
+  background-color: #555555 !important;
+}
+
+.sidebar-menu-icon {
+  font-size: medium;
+  padding-right: 8px;
+  vertical-align: middle;
+}
+
+.sidebar-menu-xs .sidebar-menu-icon {
+//  font-size: small;
+  padding-right: 0px;
+  vertical-align: middle;
+}
+
+.sidebar-menu-label {
+  font-size: small;
+  vertical-align: middle;
 }
 
 @media screen and (max-width: 768px) {
@@ -38,10 +78,5 @@
     position: absolute;
     top: 0;
     width: 33%;
-    margin-left: 5px;
-  }
-
-  #sidebar, #sidebar a, #sidebar-footer a {
-    padding-left: 3px;
   }
 }

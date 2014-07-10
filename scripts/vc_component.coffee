@@ -8,14 +8,12 @@ ComponentClass =
 #    color
 #    options
 #    accepts []
-#    default_children
-#    valueKind
-#    code
-#    properties []
+#    enum []
+#    default_children []
 #    dependencies []
+#    code
 
   VCGlobal: null
-  ComponentProperty: null
 
   setData: (c) ->
     if c.clearData
@@ -24,13 +22,17 @@ ComponentClass =
     c.$data = {}
     c.$data._inherit = null
     c.$data._accepts = null
-    c.$data._valueKind = null
+    c.$data._default_children = null
+    c.$data._parent = null
     c.$data._json = {}
     c.$data._code = {}
     c.$data.isComponent = true
 
     if c.extra?
-      c.$data._json = JSON.parse(c.extra)
+      if typeof c.extra is 'string'
+        c.$data._json = JSON.parse(c.extra)
+      else
+        c.$data._json = _.cloneDeep(c.extra)
 
       code = c.$data._json.code
       if code?
@@ -40,8 +42,8 @@ ComponentClass =
           catch e
             console.log e
 
-      if !c.$data._json.properties
-        c.$data._json.properties = []
+      if !c.$data._json.default_children
+        c.$data._json.default_children = []
 
       if !c.$data._json.dependencies
         c.$data._json.dependencies = []
@@ -58,11 +60,19 @@ ComponentClass =
       @_id
 
     c.getName = () ->
-      @name.toLowerCase()
+      return (if @name then @name.toLowerCase() else "")
+
+    c.displayName = () ->
+      if @name
+        return @name
+      else if @getInherit()
+        return @getInherit().displayName()
+      else
+        return "Untitled"
 
     c.options = () ->
-      if @$data._json.options
-        return @$data._json.options
+      if @$data and @$data._json.options
+        return @$data and @$data._json.options
 #      else if @isInherit()
 #        return @inherit().options()
       else
@@ -76,9 +86,9 @@ ComponentClass =
         return false
 
     c.getInherit = () ->
-      if @$data._inherit
+      if @$data and @$data._inherit
         return @$data._inherit
-      else if @$data._json.inherit
+      else if @$data and @$data._json.inherit
         c = ComponentClass.VCGlobal.findComponent(@$data._json.inherit)
         @$data._inherit = c
         return c
@@ -86,32 +96,56 @@ ComponentClass =
         return null
 
     c.isInherit = () ->
-      return @getInherit()
+      @getInherit() != null
 
-    c.isValueKind = () ->
-      @valueKind()
+    c.hasParent = () ->
+      @getParent() != null
 
-    c.valueKind = () ->
-      if @$data._valueKind
-        return @$data._valueKind
-      else if @isInherit()
-        return @getInherit().valueKind()
+    c.getParent = () ->
+      if @$data
+        return @$data._parent
       else
-        if @$data._json.valueKind
-          c = ComponentClass.VCGlobal.findComponent(@$data._json.valueKind)
-          @$data._valueKind = c
-        else
-          c = null
-        return c
+        return null
+
+    c.hasEnum = () ->
+      @getEnum().length
+
+    c.getEnum = () ->
+      l = []
+
+      e = @$data and @$data._json.enum
+      if e
+        if typeof e is 'string'
+          l = e.split(',')
+        else if e instanceof Array
+          l = e
+      else if @isInherit()
+        l = @getInherit().getEnum()
+
+      nl = []
+
+      for i in [0..l.length - 1]
+        ii = l[i]
+        if ii
+          if ii.startsWith('#')
+            nl = nl.concat(ComponentClass.VCGlobal.findComponentsOfKind(ii.substr(1)))
+          else if ii.toLowerCase() == '@module'
+            nl = nl.concat(ComponentClass.VCGlobal.modules.rows)
+          else if ii.startsWith('@')
+            nl = nl.concat(ComponentClass.VCGlobal.findNodesOfKind(ii.substr(1)))
+          else
+            nl.push(ii)
+
+      return nl
 
     c.getAccepts = () ->
-      if @$data._accepts
-        return @$data._accepts
-      else if @isInherit()
-        return @getInherit().getAccepts()
+      if @$data and @$data._accepts
+        r = @$data._accepts
+#      else if @isInherit()
+#        return @getInherit().getAccepts()
       else
         na = []
-        if @$data._json.accepts
+        if @$data and @$data._json.accepts
           for i in @$data._json.accepts
             a = { parent: [], component: ComponentClass.VCGlobal.findComponent(i.component)}
             if i.parent and i.parent.length
@@ -122,10 +156,18 @@ ComponentClass =
                 else
                   console.log "Component '{0}' not found".format(pi)
             na.push(a)
-        @$data._accepts = na
-        return na
+        if @$data
+          @$data._accepts = na
+        r = na
 
-    c.inheritedAccepts = () ->
+#      for cc in ComponentClass.VCGlobal.components
+#        if cc.hasParent()
+#          if cc.getParent() == @
+#            r.push({ parent: [], component: cc})
+
+      return r
+
+    c.getInheritedAccepts = () ->
       l = [].concat(@getAccepts())
       if @isInherit()
         l = l.concat(@getInherit().getAccepts())
@@ -134,7 +176,7 @@ ComponentClass =
     c.doAccept = (node, cc) ->
       cc = ComponentClass.VCGlobal.findComponent(cc)
       if cc
-        for a in @inheritedAccepts()
+        for a in @getInheritedAccepts()
           if a.component
             ok = cc.kindOf(a.component.name) or (!a.component and !node)
             cp = a.parent
@@ -155,6 +197,23 @@ ComponentClass =
               return true
 
       return false
+
+    c.getDefaultChildren = () ->
+      if @$data and @$data._default_children
+        return @$data._default_children
+      else if @isInherit()
+        return @getInherit().getDefaultChildren()
+      else
+        na = []
+        if @$data and @$data._json.default_children
+          for i in @$data._json.default_children
+            na.push(ComponentClass.VCGlobal.findComponent(i.component))
+        if @$data
+          @$data._default_children = na
+        return na
+
+    c.hasDefaultChildren = () ->
+      @getDefaultChildren().length
 
     c.isLocked = () ->
       if @hasOption('l')
@@ -193,13 +252,13 @@ ComponentClass =
         return @getName() == name.toLowerCase() or (@isInherit() and @getInherit().kindOf(name))
 
     c.getColor = () ->
-      if @$data._json.color
+      if @$data and @$data._json.color
         return @$data._json.color
       else if @isInherit()
         return @getInherit().getColor()
 
     c.getIcon = () ->
-      if @$data._json.icon
+      if @$data and @$data._json.icon
         return @$data._json.icon
       else if @isInherit()
         return @getInherit().getIcon()
@@ -211,7 +270,7 @@ ComponentClass =
         return @getInherit().parentIcon()
 
     c.code = () ->
-      if @$data._code
+      if @$data and @$data._code
         return @$data._code
       else if @isInherit()
         return @getInherit().code()
@@ -257,91 +316,67 @@ ComponentClass =
     c.hasGenerate = () ->
       @generate() != null
 
-    c.doGenerate = (node) ->
+    c.doGenerate = (node, client) ->
       g = @generate()
       if g
-        g.call(@, node)
+        g.call(@, node, (if client? then client else false))
 
-    c.hasProperty = (name) ->
-      @getProperty(name)?
-
-    c.getProperty = (name) ->
-      name = name.toLowerCase()
-      for cp in @getProperties()
-        if cp.getName() == name
-          return cp
-      return null
-
-    c.getProperties = () ->
-      @$data._json.properties
-
-    c.hasProperties = () ->
-      @getProperties().length
-
-    c.foreachProperty = (f) ->
-      if @hasProperties()
-        for p in @getProperties()
-          f(p)
-
-    c.getIn = () ->
-      @foreachProperty((p) ->
-        if p.isIn()
-          return p
-      )
-      return null
-
-    c.getOut = () ->
-      @foreachProperty((p) ->
-        if p.isOut()
-          return p
-      )
-      return null
-
-    c.getInAccepts = () ->
-      i = @getIn()
-      if i
-        return i.inheritedAccepts()
+    c.element = () ->
+      e = angular.element('#component-element_' + @id())
+      if e and e.length
+        return e
       else
-        return []
+        return null
 
-    c.getOutAccepts = () ->
-      o = @getOut()
-      if o
-        return o.inheritedAccepts()
-      else
-        return []
-
-    c.acceptsMatch = (ia, oa) ->
-      for i in ia
-        for o in oa
-          if i.component.kindOf(o.component.name)
-            return true
-      return false
+    c.scope = () ->
+      e = @element()
+      if e
+        scope = e.scope()
+        return scope
+      return null
 
 
   make: (c) ->
     @setData(c)
-    that = @
-    c.foreachProperty((p) ->
-      that.ComponentProperty.make(p, c)
-    )
+
+    n = c.name
+    x = n.indexOf('.')
+    if x != -1
+      n1 = n.substr(0, x)
+      c.name = n.substr(x + 1)
+      c.$data._parent = @VCGlobal.findComponent(n1)
 
   list: (selected) ->
     l = []
     if @VCGlobal.components
       for c in @VCGlobal.components
-        if c.$data and c.isVisible() and (!selected or selected.component.doAccept(selected, c))
-          l.push(c)
+        if c.$data and c.isVisible()
+          if !selected and !c.hasParent()
+            l.push(c)
+          else if selected and selected.getComponent().doAccept(selected, c)
+            l.push(c)
     return l
+
+  elements: () ->
+    e = angular.element('#editor-components-root')
+    if e and e.length
+      return e
+    else
+      return null
+
+  scope: () ->
+    e = @elements()
+    if e
+      scope = e.scope()
+      return scope
+    return null
 
 
 if define?
-  define('vc_component', ['vc_global', 'vc_componentproperty'], (gd, cpd) ->
+  define('vc_component', ['vc_global'], (gd) ->
     ComponentClass.VCGlobal = gd
-    ComponentClass.ComponentProperty = cpd
     return ComponentClass
   )
 else
   ComponentClass.VCGlobal = require('./vc_global')
-  ComponentClass.ComponentProperty = require('./vc_componentproperty')
   module.exports = ComponentClass

@@ -46,6 +46,7 @@ app = angular.module('app', [
   'ui.config'
   'ui.directives'
   'ui.filters'
+  'ui.tree'
 
   'pagination.services'
 
@@ -53,6 +54,9 @@ app = angular.module('app', [
 
   'jm.i18next'
   'ajoslin.promise-tracker'
+  'frapontillo.ex.filters'
+  'angular-lodash'
+  'underscore.string'
 
   'Datetimepicker'
 
@@ -91,8 +95,6 @@ app = angular.module('app', [
 #    $window._
 #])
 
-.constant('humanize', window.humanize)
-
 #.factory('_', [
 #  '$window',
 #
@@ -121,6 +123,8 @@ app = angular.module('app', [
   '$i18nextProvider'
 
   ($stateProvider, $urlRouterProvider, $i18nextProvider) ->
+
+#    _.mixin(_.string.exports())
 
     $i18nextProvider.options = {
       useCookie: true

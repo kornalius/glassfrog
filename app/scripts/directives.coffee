@@ -149,3 +149,29 @@ angular.module('app.directives', [
         return v
       )
 ])
+
+.directive("clearable", [
+  '$document'
+
+  ($document) ->
+
+    restrict: 'A'
+    require: '?ngModel'
+
+    link: (scope, element, attr, ngModel) ->
+      clear = element.parent().find('.searchclear')
+
+      element.on('keyup', ->
+        clear.toggle(Boolean(element.val()))
+      )
+
+      clear.toggle(Boolean(element.val()))
+
+      clear.on('click', ->
+        scope.$apply( ->
+          ngModel.$setViewValue('')
+          element.val('').focus()
+          clear.hide()
+        )
+      )
+])

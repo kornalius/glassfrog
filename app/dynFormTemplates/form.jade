@@ -1,13 +1,21 @@
 div(ng-controller="dynFormCtrl", ng-init="fi = fieldIndex;")
+
   .panel.panel-primary(container="form.container")
+
     .panel-heading
-      .panel-title {{form.label}}
+      span.panel-title {{form.label}}
+      span.btn-group.btn-group-xs.pull-right.toolbar-group
+        a.btn.btn-default(ng-repeat="b in form.buttons", href="{{b.url}}")
+          | &nbsp;
+          i.cic(class="cic-{{b.icon}}", style="vertical-align: middle;")
+          span(style="vertical-align: middle;") &nbsp; {{b.name}}
 
     .panel-body
       .container-fluid
         .row-fluid
-          ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in rows track by $index", novalidate)
-            // <row>
+          ng-form(name="{{domName()}}", ng-class="getClass()", role="form", novalidate)
+            span(ng-repeat="row in rows track by $index")
+              // <row>
         .row-fluid
 
     .panel-footer

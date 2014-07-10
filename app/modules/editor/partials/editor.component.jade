@@ -1,27 +1,32 @@
-ul.nav
-  li
-    a.visible-xs.text-center(data-toggle="toolbar-offcanvas")
-      span.cic.cic-chevron-right2(style="font-size: 16px;")
+#editor-components-root
 
-.hidden-xs#lg-toolbar-menu
-  form#editor-components-search(role='search')
-    .form-group
-      .input-group
-        input.form-control(type='text', placeholder='Search', ng-model="search")
-        span.input-group-btn
-          button.btn.btn-default(type="button")
-            span.cic.cic-search
+  ul.nav
+    li
+      a.visible-xs.text-center(data-toggle="components-offcanvas")
+        span.cic.cic-chevron-right2
 
-  .component#editor-components-list(ng-repeat="c in list() | filter: search", draggable)
-    ng-include(src="'/partials/component-template.html'")
+  .hidden-xs#editor-components
+    form#editor-components-search(role='search')
+      .form-group
+        .input-group.input-group-sm
+          input.form-control(type='text', placeholder='Search', ng-model="search", clearable)
+          span.searchclear &times;
+          span.input-group-btn
+            button.btn.btn-default(type="button")
+              span.cic.cic-search
 
-.visible-xs#xs-toolbar-menu
-  .component(ng-repeat="c in list() | filter: search", draggable)
+    .components
 
-    table(id="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)")
+      #editor-components-list
+        .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
+          ol(ui-tree-nodes="", ng-model="componentNodes", id="tree-components-root", data-nodrop)
+            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node, ng-include="'/partials/component-template.html'")
 
-      td.text-center(id="component-icon-col_{{c._id}}", valign="middle", style="padding-top: 2px; padding-bottom: 2px;")
+  .visible-xs#editor-components-xs
 
-        span.text-muted.cic(id="component-icon_{{c._id}}", class="cic-{{c.getIcon()}}", style="font-size: 14px;")
+    .components-xs
 
-    span(ng-init="c.render(null, true)")
+      #editor-components-xs-list
+        .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
+          ol(ui-tree-nodes="", ng-model="componentNodes", id="tree-components-root", data-nodrop)
+            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node, ng-include="'/partials/component-xs-template.html'")

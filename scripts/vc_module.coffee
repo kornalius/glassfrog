@@ -10,6 +10,7 @@ ModuleClass =
 #    color
 #    options
 
+  VCGlobal: null
   Node: null
 
   setData: (m) ->
@@ -19,9 +20,13 @@ ModuleClass =
     m.$data = {}
     m.$data._states = ''
     m.$data._json = {}
+    m.$data.isModule = true
 
     if m.extra
-      m.$data._json = JSON.parse(m.extra)
+      if typeof m.extra is 'string'
+        m.$data._json = JSON.parse(m.extra)
+      else
+        m.$data._json = _.cloneDeep(m.extra)
 
       if !m.$data._json.root
         nn = { name: 'Root', component: 'root' }
@@ -30,11 +35,24 @@ ModuleClass =
       ModuleClass.Node.make(m.$data._json.root, null, m)
 
 
+    m.id = () ->
+      @_id
+
+    m.getName = () ->
+      return (if @name then @name.toLowerCase() else "")
+
+    m.displayName = () ->
+      if @name
+        return @name
+      else
+        return "Untitled"
+
     m.getRoot = () ->
-      return @$data._json.root
+      return (if @$data and @$data._json.root then @$data._json.root else null)
 
     m.setRoot = (n) ->
-      @$data._json.root = n
+      if @$data
+        @$data._json.root = n
       @setModified(true)
 
     m.hasNodes = () ->
@@ -67,10 +85,11 @@ ModuleClass =
         delete @$data
 
     m.options = () ->
-      if @$data._json.options? then @$data._json.options else ''
+      return (if @$data and @$data._json.options? then @$data._json.options else '')
 
     m.setOptions = (o) ->
-      @$data._json.options = o
+      if @$data
+        @$data._json.options = o
       @setModified(true)
 
     m.hasOption = (s) ->
@@ -87,16 +106,18 @@ ModuleClass =
         @setOptions(o.substr(0, i) + o.substr(i + 1))
 
     m.hasState = (s) ->
-      @$data._states.indexOf(s) > -1
+      if @$data
+        @$data._states.indexOf(s) > -1
 
     m.addState = (s) ->
-      if !@hasState(s)
+      if !@hasState(s) and @$data
         @$data._states += s
 
     m.delState = (s) ->
-      i = @$data._states.indexOf(s)
-      if i != -1
-        @$data._states = @$data._states.substr(0, i) + @$data._states.substr(i + 1)
+      if @$data
+        i = @$data._states.indexOf(s)
+        if i != -1
+          @$data._states = @$data._states.substr(0, i) + @$data._states.substr(i + 1)
 
     m.isSaved = () ->
       !@isModified()
@@ -115,16 +136,17 @@ ModuleClass =
         @getRoot().foreachChild((n) ->
           n.setModified(false)
         , true)
-      @extra = JSON.stringify(@$data._json)
+      if @$data
+        @extra = JSON.stringify(@$data._json)
 
     m.getIcon = () ->
-      if @$data._json.icon
+      if @$data and @$data._json.icon
         return @$data._json.icon
       else
         return 'box4'
 
     m.getColor = () ->
-      if @$data._json.color
+      if @$data and @$data._json.color
         return @$data._json.color
       else
         return ''
@@ -136,18 +158,66 @@ ModuleClass =
       for c in @getNodes(recursive)
         f(c)
 
+    m.element = () ->
+      e = angular.element('#module-element_' + @id())
+      if e and e.length
+        return e
+      else
+        return null
+
+    m.scope = () ->
+      e = @element()
+      if e
+        scope = e.scope()
+        return scope
+      return null
+
 
   make: (m) ->
     @setData(m)
     for n in m.$data._json.root.nodes
       ModuleClass.Node.make(n, m.$data._json.root, m)
 
+  list: () ->
+    l = []
+
+    if @VCGlobal.modules
+      for m in @VCGlobal.modules.rows
+        l.push(m)
+
+    return l.sort((a, b) ->
+      ao = a.name
+      bo = b.name
+      if ao < bo
+        return -1
+      else if ao > bo
+        return 1
+      else
+        return 0
+    )
+
+  elements: () ->
+    e = angular.element('#editor-modules-root')
+    if e and e.length
+      return e
+    else
+      return null
+
+  scope: () ->
+    e = @elements()
+    if e
+      scope = e.scope()
+      return scope
+    return null
+
 
 if define?
-  define('vc_module', ['vc_node'], (nd) ->
+  define('vc_module', ['vc_global', 'vc_node'], (gd, nd) ->
     ModuleClass.Node = nd
+    ModuleClass.VCGlobal = gd
     return ModuleClass
   )
 else
   ModuleClass.Node = require("./vc_node")
+  ModuleClass.VCGlobal = require('./vc_global')
   module.exports = ModuleClass

@@ -9,8 +9,8 @@ angular.module('sidebar', [])
 
     $($document).ready(() ->
       $('[data-toggle=offcanvas]').click(() ->
-        $(this).toggleClass('visible-xs text-center')
-        $(this).find('span').toggleClass('cic-chevron-right2 cic-chevron-left2')
+        $(this).toggleClass('visible-xs')
+        $(this).find('i').toggleClass('cic-chevron-right2 cic-chevron-left2')
         $('.row-offcanvas').toggleClass('active')
         $('#lg-menu').toggleClass('hidden-xs').toggleClass('visible-xs')
         $('#xs-menu').toggleClass('visible-xs').toggleClass('hidden-xs')

@@ -20,7 +20,7 @@ angular.module('app.controllers', ['app.globals', 'webStorageModule'])
 #    console.log webStorage.get('test', true)
     webStorage.add('user', $scope.user, true)
 
-  Globals.user = angular.copy($scope.user)
+  Globals.user = _.cloneDeep($scope.user)
 
   # Uses the url to determine if the selected
   # menu item should have the class active.

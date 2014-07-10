@@ -16,10 +16,12 @@ angular.module('user.profile', ['dynamicForm'])
       name: "UserProfileForm"
       layout: {type:'form', style:'horizontal'}
       container: true
+      buttons: []
 
       fields: [
         label: "Login Information"
         type: "group"
+        column: 6
       ,
         label: "Username"
         type: "input"
@@ -50,6 +52,7 @@ angular.module('user.profile', ['dynamicForm'])
       ,
         label: "Personal Information"
         type: "group"
+        column: 6
       ,
         label: "First Name"
         type: "input"

@@ -2,6 +2,8 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
 
 .factory('EditorModule', [
   'Editor'
+  'EditorNode'
+  'EditorComponent'
   '$timeout'
   'Globals'
   '$http'
@@ -9,9 +11,11 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
   'dynModal'
   '$rootScope'
 
-  (Editor, $timeout, globals, $http, dynForm, dynModal, $rootScope) ->
+  (Editor, EditorNode, EditorComponent, $timeout, globals, $http, dynForm, dynModal, $rootScope) ->
 
+    moduleNodes: []
     selected: null
+    popup: null
 
     share: (m, cb) ->
 #      if @canShare()
@@ -95,8 +99,11 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
           that.selected = VCGlobal.findModule(m)
           if that.isSelection(m)
             Editor.editModule(m, (sm) ->
+              EditorNode.clearSelection()
               that.selected = sm
-              angular.element('#module-element_' + sm._id).scope().$apply()
+              EditorComponent.refresh()
+              if sm.scope()
+                sm.scope().$apply()
             )
         )
 
@@ -112,6 +119,38 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
     setOver: (m) ->
       Editor.setOver(m)
 
+    showpopup: (m) ->
+      if @popup
+        $timeout.cancel(@popup)
+      @popup = $timeout(->
+        $('#module-popover_' + m._id).popover('show')
+      , 1500)
+
+    hidepopup: (m) ->
+      if @popup
+        $timeout.cancel(@popup)
+      $timeout(->
+        $('#module-popover_' + m._id).popover('hide')
+      )
+
+    refresh: (cb) ->
+      that = @
+      require(['vc_module'], (Module) ->
+        that.moduleNodes = Module.list()
+        if Module.scope()
+          Module.scope().$apply()
+        cb() if cb
+      )
+
+    edit: (m) ->
+
+    new: (cb) ->
+
+    delete: (m, cb) ->
+
+    nodeElement: (m) ->
+      m.element()
+
 ])
 
 .controller('EditorModuleCtrl', [
@@ -122,6 +161,41 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
   '$timeout'
 
   ($scope, Rest, Editor, EditorModule, $timeout) ->
+
+    $scope.moduleNodes = []
+    $scope.service = EditorModule
+
+    $scope.$watchCollection('service.moduleNodes', (newVal) ->
+      $scope.moduleNodes = newVal
+    )
+
+    $scope.treeOptions =
+      accept: (sourceNodeScope, destNodesScope, destIndex) ->
+        return false
+#        s = sourceNodeScope.$modelValue
+#        return s and s.$data and s.$data.isNode
+
+      beforeDrag: (sourceNodeScope) ->
+        return true
+
+      dropped: (event) ->
+#        n = event.source.nodeScope.$modelValue
+#        if n
+#          m = event.dest.nodesScope.$nodeScope
+#          if m
+#            n.$data._module = m
+#            n.$data._parent = m.getRoot()
+
+      dragStart: (event) ->
+
+      dragMove: (event) ->
+
+      dragStop: (event) ->
+
+      beforeDrop: (event) ->
+
+    $scope.nodeElement = (m) ->
+      EditorModule.nodeElement(m)
 
     $scope.setOver = (m) ->
       EditorModule.setOver(m)
@@ -138,57 +212,31 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
     $scope.isSelection = (m) ->
       EditorModule.isSelection(m)
 
-    require(['vc_global'], (VCGlobal) ->
-      $scope.list = () ->
-        list = []
-
-        if VCGlobal.modules
-          for m in VCGlobal.modules.rows
-            list.push(m)
-
-        return list.sort((a, b) ->
-          ao = a.name
-          bo = b.name
-          if ao < bo
-            return -1
-          else if ao > bo
-            return 1
-          else
-            return 0
-        )
-    )
-
     $scope.showpopup = (m) ->
-      if $scope.popup
-        $timeout.cancel($scope.popup)
-      $scope.popup = $timeout(->
-        $('#module-popover_' + m._id).popover('show')
-      , 1500)
+      EditorModule.showpopup(m)
 
     $scope.hidepopup = (m) ->
-      if $scope.popup
-        $timeout.cancel($scope.popup)
-      $timeout(->
-        $('#module-popover_' + m._id).popover('hide')
-      , 1)
+      EditorModule.hidepopup(m)
 
     $scope.edit = (m) ->
-      Editor
+      EditorModule.edit(m)
+
     $scope.new = (cb) ->
+      EditorModule.edit(cb)
 
     $scope.save = (cb) ->
-      if @selected
-        EditorModule.save(@selected, cb)
+      EditorModule.save(@selected, cb)
 
     $scope.saveAll = (cb) ->
       EditorModule.saveAll(cb)
 
     $scope.share = (cb) ->
-      if @selected
-        EditorModule.share(@selected, cb)
+      EditorModule.share(@selected, cb)
 
     $scope.delete = (cb) ->
+      EditorModule.share(@selected, cb)
 
     $scope.refresh = (cb) ->
-#      Node.refresh(cb)
+      EditorModule.refresh(cb)
+
 ])

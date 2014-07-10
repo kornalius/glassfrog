@@ -1,10 +1,10 @@
-div(class="{{fields[fieldIndex].getColClass(10)}}")
+div(class="{{fields[fieldIndex].getInputClass()}}")
 
   div(ng-class="{'has-error' : hasErrors(fields[fieldIndex], $index)}")
     // <input>
 
   div(ng-if="fields[fieldIndex].type != 'subform'")
-    .help-block
+    .help-block.field-error-block
       div(ng-if="fields[fieldIndex].description") {{fields[fieldIndex].description}}
 
       div(ng-show="hasErrors(fields[fieldIndex], $index)")

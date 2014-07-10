@@ -1,25 +1,63 @@
 .row#editor-content-toolbar
 
-  .navbar.navbar-default#editor-content-toolbar-menu(role="navigation", style="padding-left: 8px; margin-bottom: 8px;")
+  .navbar.navbar-default#editor-content-toolbar-menu(role="navigation")
 
-    button.btn.btn-default.navbar-btn(type="button", ng-click="save()")
-      span.text-muted.cic.cic-save(style="font-size: 16px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
-      span.text-muted.cic.cic-refresh(style="font-size: 16px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
-      span.text-muted.cic.cic-preview(style="font-size: 18px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="rebuild()")
-      span.text-muted.cic.cic-uniF002(style="font-size: 18px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="alert()")
-      span.text-muted.cic.cic-form(style="font-size: 18px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="choose()")
-      span.text-muted.cic.cic-list-alt(style="font-size: 18px;")
-    button.btn.btn-default.navbar-btn(type="button", ng-click="quickForm()")
-      span.text-muted.cic.cic-fastforward(style="font-size: 18px;")
+    .navbar-header
+
+      button.navbar-toggle.pull-left(type="button", data-toggle="collapse", data-target="#editor-content-toolbar-collapse")
+        span.sr-only Toggle navigation
+        span.icon-bar
+        span.icon-bar
+        span.icon-bar
+
+    .collapse.navbar-collapse#editor-content-toolbar-collapse
+
+      ul.nav.navbar-nav
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="save()")
+            span.text-muted.cic.cic-save
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="refresh()")
+            span.text-muted.cic.cic-refresh
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
+            span.text-muted.cic.cic-preview
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="rebuild()")
+            span.text-muted.cic.cic-uniF002
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="alert()")
+            span.text-muted.cic.cic-form
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="choose()")
+            span.text-muted.cic.cic-list-alt
+
+        li
+          button.btn.btn-default.navbar-btn(type="button", ng-click="quickForm()")
+            span.text-muted.cic.cic-fastforward
+
+
+.row.nodes-tabs
+
+  ul.nav.nav-tabs(role="tablist")
+
+    li.active
+      a(href="", ng-click="", ng-if="service.module") {{service.module.name | _.str: 'humanize' | _.str: 'truncate':[8]}} ({{service.module.getRoot().getName() | _.str: 'humanize' | _.str: 'truncate':[8]}})
 
 
 .row.nodes#editor-content-main(ng-click="clearSelection()")
 
-  ul#nodes-table(ng-repeat="n in module().getRoot().list()", style="list-style-type:none; padding: 0px !important; margin: 0px !important;")
+  #editor-nodes-root
 
-    include includes/node-template
+    //ul.nodes-tree(frang-tree)
+    //  li(frang-tree-repeat="n in rootNodes", ng-include="'/partials/node-template.html'")
+
+    .nodes-tree(ui-tree="treeOptions", data-drag-delay="250", data-empty-place-holder-enabled="true", ng-cloak)
+      ol(ui-tree-nodes="", ng-model="rootNodes")
+        li(ng-repeat="n in rootNodes", ui-tree-node, data-collapsed, ng-include="'/partials/node-template.html'")

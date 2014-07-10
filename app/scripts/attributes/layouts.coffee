@@ -52,11 +52,13 @@ angular.module('layoutAttributes', [])
         input = dynForm.getFieldDOM(element)
         if input and input.length and input[0].nodeName == 'INPUT'
           input.removeAttr('icon')
-          element.find('span').addClass("input-group-btn")
+          input.parent().addClass("input-group")
+          element.find('span').addClass("input-group-addon")
           element.find('span').append("<button class='btn btn-default'><i class=\"cic cic-" + field.icon + "\"></i></button>")
         else
           element.removeAttr('icon')
           element.prepend("<i class=\"cic cic-" + field.icon + "\"/>&nbsp;")
+
     break:
       type: 'layout'
       code: (scope, element, field) ->

@@ -46,6 +46,16 @@
     "jquery-switchbutton": "*",
     "angular-bootstrap": "~0.11.0",
     "multiselect": "~0.9.11",
-    "safejson": "~1.0.0"
+    "safejson": "~1.0.0",
+    "angular-ui-tree": "~2.1.4",
+    "angular-filters": "~1.1.0",
+    "angular-lodash": "~0.1.0",
+    "angular-underscore-string": "~0.1.1",
+    "angular-tree-repeat": "~0.0.1",
+    "angular-form-builder": "~0.1.0",
+    "ng-contenteditable": "*"
+  },
+  "resolutions": {
+    "angular": "~1.2.18"
   }
 }

@@ -293,11 +293,20 @@ angular.module('select.services', ['app', 'app.globals'])
         )
 
         element.on('select2-focus', (event) ->
-#          element.trigger('focus')
+          if $(this).data('select2-closed')
+            $(this).data('select2-closed', false)
+            return
+
+          select2 = $(this).data('select2')
+          if !select2.opened()
+              select2.open()
+#            element.trigger('focus')
         )
 
         element.on('select2-blur', (event) ->
-          element.trigger('blur')
+#          $timeout(->
+#            element.trigger('blur')
+#          )
         )
 
         element.on('select2-loaded', (event) ->
@@ -310,6 +319,7 @@ angular.module('select.services', ['app', 'app.globals'])
         )
 
         element.on('select2-close', (event) ->
+          $(this).data('select2-closed', true)
 #          element.select2('positionDropdown')
         )
 

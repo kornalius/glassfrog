@@ -1,24 +1,26 @@
-div(ng-controller="SidebarCtrl")
+span.sidebar(ng-controller="SidebarCtrl")
 
-  ul.nav
-    li
-      a.visible-xs.text-center(data-toggle="offcanvas")
-        span.cic.cic-chevron-right2
+  ul.nav.visible-xs.sidebar-menu-xs
+    li.sidebar-menu-line
+      a.sidebar-menu(data-toggle="offcanvas")
+        i.sidebar-menu-icon.cic.cic-chevron-right2
 
-  ul.nav.hidden-xs#lg-menu
-    li(ng-repeat="m in sidenavs()")
-      a.proper(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}")
-        i.glyphicon.glyphicon-list-alt
-          span(style="padding-left: 6px;") {{"nav." + m.name | i18next}}
+  ul.nav.hidden-xs.sidebar-menu-lg#lg-menu
+    li.sidebar-menu-line(ng-repeat="m in sidenavs()")
+      a.sidebar-menu(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden")
+        i.sidebar-menu-icon.cic.cic-cmd2(ng-show="!m.icon")
+        i.sidebar-menu-icon.cic(class="cic-{{m.icon}}", ng-show="m.icon")
+        span.sidebar-menu-label.proper {{"nav." + m.name | i18next}}
 
-  //ul.list-unstyled.hidden-xs#sidebar-footer
+  //ul.list-unstyled.hidden-xs.sidebar-footer
   //  li
   //    a(href="http://www.bootply.com")
   //      h3 Bootstrap
   //      i.glyphicon.glyphicon-heart-empty
   //      | Bootply
 
-  ul.nav.visible-xs#xs-menu
-    li(ng-repeat="m in sidenavs()")
-      a.proper.text-center(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}")
-        i.glyphicon.glyphicon-list-alt
+  ul.nav.visible-xs.sidebar-menu-xs#xs-menu
+    li.sidebar-menu-line(ng-repeat="m in sidenavs()")
+      a.sidebar-menu(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden")
+        i.sidebar-menu-icon.cic.cic-cmd2(ng-show="!m.icon")
+        i.sidebar-menu-icon.cic(class="cic-{{m.icon}}", ng-show="m.icon")

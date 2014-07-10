@@ -7,17 +7,10 @@
       span.icon-bar
 
     a.navbar-brand.proper(href='/')
-      span.cic.cic-home42
-      | &nbsp;Glassfrog
+      //span.cic.cic-home42
+      | &nbsp; Glassfrog
 
   nav.collapse.navbar-collapse
-
-    ul.nav.navbar-nav
-      li: a.navbar-link(href='/aboutus') About Us
-      li: a.navbar-link(href='/whatisglassfrog') What is Glassfrog?
-      li: a.navbar-link(href='/features') Features
-      li: a.navbar-link(href='/blog') Blog
-      li: a.navbar-link(href='/contactus') Contact Us
 
     ul.nav.navbar-nav.navbar-right
       li.dropdown
@@ -32,6 +25,15 @@
             a.navbar-link(href='/signup')
               span.cic.cic-edit32
               | &nbsp;Register
+
+    ul.nav.navbar-nav.navbar-right
+      li: a.navbar-link.smooth-link(href='/#') Home
+      li: a.navbar-link.smooth-link(href='/#banner') Demo
+      //li: a.navbar-link(href='/whatisglassfrog') What is Glassfrog?
+      li: a.navbar-link.smooth-link(href='/#features') Features
+      li: a.navbar-link.smooth-link(href='/#details') Details
+      li: a.navbar-link.smooth-link(href='/#testimonials') Testimonials
+      li: a.navbar-link.smooth-link(href='/#contactus') Contact Us
 
 //form.navbar-form.navbar-right(role='search')
 //  .form-group

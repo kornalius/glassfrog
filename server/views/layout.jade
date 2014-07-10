@@ -67,11 +67,12 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
       else
         .row
 
-          .column.col-sm-12.col-xs-12#index-main
+          .column-index.col-sm-12.col-xs-12#index-main
             include navbar
 
-            .padding
-              .full
+            .padding-index
+
+              .full-index
 
                 .row
 
@@ -80,12 +81,14 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
                   include errors
 
                 .row
+
                   block content
 
   #footer
     .navbar.navbar-default.navbar-static-bottom.navbar-fixed-bottom(role="navigation")
       .container-fluid.navbar-inner
         span.text-muted
+          | &nbsp;
           span.proper= t('copyright')
           | &nbsp;
           script document.write(new Date().getFullYear().toString())

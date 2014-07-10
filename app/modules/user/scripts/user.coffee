@@ -15,6 +15,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user',
       url: '/user'
       parent: 'user_root'
+      hidden: true
       data:
         root: 'user'
       views:
@@ -26,6 +27,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.profile',
       url: '/profile'
       parent: 'user_root'
+      icon: 'user32'
       data:
         root: 'user'
       views:
@@ -37,6 +39,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.invoices',
       url: '/invoices'
       parent: 'user_root'
+      icon: 'cash'
       data:
         root: 'user'
       views:
@@ -48,6 +51,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.shares',
       url: '/shares'
       parent: 'user_root'
+      icon: 'share52'
       data:
         root: 'user'
       views:

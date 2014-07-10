@@ -7,7 +7,7 @@ module.exports = [
     options: 'l'
     icon: 'dropmenu'
     accepts: ['Menu']
-    default_children: 'Menu'
+    default_children: ['Menu']
 ,
   name: 'Menu'
   desc: 'Menu item'

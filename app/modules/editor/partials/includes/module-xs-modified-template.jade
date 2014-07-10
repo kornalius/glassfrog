@@ -1,1 +1,1 @@
-td.module-modified-color(id="module-modified-color_{{m._id}}", align="right", style="padding: 2px; width: 6px; min-width: 6px;", ng-show="m.isModified()")
+td(id="module-modified-color_{{m._id}}", ng-class="{ 'module-xs-not-modified-color': !m.isModified(), 'module-xs-modified-color': m.isModified() }")

@@ -60,6 +60,7 @@
     "sugar": "^1.4.1",
     "through": "^2.3.4",
     "tracer": "^0.6.2",
+    "underscore.string": "^2.3.3",
     "verbal-expressions": "^0.1.2"
   },
   "devDependencies": {

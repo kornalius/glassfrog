@@ -37,12 +37,16 @@ html, body, #editor {
   padding: 4px;
 }
 
+.container-fluid {
+  padding: 0px;
+}
+
 .column .padding {
-  padding: 8px;
+  padding: 4px;
 }
 
 .full {
-  padding-top: 8px;
+//  padding-top: 8px;
 }
 
 .box {
@@ -55,11 +59,7 @@ html, body, #editor {
 }
 
 .box #index-main {
-  background-color: #dde5f1;
-}
-
-#index-page {
-  margin-top: 50px;
+  background-color: #688ec0;
 }
 
 //.divider {
@@ -72,13 +72,17 @@ html, body, #editor {
   padding-right: 0px;
 }
 
+#login, #signup, #forgot {
+  padding-top: 50px;
+}
+
 #footer {
   margin-bottom: 20px;
 }
 
-.col-sm-5 {
-  padding: 0px;
-}
+//.col-sm-5 {
+//  padding: 0px;
+//}
 
 .col-sm-9.full {
   width: 100%;
@@ -120,7 +124,7 @@ a.active {
 }
 
 .form-group {
-  margin-bottom: 8px !important;
+  margin-bottom: 4px !important;
 }
 
 .panel-footer.form-group {
@@ -128,10 +132,10 @@ a.active {
 }
 
 .form-group-separator {
-//  font-size: @font-size-lg;
+  font-size: medium;
   font-weight: bold;
-  color: @gray-light;
-  border-bottom: #c0c0c0 solid 2px;
+//  color: @gray-light;
+//  border-bottom: #c0c0c0 solid 2px;
 //  margin-top: 8px;
 }
 
@@ -223,4 +227,40 @@ textarea.form-control {
 
 .row-lg {
   line-height: 10em;
+}
+
+.searchclear {
+  position: absolute;
+  right: 36px;
+  top: -3px;
+  bottom: 0;
+  height: 16px;
+  margin: auto;
+  font-size: 12px;
+  cursor: pointer;
+  z-index: 10000;
+//  color: #ccc;
+}
+
+.control-label {
+  font-size: small;
+  white-space: nowrap;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-back {
+//  background-color: @gray-lighter;
+//  border-radius: @border-radius-large;
+  padding: 8px;
+}
+
+.field-error-block {
+  margin: 0px !important;
+}
+
+.toolbar-group a, .toolbar-group a i {
+  color: @brand-primary;
+//  font-weight: bold;
 }

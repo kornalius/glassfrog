@@ -70,9 +70,10 @@ angular.module('dragdrop.service', ['app', 'app.globals', 'editor', 'editor.node
 ])
 
 .directive('droppable', [
+  'Editor'
   'EditorNode'
 
-  (EditorNode) ->
+  (Editor, EditorNode) ->
     restrict: 'A'
 
     link: (scope, element, attrs) ->
@@ -91,13 +92,13 @@ angular.module('dragdrop.service', ['app', 'app.globals', 'editor', 'editor.node
           # Move node
           if s and s.$data.isNode and s.canMove(d, false)
             s.move(d, false, (result) ->
-              EditorNode.setSelection(result)
+#              EditorNode.setSelection(result)
             )
 
           # Insert component
-          else if d.canAdd(s, false)
+          else if s and s.$data.isComponent and d.canAdd(s, false)
             d.add(s.name, s, false, (result) ->
-              EditorNode.setSelection(result)
+#              EditorNode.setSelection(result)
             )
 
           $(ui.helper).removeClass('drag-invalid')
@@ -188,63 +189,50 @@ angular.module('dragdrop.service', ['app', 'app.globals', 'editor', 'editor.node
           $(this).removeClass('drag-hover')
       )
 
-      $('.node-property-value-col').droppable(
+      $('#editor-content-main').droppable(
         accept: '.node, .component'
         tolerance: 'pointer'
-        greedy: true
 
         drop: (event, ui) ->
           src = angular.element(ui.draggable).scope()
           dst = angular.element(this).scope()
           s = if src.n then src.n else src.c
-          d = dst.np
+          d = Editor.module.getRoot()
 
-          if d and s and d.canAdd(s) and (s.$data.isNode or s.$data.isComponent)
-            d.add(s.name, s)
+          # Move node
+          if s and s.$data.isNode and s.canMove(d, true)
+            s.move(d, true, (result) ->
+#              EditorNode.setSelection(result)
+            )
+
+          # Insert component
+          else if s and s.$data.isComponent and d.canAdd(s, true)
+            d.add(s.name, s, true, (result) ->
+#              EditorNode.setSelection(result)
+            )
 
           $(ui.helper).removeClass('drag-invalid')
-          $(this).removeClass('drag-hover')
-
-#          $(".node").each(() ->
-#            $this = $(this)
-#            $this.removeClass('drag-insert-top')
-#            $this.removeClass('drag-insert-bottom')
-#          )
-
-          event.stopPropagation()
+          $(this).removeClass('dropzone-hover')
+          $(".dropzone").removeClass('dropzone-active')
 
         over: (event, ui) ->
           src = angular.element(ui.draggable).scope()
           dst = angular.element(this).scope()
           s = if src.n then src.n else src.c
-          d = dst.np
+          d = Editor.module.getRoot()
 
-#          $(".node").each(() ->
-#            $this = $(this)
-#            $this.removeClass('drag-insert-top')
-#            $this.removeClass('drag-insert-bottom')
-#          )
+          $(this).addClass('dropzone-hover')
+          $("#dropzone_" + d._id).addClass('dropzone-active')
 
-          $(this).addClass('drag-hover')
-
-          if d and s and !d.canAdd(s) and (s.$data.isNode or s.$data.isComponent)
-              $(ui.helper).addClass('drag-invalid')
-            else
-              $(ui.helper).removeClass('drag-invalid')
-  #            $this = $(this)
-  #            cOffset = $this.offset()
-  #            if event.pageX >= cOffset.left and event.pageX <= cOffset.left + $this.width()
-  #              bottomPos = cOffset.top + $this.height()
-  #              if event.pageY >= cOffset.top and event.pageY <= cOffset.top + insertZone
-  #                $this.addClass('drag-insert-top')
-  #              if event.pageY >= bottomPos - insertZone and event.pageY <= bottomPos
-  #                $this.addClass('drag-insert-bottom')
-
-          event.stopPropagation()
+          if (s and s.$data.isNode and !s.canMove(d, false)) or (!d.canAdd(s, false))
+            $(ui.helper).addClass('drag-invalid')
+          else
+            $(ui.helper).removeClass('drag-invalid')
 
         out: (event, ui) ->
 #          $(ui.helper).removeClass('drag-invalid')
-          $(this).removeClass('drag-hover')
+          $(this).removeClass('dropzone-hover')
+          $(".dropzone").removeClass('dropzone-active')
       )
 
 ])

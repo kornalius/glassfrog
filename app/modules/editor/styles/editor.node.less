@@ -1,19 +1,25 @@
+@node-color: whitesmoke;
+@node-width: 250px;
+@node-height: 28px;
+
+.node-line {
+  vertical-align: middle;
+}
+
 .node {
-  background: whitesmoke;
+  background-color: @node-color;
   font-size: 12px;
-  border-radius: @border-radius-base;
   cursor: pointer;
-  min-width: 300px;
-  width: 300px;
-  min-height: 24px;
-  height: 24px;
-//  border-left: 10px solid transparent;
-  box-shadow: 1px 1px 1px rgba(80, 80, 80, 0.5);
-//  margin-bottom: 4px;
+  min-width: @node-width;
+  width: @node-width;
+  min-height: @node-height;
+  height: @node-height;
+  border-radius: @border-radius-base;
+  box-shadow: 1px 1px 3px rgba(80, 80, 80, 0.5);
 }
 
 .node-icon-col {
-//  padding-top: 3px;
+  padding-bottom: 2px;
 //  padding-left: 4px;
 //  padding-right: 8px;
   text-align: center;
@@ -25,9 +31,9 @@
 }
 
 .node-link-icon {
-  color: #688ec0;
-  font-size: 13px;
-  padding-right: 3px;
+  color: #999999;
+  font-size: medium;
+  padding-right: 2px;
   vertical-align: middle;
 }
 
@@ -46,17 +52,24 @@
 }
 
 .node-label-col {
-//  background-color: yellowgreen;
-  min-width: 50px !important;
 }
 
 .node-label {
-  vertical-align: middle;
-  padding: 4px;
+  padding-left: 4px;
   color: #333333;
+  text-shadow: 1px 1px 2px @gray-light;
+  vertical-align: middle;
+  min-width: 75px;
 }
 
 .node-input {
+  font-size: small !important;
+  height: 24px !important;
+  width: 100% !important;
+}
+
+.node-select {
+
 }
 
 .node-highlighted {
@@ -68,7 +81,7 @@
 }
 
 .node-selected-highlighted {
-  background: #ccd9ea;
+  background: lightsteelblue;
 }
 
 .node-expand {
@@ -92,49 +105,67 @@
 
 .node-parentIcons-col {
 //  background-color: #b0c4de;
-  padding: 4px;
-  vertical-align: middle;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .node-parentIcons {
   background-color: #999999;
   border-radius: 4px;
-  padding: 2px;
+  vertical-align: middle;
 }
 
 .node-parentIcons, .node-parentIcon {
   color: #f5f5f5;
 //  padding-top: 8px;
-  font-size: 12px;
-  padding-left: 2px;
-  padding-right: 2px;
+  font-size: x-small;
+  padding: 2px 1px 2px 1px;
+  vertical-align: middle;
 }
 
-.tool-icon {
-  color: #d4d4d4;
-}
-
-.tool-icon-highlighted {
-  color: whitesmoke;
-}
-
-.tool-menu {
+.node-button-menu {
 //  background-color: #ffff00;
-  min-width: 160px;
+  max-height: @node-height;
+  min-height: @node-height;
+  height: @node-height;
+  max-width: 64px;
+  min-width: 64px;
+  width: 64px;
 }
 
-.tool-menu button {
-  padding: 2px 4px 2px 4px;
+.node-button-icon {
+  color: #d4d4d4;
+  font-size: 14px;
 }
 
-.tool-menu .btn-group > .btn {
+.node-button-item {
   border: none;
   box-shadow: none;
   background: none;
+  font-size: 14px;
+  padding: 0px 0px 0px 0px;
+  margin: 0;
 }
 
-.tool-menu .btn-group > .btn:hover > span {
+.node-button-item:hover span {
   color: whitesmoke;
+}
+
+.node-menu {
+
+}
+
+.node-menu-item {
+  font-size: 14px;
+}
+
+.node-menu-icon {
+  color: #d4d4d4;
+  padding-right: 16px;
+}
+
+.node-menu-label {
+
 }
 
 #editor-content {
@@ -148,8 +179,12 @@
   background: none;
 }
 
+#editor-content-toolbar-menu .btn {
+  font-size: 14px;
+}
+
 .row#editor-content-toolbar {
-  height: auto !important;
+//  height: auto !important;
 }
 
 #editor-content-toolbar-menu.navbar.navbar-default {
@@ -183,98 +218,74 @@
   padding: 2px 2px !important;
 }
 
-.node-properties {
-  padding-top: 4px;
-  padding-bottom: 4px;
+.nodes .angular-ui-tree {
+
 }
 
-.node-property {
-  font-size: 10px;
-  cursor: pointer;
-  height: 20px;
-  width: 99%;
+.nodes .angular-ui-tree-empty {
+  border: none !important;
+  min-height: 100px;
+  background-color: transparent !important;
+  background-image: none !important;
 }
 
-.node-property-label-col {
-  max-width: 100px;
-  width: 10px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.nodes .angular-ui-tree-nodes {
+  display: block;
+  position: relative;
+  margin: 0px;
+  padding: 0px;
+  list-style: none;
 }
 
-.node-property-label {
-  vertical-align: middle;
-  font-style: italic;
-  color: #333333;
+.nodes .angular-ui-tree-nodes .angular-ui-tree-nodes {
+  padding-left: 20px !important;
 }
 
-.node-property-value-col {
+.nodes .angular-ui-tree-node, .nodes .angular-ui-tree-placeholder {
+  display: block;
+  position: relative;
+  background-color: transparent;
+  margin: 0 !important;
+  margin-top: 0px !important;
+  margin-bottom: 0px !important;
+  padding-top: 1px !important;
+  padding-bottom: 1px !important;
+  min-width: @node-width !important;
+  width: @node-width !important;
+  min-height: @node-height !important;
+  line-height: @node-height !important;
 }
 
-.node-property-value {
-  vertical-align: middle;
-  background: #999999;
-  width: 100%;
-  min-height: 18px;
-  height: 18px;
-  padding: 0px 2px 0px 2px;
-  font-size: 10px;
-  color: #f5f5f5;
+.nodes .angular-ui-tree-hidden {
+  display: none;
 }
 
-.node-property-input {
-  vertical-align: middle;
-}
-
-.node-property-select {
-  vertical-align: middle;
-}
-
-.node-property-check-wrapper {
-  vertical-align: middle;
-}
-
-.node-property-check {
-}
-
-.node-property-highlighted {
-  border-color: #688ec0;
+.nodes .angular-ui-tree-placeholder {
+  margin: 5px 0px 5px 32px !important;
+  padding: 0px;
+  background-color: #d4d4d4;
+  opacity: 0.5;
   border-radius: @border-radius-base;
-  box-shadow: 0 0 8px #688ec0;
+  border: thin dashed black;
 }
 
-.node-property-selected {
-  background: lightsteelblue;
+.nodes .angular-ui-tree-handle {
+  cursor: pointer;
+  text-decoration: none !important;
+  font-weight: normal !important;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
-.node-property-selected-highlighted {
-  background: #ccd9ea;
-}
-
-.node-property-parentIcon {
-  vertical-align: middle;
-  color: #f5f5f5;
-  font-size: 11px;
-  padding-left: 2px;
-  padding-right: 2px;
-}
-
-.node-property-expand {
-  vertical-align: middle;
-  font-size: 18px;
-  color: #999999;
-}
-
-.node-property-expand-highlighted {
-  vertical-align: middle;
-  font-size: 18px;
-  color: #999999;
-}
-
-#editor-content-nodeproperty-main {
-  padding-top: 4px;
-  padding-bottom: 8px;
-  padding-left: 8px;
-  padding-right: 4px;
+.angular-ui-tree-drag {
+  position: absolute;
+  pointer-events: none;
+  z-index: 999;
+  opacity: .8;
+  -webkit-transform: rotate(2.5deg);
+  -moz-transform: rotate(2.5deg);
+  -o-transform: rotate(2.5deg);
+  -ms-transform: rotate(2.5deg);
+  transform: rotate(2.5deg);
 }

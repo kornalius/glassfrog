@@ -1,7 +1,25 @@
-div(ui-tree-handle)
+div(id="module-popover_{{m._id}}", data-placement="left", data-content="{{m.desc}}", data-container="body")
 
-  div(id="component-popover_{{c._id}}", data-content="{{c.desc}}", data-container="body")
+  table.module-xs(id="module-element_{{m._id}}", width="100%", ng-model="m", ng-mouseover="setOver(m); showpopup(m);", ng-mouseleave="setOver(null); hidepopup(m);", ng-class="{ 'module-xs-highlighted': isOver(m) && !isSelection(m), 'module-xs-selected': isSelection(m) && !isOver(m), 'module-xs-selected-highlighted': isSelection(m) && isOver(m) }", ng-click="setSelection(m); $event.stopPropagation();")
 
-    table.component(id="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)", render-component="c")
+    include module-xs-color-template
 
-      include component-icon-template
+    td
+
+      table
+
+        tr
+
+          include module-xs-icon-template
+
+          include module-xs-shared-template
+
+        tr
+
+          include module-xs-label-template
+
+        tr
+
+          include module-xs-version-template
+
+    include module-xs-modified-template

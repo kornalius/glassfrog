@@ -1,14 +1,23 @@
 div(id="module-popover_{{m._id}}", data-placement="left", data-content="{{m.desc}}", data-container="body")
+
   table.module(id="module-element_{{m._id}}", width="100%", ng-model="m", ng-mouseover="setOver(m); showpopup(m);", ng-mouseleave="setOver(null); hidepopup(m);", ng-class="{ 'module-highlighted': isOver(m) && !isSelection(m), 'module-selected': isSelection(m) && !isOver(m), 'module-selected-highlighted': isSelection(m) && isOver(m) }", ng-click="setSelection(m); $event.stopPropagation();")
 
     include module-color-template
 
-    include module-icon-template
+    td
 
-    include module-label-template
+      table
 
-    include module-shared-template
+        tr
 
-    include module-version-template
+          include module-icon-template
+
+          include module-label-template
+
+        tr
+
+          include module-shared-template
+
+          include module-version-template
 
     include module-modified-template

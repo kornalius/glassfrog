@@ -4,7 +4,6 @@ timestamps = require('mongoose-time')()
 version = require('../mongoose_plugins/mongoose-version')
 ownable = require('mongoose-ownable')
 async = require('async')
-_ = require('lodash')
 safejson = require('safejson')
 
 VCGlobal = require("../vc_global")
@@ -135,6 +134,7 @@ setTimeout( ->
         dd = data.map((d) ->
           f = _.clone(d)
 
+          f.name = _.str.classify(f.name)
           f.owner_id = owner
 
           if f.extra

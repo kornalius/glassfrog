@@ -3,8 +3,10 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 .run([
   '$http'
   'Rest'
+  'EditorComponent'
+  'EditorModule'
 
-  ($http, Rest) ->
+  ($http, Rest, EditorComponent, EditorModule) ->
 
     require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->
       console.log "Loading components..."
@@ -14,6 +16,8 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
         for c in VCGlobal.components
           Component.make(c)
         console.log "Loaded {0} components".format(VCGlobal.components.length)
+
+        EditorComponent.refresh()
       )
       .error((data, status) ->
       )
@@ -26,6 +30,8 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
         for m in VCGlobal.modules.rows
           Module.make(m)
         console.log "Loaded {0} modules".format(VCGlobal.modules.rows.length)
+
+        EditorModule.refresh()
       )
       .error((data, status) ->
       )
@@ -42,8 +48,7 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
     .state('editor_root',
       abstract: true
       templateUrl: '/partials/editor.html'
-      controller: ($scope) ->
-        $scope.localVariable = "HELLO WORLD!"
+      controller: 'EditorCtrl'
 #      onEnter: () ->
 #        console.log "enter test"
     )
@@ -51,6 +56,7 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
     .state('editor',
       url: '/editor'
       parent: 'editor_root'
+      hidden: true
       data:
         root: 'editor'
       views:
@@ -80,12 +86,14 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
 .factory('Editor', [
   'dynModal'
+  '$timeout'
 
-  (dynModal) ->
+  (dynModal, $timeout) ->
     over: null
     drag: null
     dragOver: null
     module: null
+    rootNodes: []
 
     isModuleSaved: () ->
       !@module or @module.isSaved()
@@ -109,11 +117,14 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
       @askSaveModule((ok) ->
         if ok
           that.module = m
+          that.rootNodes = m.getRoot().nodes
         cb(that.module) if cb
       )
 
-    saveModule: (m) ->
-      m.save()
+    saveModule: (m, cb) ->
+      m.save((err, result) ->
+        cb() if cb
+      )
 
     isOver: (o) ->
       @over == o
@@ -126,4 +137,54 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
     setDragOver: (o) ->
       @dragover = o
+])
+
+.controller('EditorCtrl', [
+  '$scope'
+  'Editor'
+  'EditorComponent'
+  'EditorModule'
+  'EditorNode'
+  '$timeout'
+
+  ($scope, Editor, EditorComponent, EditorModule, EditorNode, $timeout) ->
+
+    $scope.rootNodes = []
+    $scope.service = Editor
+
+    $scope.$watchCollection('service.rootNodes', (newVal) ->
+      $scope.rootNodes = newVal
+    )
+
+    require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->
+      $timeout( ->
+        EditorComponent.refresh(EditorNode.selection())
+        EditorModule.refresh()
+      , 100)
+    )
+
+    $scope.isModuleSaved = () ->
+      Editor.isModuleSaved()
+
+    $scope.askSaveModule = () ->
+      Editor.askSaveModule()
+
+    $scope.editModule = (m, cb) ->
+      Editor.editModule(m, cb)
+
+    $scope.saveModule = (m) ->
+      Editor.saveModule(m)
+
+    $scope.isOver = (o) ->
+      Editor.isOver(o)
+
+    $scope.setOver = (o) ->
+      Editor.setOver(o)
+
+    $scope.isDragOver = (o) ->
+      Editor.isDragOver(o)
+
+    $scope.setDragOver = (o) ->
+      Editor.setDragOver(o)
+
 ])
