@@ -46,7 +46,6 @@ app = angular.module('app', [
   'ui.config'
   'ui.directives'
   'ui.filters'
-  'ui.tree'
 
   'pagination.services'
 

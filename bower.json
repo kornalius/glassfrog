@@ -47,13 +47,14 @@
     "angular-bootstrap": "~0.11.0",
     "multiselect": "~0.9.11",
     "safejson": "~1.0.0",
-    "angular-ui-tree": "~2.1.4",
     "angular-filters": "~1.1.0",
     "angular-lodash": "~0.1.0",
     "angular-underscore-string": "~0.1.1",
-    "angular-tree-repeat": "~0.0.1",
     "angular-form-builder": "~0.1.0",
-    "ng-contenteditable": "*"
+    "ng-contenteditable": "*",
+    "jquery-sortable": "~0.9.12",
+    "tinycolor": "~1.0.0",
+    "acorn": "~0.6.0"
   },
   "resolutions": {
     "angular": "~1.2.18"

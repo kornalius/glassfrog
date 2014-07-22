@@ -1,0 +1,186 @@
+Language Syntax Definition
+
+'statement': [
+  { _or: [
+    { token: 'object' },
+    { token: 'object-assign' },
+    { token: 'method-ref' },
+    { token: 'condition' },
+    { token: 'loop' }
+  ]}
+]
+
+'object-definition': [
+  { _or: [
+    { type: 'Property' },
+    { type: 'Method' },
+    { type: 'Event' }
+  ]}
+]
+
+'object-ref': [
+  { type: 'ObjectRef' }
+]
+
+'object-assign': [
+  { type: 'ObjectRef' },
+  { token: 'expr' }
+]
+
+'method-ref': [
+  { type: 'MethodRef' },
+  { token: 'expr', min: 0 }
+]
+
+'value': [
+  { _or: [
+    { type: 'Number' },
+    { type: 'String' },
+    { type: 'Cson' },
+    { type: 'Boolean' },
+    { type: 'Date' },
+    { type: 'Time' },
+    { type: 'Color' }
+  ]}
+]
+
+'expr': [
+  { token: 'term' },
+  { min: 0, _or: [
+    { token: 'plus-term' },
+    { token: 'minus-term' }
+  ]}
+]
+
+'add-term': [
+  { type: 'AddOp' },
+  { token: 'term' }
+]
+
+'sub-term': [
+  { type: 'SubOp' },
+  { token: 'term' }
+]
+
+'term': [
+  { token: 'factor' },
+  { min: 0, _or: [
+    { token: 'mul-factor' },
+    { token: 'div-factor' },
+    { token: 'mod-factor' }
+  ]}
+]
+
+'mul-factor': [
+  { type: 'MulOp' },
+  { token: 'factor' }
+]
+
+'div-factor': [
+  { type: 'DivOp' },
+  { token: 'factor' }
+]
+
+'mod-factor': [
+  { type: 'ModOp' },
+  { token: 'factor' }
+]
+
+'factor': [
+  { _or: [
+    { token: 'value' },
+    { type: 'expr' }
+  ]}
+]
+
+'condition-expr': [
+  { token: 'term' },
+  { min: 0, _or: [
+    { token: 'plus-term' },
+    { token: 'minus-term' }
+  ]}
+]
+
+'condition': [
+  { type: 'If' },
+  { token: 'condition-expr' }
+]
+
+'loop': [
+  { _or: [
+    { token: 'for' },
+    { token: 'foreach' },
+    { token: 'while' }
+  ]}
+]
+
+'for': [
+  { type: 'For' },
+  { token: 'objectRef' },
+  { token: 'expr', min: 1 }
+]
+
+'foreach': [
+  { type: 'ForEach' },
+  { token: 'expr' },
+]
+
+'object': [
+  { type: 'Object' },
+  { type: 'String' }
+]
+
+'property': [
+  { type: 'Property' },
+  { type: 'String' },
+  { token: 'value', min: 1 }
+]
+
+'method': [
+  { type: 'Method' },
+  { type: 'String' },
+  { token: 'args', min: 0 }
+]
+
+
+
+Classes (#inherit, (accepts), {accepts-right} <in, >out)
+
+  
+  ** can only change name of object and literal components
+
+
+  object           : (property|method|object-event) <0 >0
+
+  objectRef        : <0 >1
+
+  schema           : #object (field|method|schema-event) <0 >0
+
+  field            : #object (validator|validate-event) <0 >0
+
+  method           : #object (statement) <0 >0
+
+  methodRef        : #objectRef <0+ >1
+
+  value            : {value|}
+
+  literal          : #value <0 >1
+
+  string           : #literal
+
+  number           : #literal
+
+  cson             : #literal (cson|literal)
+
+  boolean          : #literal
+
+  date             : #literal
+
+  time             : #literal
+
+  color            : #literal
+
+  operator         : 
+
+  +                : #operator {value}
+

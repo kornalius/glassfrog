@@ -150,7 +150,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
           l.push({ id: x++, text: nn })
       return l
 
-    edit: (n) ->
+    edit: (n, $event) ->
       if @canEdit(n)
         @currentEdit = n
         @oldEditValue = n.name
@@ -160,13 +160,15 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
             i.select2('data', { id: n.id(), text: n.name })
           $timeout(->
             i.select2('focus')
-          , 100)
+          )
         else
           i = angular.element('#node-input_' + n.id())
           $timeout(->
             i.focus()
             i.select()
-          , 100)
+          )
+        if $event
+          $event.stopPropagation()
 
     saveEdit: () ->
       n = @currentEdit
@@ -305,53 +307,54 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
   ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope, $timeout) ->
 
-    $scope.treeOptions =
-      accept: (sourceNodeScope, destNodesScope, destIndex) ->
-        s = sourceNodeScope.$modelValue
-        t = destNodesScope.$nodeScope
-        if t
-          p = t.$modelValue
-        else if Editor.module
-          p = Editor.module.getRoot()
-        else
-          p = null
-
-        ok = false
-        if p and p.$data and p.$data.isNode and s and s.$data
-          if s.$data.isComponent
-            ok = p.getComponent().doAccept(null, s)
-          else
-            ok = p.getComponent().doAccept(s, s.getComponent())
-
-        return Editor.module and ok
-
-      beforeDrag: (sourceNodeScope) ->
-        return true
-
-      dropped: (event) ->
-        n = event.source.nodeScope.$modelValue
-        if n and n.$data and Editor.module
-          d = event.dest.nodesScope.$nodeScope
-          if d and d.$data and d.$data.isNode
-            p = d.$modelValue
-          else if !d
-            p = Editor.module.getRoot()
-          else
-            p = null
-
-          if n.$data._parent != p
-            if n.$data._parent and n.$data._parent.$data
-              n.$data._parent.setModified(true)
-            n.$data._parent = p
-            n.setModified(true)
-
-      dragStart: (event) ->
-
-      dragMove: (event) ->
-
-      dragStop: (event) ->
-
-      beforeDrop: (event) ->
+#    $scope.treeOptions =
+#      accept: (sourceNodeScope, destNodesScope, destIndex) ->
+#        s = sourceNodeScope.$modelValue
+#        t = destNodesScope.$nodeScope
+#        if t
+#          p = t.$modelValue
+#        else if Editor.module
+#          p = Editor.module.getRoot()
+#        else
+#          p = null
+#
+#        ok = false
+#        if p and p.$data and p.$data.isNode and s and s.$data
+#          if s.$data.isComponent
+#            ok = p.getComponent().doAccept(null, s)
+#          else
+#            ok = p.getComponent().doAccept(s, s.getComponent())
+#
+#        return Editor.module and ok
+#
+#      beforeDrag: (sourceNodeScope) ->
+#        return true
+#
+#      dropped: (event) ->
+#        n = event.source.nodeScope.$modelValue
+#        if n and n.$data and Editor.module
+#          d = event.dest.nodesScope.$nodeScope
+#          if d and d.$data and d.$data.isNode
+#            p = d.$modelValue
+#          else if !d
+#            p = Editor.module.getRoot()
+#          else
+#            p = null
+#
+#          if n.$data._parent != p
+#            if n.$data._parent and n.$data._parent.$data
+#              n.$data._parent.setModified(true)
+#            n.$data._parent = p
+#            n.setModified(true)
+#            EditorNode.setSelection(n)
+#
+#      dragStart: (event) ->
+#
+#      dragMove: (event) ->
+#
+#      dragStop: (event) ->
+#
+#      beforeDrop: (event) ->
 
     $scope.module = () ->
       EditorNode.module()
@@ -424,6 +427,14 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.refresh = (selected) ->
       EditorNode.refresh(selected)
+
+    $scope.toggle = (n, recursive) ->
+#      console.log $(".nodes-tree")
+      n.toggle(recursive)
+
+      $timeout(->
+        Editor.refreshDragTrees()
+      )
 
     #    $scope.save = (cb) ->
     #      require(['async'], (async) ->

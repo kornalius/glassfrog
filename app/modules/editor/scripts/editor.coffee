@@ -87,13 +87,18 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 .factory('Editor', [
   'dynModal'
   '$timeout'
+  '$interval'
 
-  (dynModal, $timeout) ->
+  (dynModal, $timeout, $interval) ->
     over: null
     drag: null
     dragOver: null
     module: null
     rootNodes: []
+    oldContainer: null
+    draggedWidth: 0
+    draggedHeight: 0
+    currentDragID: null
 
     isModuleSaved: () ->
       !@module or @module.isSaved()
@@ -115,10 +120,17 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
     editModule: (m, cb) ->
       that = @
       @askSaveModule((ok) ->
-        if ok
-          that.module = m
-          that.rootNodes = m.getRoot().nodes
-        cb(that.module) if cb
+        require(['vc_global'], (VCGlobal) ->
+          if ok
+            that.module = m
+            for mm in VCGlobal.modules.rows
+              mm.delState('e')
+            m.addState('e')
+            that.rootNodes = m.getRoot().nodes
+            m.doGenerate(true)
+            m.doGenerate(false)
+          cb(that.module) if cb
+        )
       )
 
     saveModule: (m, cb) ->
@@ -137,6 +149,165 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
     setDragOver: (o) ->
       @dragover = o
+
+    refreshDragTrees: () ->
+#      console.log "refreshDragTrees()", $(".nodes-tree")
+#      console.log "refreshDragTrees()", $(".nodes-args-tree")
+
+#      $(".nodes-tree").sortable("refresh")
+      $(".nodes-tree").sortable("destroy")
+
+#      $(".nodes-args-tree").sortable("refresh")
+      $(".nodes-args-tree").sortable("destroy")
+
+      that = @
+
+      $timeout(->
+        $("ol.nodes-tree").sortable(
+          group: 'nodes-tree'
+          tolerance: 8
+          distance: 8
+          dragID: 'N'
+#          containerPath: ''
+#          containerSelector: 'ol.nodes-tree'
+#          itemPath: ''
+#          itemSelector: 'li.nodes-tree-line'
+#          handle: 'td.node-color-col, td.node-icon-col, td.node-label-col'
+          nested: true
+          vertical: true
+          exclude: 'ol.nodes-args-tree'
+#          pullPlaceholder: false
+#          placeholder: '<li class="placeholder"/>'
+
+          isValidTarget: (item, container) ->
+#            console.log "isValidTarget", item, container
+            return container.options.dragID == 'N' && that.currentDragID == 'N'
+
+          onMousedown: (item, _super, event) ->
+            that.draggedWidth = 0
+            that.draggedHeight = 0
+            that.oldContainer = null
+
+#            console.log "onMouseDown", $(event.target), $(event.target).parents('li.nodes-args-tree-line')
+            if _super(item, _super, event)
+              return $(event.target).parents('ol.nodes-args-tree').length == 0
+            else
+              return false
+
+          onCancel: (item, container, _super, event) ->
+            console.log "onCancel", item, container
+
+          onDrag: (item, position, _super, event) ->
+#            console.log "onDrag", item.position(), position
+#            position.left /= 2
+#            item.css(position)
+            _super(item, position)
+
+          onDragStart: (item, container, _super, event) ->
+            that.currentDragID = container.options.dragID
+            that.draggedWidth = item.width()
+            that.draggedHeight = item.height()
+            _super(item, container)
+
+          afterMove: (placeholder, container) ->
+  #            console.log "afterMove", placeholder, container
+            if that.oldContainer != container
+              if that.oldContainer
+                that.oldContainer.el.removeClass("active")
+              if container
+                container.el.addClass("active")
+              that.oldContainer = container
+            if placeholder
+              placeholder.width(that.draggedWidth)
+              placeholder.height(that.draggedHeight)
+
+          onDrop: (item, container, _super) ->
+            console.log "onDrop", item, container
+            _super(item, container)
+            if container
+              container.el.removeClass("active")
+            scope = angular.element(item).scope()
+            if scope and scope.$parent and scope.$parent.n
+              scope.$parent.n.setModified(true)
+
+          serialize: (parent, children, isContainer) ->
+            return (if isContainer then children.join() else parent.text())
+        )
+
+        $("ol.nodes-args-tree").sortable(
+          group: 'nodes-args-tree'
+          tolerance: 8
+          distance: 8
+          dragID: 'A'
+#          containerPath: '> .nodes-args-tree'
+#          containerSelector: '.nodes-args-tree'
+#          itemPath: '.nodes-args-tree-line'
+#          itemSelector: '.nodes-args-tree-line'
+#          handle: 'div'
+          nested: false
+          vertical: false
+          exclude: 'ol.nodes-tree'
+#          placeholder: '<li class="placeholder"/>'
+#          pullPlaceholder: false
+
+          isValidTarget: (item, container) ->
+#            console.log "isValidTarget(args)", item, container
+            return container.options.dragID == 'A' && that.currentDragID == 'A'
+
+          onMousedown: (item, _super, event) ->
+            that.draggedWidth = 0
+            that.draggedHeight = 0
+            that.oldContainer = null
+
+#            console.log "onMouseDown(args)", item, event
+            if _super(item, _super, event)
+              return $(event.target).parents('ol.nodes-args-tree').length > 0
+            else
+              return false
+
+          onCancel: (item, container, _super, event) ->
+            console.log "onCancel(args)", item, container
+
+          onDrag: (item, position, _super, event) ->
+#            console.log "onDrag(args)", item, position
+#            position.left /= 2
+#            item.css(position)
+            _super(item, position)
+
+          onDragStart: (item, container, _super, event) ->
+            that.currentDragID = container.options.dragID
+            that.draggedWidth = item.width()
+            that.draggedHeight = item.height()
+            _super(item, container)
+
+          afterMove: (placeholder, container) ->
+#            console.log "afterMove(args)", placeholder, container
+            if that.oldContainer != container
+              if that.oldContainer
+                that.oldContainer.el.removeClass("active")
+              if container
+                container.el.addClass("active")
+              that.oldContainer = container
+            if placeholder
+              placeholder.width(that.draggedWidth)
+              placeholder.height(that.draggedHeight)
+
+          onDrop: (item, container, _super) ->
+            console.log "onDrop(args)", item, container
+            _super(item, container)
+            if container
+              container.el.removeClass("active")
+            scope = angular.element(item).scope()
+            if scope and scope.$parent and scope.$parent.n
+              scope.$parent.n.setModified(true)
+
+#          serialize: (parent, children, isContainer) ->
+#            return (if isContainer then children.join() else parent.text())
+        )
+
+#        $(".nodes-args-tree").sortable("refresh")
+#        $(".nodes-tree").sortable("refresh")
+      )
 ])
 
 .controller('EditorCtrl', [
@@ -154,6 +325,10 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
     $scope.$watchCollection('service.rootNodes', (newVal) ->
       $scope.rootNodes = newVal
+
+      $timeout(->
+        Editor.refreshDragTrees()
+      )
     )
 
     require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->

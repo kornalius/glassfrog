@@ -1,10 +1,16 @@
+@module-color: @control-color;
 @module-width: 250px;
 @module-height: 32px;
+
+.modules ol {
+  list-style-type: none;
+  padding: 0px;
+}
 
 .module {
   min-height: @module-height;
   height: @module-height;
-  background: whitesmoke;
+  background: @module-color;
   font-size: small;
   line-height: 16px;
   cursor: pointer;
@@ -15,11 +21,13 @@
 }
 
 .module-selected {
-  background: lightsteelblue;
+  background: @control-selection-color;
+  color: @text-selection-color;
 }
 
 .module-selected-highlighted {
-  background: #ccd9ea;
+  background: @control-highlight-color;
+  color: @text-highlight-color;
 }
 
 .module-color {
@@ -40,7 +48,7 @@
 .module-icon {
   font-size: medium;
   vertical-align: middle;
-  color: @gray;
+  color: @dark-icon-color;
 }
 
 .module-label-col {
@@ -53,6 +61,7 @@
 }
 
 .module-label {
+  color: @text-color;
   font-size: small;
   padding-right: 4px;
   vertical-align: middle;
@@ -62,10 +71,11 @@
   width: 24px !important;
   min-width: 24px !important;
   text-align: center;
+  color: @info-icon-color;
 }
 
 .module-shared-icon {
-  color: @gray-light;
+  color: @icon-color;
   font-size: x-small;
   vertical-align: middle;
 }
@@ -77,13 +87,13 @@
 
 .module-version {
   font-size: xx-small;
-  color: @gray-light;
+  color: @info-text-color;
   vertical-align: middle;
   padding-right: 2px;
 }
 
 .module-modified-color {
-  background-color: #f3a7a7;
+  background-color: @light-red-color;
 //  border-radius: 0px @border-radius-base @border-radius-base 0px;
   width: 6px;
   min-width: 6px;
@@ -97,7 +107,7 @@
 .module-xs {
   min-height: @module-height;
   height: @module-height;
-  background: whitesmoke;
+  background: @module-color;
   font-size: x-small;
   line-height: 10px;
   cursor: pointer;
@@ -108,11 +118,13 @@
 }
 
 .module-xs-selected {
-  background: lightsteelblue;
+  background: @control-selection-color;
+  color: @text-selection-color;
 }
 
 .module-xs-selected-highlighted {
-  background: #ccd9ea;
+  background: @control-highlight-color;
+  color: @text-highlight-color;
 }
 
 .module-xs-color {
@@ -129,14 +141,14 @@
 .module-xs-icon {
   font-size: small;
   vertical-align: middle;
-  color: @gray;
+  color: @icon-color;
 }
 
 .module-xs-shared-icon-col {
 }
 
 .module-xs-shared-icon {
-  color: @gray-light;
+  color: @info-icon-color;
   font-size: small;
   vertical-align: middle;
 }
@@ -160,15 +172,19 @@
 
 .module-xs-version {
   font-size: xx-small;
-  color: @gray-light;
+  color: @info-text-color;
   text-align: right;
 }
 
 .module-xs-modified-color {
-  background-color: #f3a7a7;
+  background-color: @light-red-color;
 //  border-radius: 0px @border-radius-base @border-radius-base 0px;
   width: 6px;
   min-width: 6px;
+}
+
+#editor-modules-root {
+  background-color: @module-color;
 }
 
 #editor-modules {
@@ -193,110 +209,4 @@
 
 #editor-modules-xs {
 
-}
-
-.modules .angular-ui-tree {
-
-}
-
-.modules .angular-ui-tree-empty {
-  border: none !important;
-//  min-height: 100px;
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-.modules .angular-ui-tree-nodes {
-  display: block;
-  position: relative;
-  margin: 0px;
-  padding: 0px;
-  list-style: none;
-}
-
-.modules .angular-ui-tree-nodes .angular-ui-tree-nodes {
-  padding-left: 0px;
-}
-
-.modules .angular-ui-tree-node, .modules .angular-ui-tree-placeholder {
-  display: block;
-  position: relative;
-  background-color: transparent !important;
-  margin: 0 !important;
-  padding: 0px !important;
-//  min-width: @module-width !important;
-//  width: @module-width !important;
-  min-height: @module-height !important;
-  line-height: @module-height !important;
-}
-
-.modules .angular-ui-tree-hidden {
-  display: none;
-}
-
-.modules .angular-ui-tree-placeholder {
-  margin: 0px !important;
-  padding: 0px !important;
-}
-
-.modules .angular-ui-tree-handle {
-  cursor: pointer;
-  text-decoration: none !important;
-  font-weight: normal !important;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-}
-
-.modules-xs .angular-ui-tree {
-
-}
-
-.modules-xs .angular-ui-tree-empty {
-  border: none !important;
-//  min-height: 100px;
-  background-color: transparent !important;
-  background-image: none !important;
-}
-
-.modules-xs .angular-ui-tree-nodes {
-  display: block;
-  position: relative;
-  margin: 0px;
-  padding: 0px;
-  list-style: none;
-}
-
-.modules-xs .angular-ui-tree-nodes .angular-ui-tree-nodes {
-  padding-left: 0px;
-}
-
-.modules-xs .angular-ui-tree-node, .modules-xs .angular-ui-tree-placeholder {
-  display: block;
-  position: relative;
-  background-color: transparent !important;
-  margin: 0 !important;
-  padding: 0px !important;
-//  min-width: @module-width !important;
-//  width: @module-width !important;
-  min-height: @module-height !important;
-  line-height: @module-height !important;
-}
-
-.modules-xs .angular-ui-tree-hidden {
-  display: none;
-}
-
-.modules-xs .angular-ui-tree-placeholder {
-  margin: 0px !important;
-  padding: 0px !important;
-}
-
-.modules-xs .angular-ui-tree-handle {
-  cursor: pointer;
-  text-decoration: none !important;
-  font-weight: normal !important;
-  -webkit-box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
 }

@@ -1,142 +1,98 @@
 module.exports = [
 
+  name: 'Color'
+  desc: 'Color'
+  extra:
+    inherit: ['Literal']
+    icon: 'palette'
+    code:
+      render: (node) ->
+        color = @getColor()
+        if !color
+          color = @name
+        if color
+          color = color.toLowerCase()
+          if node
+            e = angular.element('#node-label_' + node.id())
+          else
+            e = angular.element('#component-icon_' + @id())
+          e.addClass(tinycolor(color).toName())
+,
+
+  name: 'Color.RGB'
+  desc: 'Color'
+  extra:
+    inherit: 'MethodRef'
+    icon: 'color'
+,
+
   name: 'Red'
   desc: 'Red colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'red'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('red')
+    inherit: 'Color'
+#    color: 'red'
 ,
 
   name: 'Blue'
   desc: 'Blue colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'blue'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('blue')
+    inherit: 'Color'
+#    color: 'blue'
 ,
 
   name: 'LightBlue'
   desc: 'Light-blue colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'lightblue'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('lightblue')
+    inherit: 'Color'
+#    color: 'lightblue'
 ,
 
   name: 'Orange'
   desc: 'Orange colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'orange'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('orange')
+    inherit: 'Color'
+#    color: 'orange'
 ,
 
   name: 'Purple'
   desc: 'Purple colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'purple'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('purple')
+    inherit: 'Color'
+#    color: 'purple'
 ,
 
   name: 'Pink'
   desc: 'Pink colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'pink'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('pink')
+    inherit: 'Color'
+#    color: 'pink'
 ,
 
   name: 'Yellow'
   desc: 'Yellow colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'yellow'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('yellow')
+    inherit: 'Color'
+#    color: 'yellow'
 ,
 
-  name: 'DarkGray'
-  desc: 'Dark-gray colored text appearance'
+  name: 'DarkGrey'
+  desc: 'Dark-grey colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'darkgray'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('darkgray')
+    inherit: 'Color'
+#    color: 'darkgray'
 ,
 
-  name: 'Gray'
-  desc: 'Gray colored text appearance'
+  name: 'Grey'
+  desc: 'Grey colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'gray'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('gray')
+    inherit: 'Color'
+#    color: 'gray'
 ,
 
-  name: 'LightGray'
-  desc: 'Light-gray colored text appearance'
+  name: 'LightGrey'
+  desc: 'Light-grey colored text appearance'
   extra:
-    inherit: 'Decorator'
-    color: 'lightgray'
-    code:
-      render: (node) ->
-        if node
-          e = angular.element('#node-label_' + node.id())
-        else
-          e = angular.element('#component-icon_' + this.id())
-        e.addClass('lightgray')
+    inherit: 'Color'
+#    color: 'lightgray'
 
 ]

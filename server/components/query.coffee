@@ -5,13 +5,21 @@ module.exports = [
   extra:
     inherit: 'Object'
     icon: 'filter'
-    default_children: ['Select','Where','OrderBy','Limit']
-    accepts: ['QueryAction']
+    defaults: [
+      'Query.Select'
+    ,
+      'Query.Where'
+    ,
+      'Query.OrderBy'
+    ,
+      name: 'Query.Limit'
+      value: 10
+    ]
+    accepts: ['Query.Action']
     color: 'lightgray'
-    code: 'query.js'
 ,
 
-  name: 'QueryAction'
+  name: 'Query.Action'
   desc: 'Query action'
   extra:
     options: 'hp'
@@ -19,46 +27,49 @@ module.exports = [
     color: 'darkgray'
 ,
 
-  name: 'Select'
+  name: 'Query.Select'
   desc: 'Selected fields'
   extra:
     icon: 'selectionadd'
-    accepts: ['Field']
+    accepts: ['FieldRef']
     inherit: 'QueryAction'
-    code: 'queryselect.js'
 ,
 
-  name: 'Where'
+  name: 'Query.Where'
   desc: 'Query conditions'
   extra:
     icon: 'search5'
-    accepts: ['If', 'And', 'Or']
-    inherit: 'QueryAction'
-    code: 'querywhere.js'
+    accepts: []
+    inherit: 'Query.Action'
 ,
 
-  name: 'OrderBy'
+  name: 'Query.OrderBy.Sort'
+  desc: 'Ascending or descending sort order'
+  extra:
+    icon: 'sort-by-attributes'
+    enum: ['Ascending', 'Descending']
+    defaultValue: 'Ascending'
+,
+
+  name: 'Query.OrderBy'
   desc: 'Order fields'
   extra:
     icon: 'sort-by-attributes'
-    accepts: ['Field']
-    inherit: 'QueryAction'
-    code: 'queryorderby.js'
+    accepts: ['FieldRef', 'Query.Sort']
+    inherit: 'Query.Action'
 ,
 
-  name: 'Query Page'
+  name: 'Query.Page'
   desc: 'Page to retrieve'
   extra:
     icon: 'pagebreak'
-    inherit: 'QueryAction'
-    code: 'querypage.js'
+    inherit: 'Query.Action'
 ,
 
-  name: 'Limit'
+  name: 'Query.Limit'
   desc: 'Maximum number of rows to fetch'
   extra:
     icon: 'stop23'
-    inherit: 'QueryAction'
-    code: 'querylimit.js'
+    inherit: 'Query.Action'
 
 ]

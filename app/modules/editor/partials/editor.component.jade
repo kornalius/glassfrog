@@ -20,7 +20,8 @@
       #editor-components-list
         .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
           ol(ui-tree-nodes="", ng-model="componentNodes", id="tree-components-root", data-nodrop)
-            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node, ng-include="'/partials/component-template.html'")
+            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node)
+              span(ng-include="'/partials/component-template.html'")
 
   .visible-xs#editor-components-xs
 
@@ -29,4 +30,5 @@
       #editor-components-xs-list
         .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
           ol(ui-tree-nodes="", ng-model="componentNodes", id="tree-components-root", data-nodrop)
-            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node, ng-include="'/partials/component-xs-template.html'")
+            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node)
+              span(ng-include="'/partials/component-xs-template.html'")

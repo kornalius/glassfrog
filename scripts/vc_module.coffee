@@ -11,7 +11,7 @@ ModuleClass =
 #    options
 
   VCGlobal: null
-  Node: null
+  VCNode: null
 
   setData: (m) ->
     if m.clearData
@@ -21,6 +21,7 @@ ModuleClass =
     m.$data._states = ''
     m.$data._json = {}
     m.$data.isModule = true
+    m.$data._syntax = null
 
     if m.extra
       if typeof m.extra is 'string'
@@ -32,7 +33,7 @@ ModuleClass =
         nn = { name: 'Root', component: 'root' }
         m.$data._json.root = nn
 
-      ModuleClass.Node.make(m.$data._json.root, null, m)
+      ModuleClass.VCNode.make(m.$data._json.root, null, m)
 
 
     m.id = () ->
@@ -40,6 +41,9 @@ ModuleClass =
 
     m.getName = () ->
       return (if @name then @name.toLowerCase() else "")
+
+    m.getDesc = () ->
+      return (if @desc then @desc else "")
 
     m.displayName = () ->
       if @name
@@ -122,6 +126,9 @@ ModuleClass =
     m.isSaved = () ->
       !@isModified()
 
+    m.isEditing = () ->
+      @hasState('e')
+
     m.isModified = () ->
       for n in @getNodes(true)
         if n.isModified()
@@ -143,13 +150,13 @@ ModuleClass =
       if @$data and @$data._json.icon
         return @$data._json.icon
       else
-        return 'box4'
+        return 'ruler3'
 
     m.getColor = () ->
       if @$data and @$data._json.color
         return @$data._json.color
       else
-        return ''
+        return null
 
     m.versionString = () ->
       "v{0}.{1}.{2}{3}".format(@version.major, @version.minor, @version.build, @version.maintenance)
@@ -172,11 +179,43 @@ ModuleClass =
         return scope
       return null
 
+    m.doGenerate = (client) ->
+      syntax = null
+      r = @getRoot()
+      if r
+        s = ""
+        for n in r.children()
+          ss = n.doGenerate(client)
+          if !ss.endsWith('\n')
+            ss += '\n'
+          s += ss
+        syntax = ModuleClass.VCGlobal.checkSyntax(s)
+        if !@$data._syntax
+          @$data._syntax = { client: null, server: null }
+        if client
+          @$data._syntax.client = syntax
+        else
+          @$data._syntax.server = syntax
+#      console.log "module generate", syntax
+
+      lines = syntax.code.split('\n')
+      for i in [0..lines.length - 1]
+        console.log i + 1, lines[i]
+
+      if syntax.error
+        console.log "ERROR:", syntax.error
+        console.log lines[syntax.error.loc.line - 1]
+        ss = ""
+        for i in [0..syntax.error.loc.column - 1]
+          ss += ' '
+        console.log ss + '^'
+
+      return syntax
 
   make: (m) ->
     @setData(m)
     for n in m.$data._json.root.nodes
-      ModuleClass.Node.make(n, m.$data._json.root, m)
+      ModuleClass.VCNode.make(n, m.$data._json.root, m)
 
   list: () ->
     l = []
@@ -213,11 +252,11 @@ ModuleClass =
 
 if define?
   define('vc_module', ['vc_global', 'vc_node'], (gd, nd) ->
-    ModuleClass.Node = nd
     ModuleClass.VCGlobal = gd
+    ModuleClass.VCNode = nd
     return ModuleClass
   )
 else
-  ModuleClass.Node = require("./vc_node")
   ModuleClass.VCGlobal = require('./vc_global')
+  ModuleClass.VCNode = require("./vc_node")
   module.exports = ModuleClass

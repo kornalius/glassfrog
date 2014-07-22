@@ -4,12 +4,12 @@ module.exports = [
   desc: 'Navigation menu bar'
   extra:
     inherit: 'UI'
-    options: 'l'
+    options: '!'
     icon: 'dropmenu'
-    accepts: ['Menu']
-    default_children: ['Menu']
+    accepts: ['Menu.Item']
+    defaults: ['Menu.Item']
 ,
-  name: 'Menu'
+  name: 'Menu.Item'
   desc: 'Menu item'
   extra:
     inherit: 'UI'

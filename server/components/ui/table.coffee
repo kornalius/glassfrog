@@ -4,25 +4,23 @@ module.exports = [
   desc: 'Table display'
   extra:
     icon: 'table2'
-    options: 'l'
     inherit: 'Control'
-    accepts: ['Column', 'Header']
+    accepts: ['Table.Column', 'Table.Header']
 ,
 
-  name: 'Header'
+  name: 'Table.Header'
   desc: 'Table header'
   icon: 'tag8'
   extra:
-    options: 'l'
     inherit: 'Control'
-    accepts: ['Icon']
+    accepts: ['Icon', 'Label']
 ,
 
-  name: 'Column'
+  name: 'Table.Column'
   desc: 'Table column'
   extra:
     icon: 'columns'
     inherit: 'Control'
-    accepts: ['Column', 'Field']
+    accepts: ['Table.Column', 'FieldRef']
 
 ]

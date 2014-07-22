@@ -1,0 +1,92 @@
+legend:
+
+  name : inherits (...) [...] = token definition
+
+  $name (...) [...] = type definition
+
+  [...] = accepts children types
+    [ type +|*|= ...]
+
+        + 1 or more
+        * 0 or more
+        = only 1
+
+  (...) = arguments
+    ( argument... )
+
+  <...> = argument definition
+    < name : type default >
+    <| optional_argument... |>
+    <+ optional_argument... but can add more than 1 +>
+
+  {...} = eval code
+
+  {{...}} = multiline eval code
+
+
+object [property+]
+
+  type:property (<| string:string{''}, number:number{0}, date:date{new Date().now}, binary, money, email, url, tel, time, password, percent, boolean |>)
+  
+  $range (<min:number{0}> <max:number{100}>)
+  
+  $size (<| size:number{0}, range |>)
+  
+  style:property (<+ background-color:color, color:color{white}, width:number{0}, height:number{0}, left:number{0}, top:number{0} +>)
+  
+  font:property (<+ name, size:number{14}, bold, italic, underline +>)
+  
+  validate:property (<+ required, indexed, readonly, populate, encrypted, size +>)
+
+  schema (<name:string{'Untitled'}) [field+, method+]
+
+  field (<name:string{'Untitled'}) [property+]
+
+  label:display (<caption:string> <property&>)
+
+  input:display (<caption:string> <text:string> <property&>)
+  
+  html:display (<| hr, h1, h2, h3 |> <+ style, font, text:string +> ) [html+]
+  
+  table:display () [column+, row+]
+  
+  column:display (<| style |>) [display+]
+  
+  row:display (<| style |>) [column+]
+
+  view:display [display+]
+
+  page [view+]
+
+  report [display+]
+
+
+
+  $statement
+
+  $chain [chain+]
+
+  $expr (<left:expr> <operator> <right:expr>)
+  
+  $operator (<| +, -, *, /, %, and, or |>)
+  
+  $condition (<| <, >, <=, >=, <>, = |>)
+  
+  if:statement (<left:expr> <condition> <right:expr>) [statement+]
+  
+  loop:statement (<variable> <| until:expr, while:expr, range |>) [statement+]
+
+  add:chain (<+ value +>)
+
+  subtract:chain (<+ value +>)
+  
+  multiply:chain (<+ value +>)
+  
+  divide:chain (<+ value +>)
+  
+  find:chain (<+ value +>)
+
+  insert:chain (<+ value +>)
+
+  print:chain (<+ value +>)
+

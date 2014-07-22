@@ -55,9 +55,6 @@
 
   #editor-nodes-root
 
-    //ul.nodes-tree(frang-tree)
-    //  li(frang-tree-repeat="n in rootNodes", ng-include="'/partials/node-template.html'")
-
-    .nodes-tree(ui-tree="treeOptions", data-drag-delay="250", data-empty-place-holder-enabled="true", ng-cloak)
-      ol(ui-tree-nodes="", ng-model="rootNodes")
-        li(ng-repeat="n in rootNodes", ui-tree-node, data-collapsed, ng-include="'/partials/node-template.html'")
+    //ol.nodes-tree.nested(ng-model="rootNodes", ng-if="rootNodes && rootNodes.length")
+    ol.nodes-tree(ng-model="rootNodes")
+      li(ng-repeat="n in rootNodes", ng-include="'/partials/node-template.html'")

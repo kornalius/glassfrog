@@ -1,28 +1,32 @@
-table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
+table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)", ng-model="n")
 
-  td(style="min-width: 32px;")
+  td.node-expand-col(ng-class="{ 'node-expand-col-32': !n.$data.isArg }")
 
-    a.btn.btn-xs(type="button", ng-click="toggle()", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", style="margin: 0px !important; padding-top: 0px !important; padding-bottom: 0px !important;")
-      //ng-click="toggleExpandCollapse(n, $event.altKey); $event.stopPropagation();"
-      span.node-expand.cic(ng-class="{ 'cic-arrow-right8': collapsed, 'cic-arrow-down8': !collapsed, 'node-expand-highlighted': isExpandOver(n)}", style="font-size: 21px;")
+    a.btn.btn-xs.node-expand(type="button", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="toggle(n, $event.altKey); $event.stopPropagation();")
 
-  td
+      span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }", style="font-size: 21px;")
 
-    div(ui-tree-handle)
+  td.node-content-col
 
-      table.node(id="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="toggleExpandCollapse(n); $event.stopPropagation();", ng-class="{ 'node-highlighted': isOver(n) && !isSelection(n), 'node-selected': isSelection(n) && !isOver(n), 'node-selected-highlighted': isSelection(n) && isOver(n) }", ng-model="n", render-node="n")
+    table.node(id="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n), 'arg': n.$data.isArg }", render-node="n")
 
-        include node-color-template
+      include node-color-template
 
-        include node-label-template
+      include node-icon-template
 
-        include node-modified-template
+      include node-label-template
 
-  include node-menu-template
+      include node-parenticons-template
 
+      td.node-args-col(ng-if="n.args.length")
+        ol.nodes-args-tree
+          li(ng-repeat="n in n.args", ng-include="'/partials/node-template.html'")
 
-//ul(ng-if="!n.collapsed && n.hasChildren()", frang-tree-insert-children="n.children()")
+      include node-modified-template
 
-ol(ui-tree-nodes="", ng-model="n.nodes", ng-class="{hidden: collapsed}")
-  li(ng-repeat="n in n.nodes", ui-tree-node, data-collapsed, ng-include="'/partials/node-template.html'")
+  //include node-menu-template
 
+ol(ng-if="n.isOpened() && n.hasChildren()")
+  li(ng-repeat="n in n.children()", ng-include="'/partials/node-template.html'")
+
+ol(ng-if="!n.isOpened() || !n.hasChildren()")

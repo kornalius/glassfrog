@@ -1,7 +1,11 @@
 html, body, #editor {
   height: 100%;
-  color: #555555;
+  color: @background-color;
   font-family: verdana,arial,sans-serif;
+}
+
+body.dragging, body.dragging * {
+  cursor: move !important;
 }
 
 .nav {
@@ -55,11 +59,11 @@ html, body, #editor {
   left: 0px;
   right: 0px;
   top: 50px;
-  background-color: #444444;
+  background-color: @desktop-color;
 }
 
 .box #index-main {
-  background-color: #688ec0;
+  background-color: @dark-blue-color;
 }
 
 //.divider {
@@ -67,7 +71,7 @@ html, body, #editor {
 //}
 
 #main {
-  background-color: #f2f2f2;
+  background-color: @control-color;
   padding-left: 0px;
   padding-right: 0px;
 }
@@ -104,7 +108,7 @@ a.active {
 
 .donetrue {
   text-decoration: line-through;
-  color: grey;
+  color: @gray-color;
 }
 
 .proper {
@@ -120,7 +124,7 @@ a.active {
 }
 
 .df-required {
-  color: @btn-danger-bg;
+  color: @error-color;
 }
 
 .form-group {
@@ -157,7 +161,7 @@ a.active {
 }
 
 .modified {
-  background-color: @brand-warning !important;
+  background-color: @light-red-color !important;
 }
 
 .pagination {
@@ -177,7 +181,7 @@ textarea.form-control {
 .panel-subform > .panel > .panel-heading {
   padding-top: 4px;
   padding-bottom: 4px;
-  background-color: #f5f5f5;
+  background-color: @form-color;
 }
 
 .panel-subform > .panel > .panel-heading.accordion-toggle .panel-title:after {
@@ -185,7 +189,7 @@ textarea.form-control {
   font-size: 14px;
   content: "\e114";
   float: right;
-  color: grey;
+  color: @sub-form-color;
 }
 
 .panel-subform > .panel > .panel-heading.accordion-toggle.collapsed .panel-title:after {
@@ -205,8 +209,8 @@ textarea.form-control {
 }
 
 .radiobuttons > .btn.active {
-  color: @btn-primary-color;
-  background-color: @btn-primary-bg;
+  color: @control-selection-color;
+  background-color: @alt-control-color;
 }
 
 .checklistbox > label:hover, .checklistbox > label:focus, .checklistbox > label.active {
@@ -242,7 +246,7 @@ textarea.form-control {
 //  color: #ccc;
 }
 
-.control-label {
+.dynform-label {
   font-size: small;
   white-space: nowrap;
   width: 100%;
@@ -261,6 +265,6 @@ textarea.form-control {
 }
 
 .toolbar-group a, .toolbar-group a i {
-  color: @brand-primary;
+  color: @control-color;
 //  font-weight: bold;
 }

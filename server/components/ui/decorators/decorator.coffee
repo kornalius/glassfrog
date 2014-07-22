@@ -4,8 +4,7 @@ module.exports = [
   desc: 'Control decoration'
   extra:
     inherit: 'Object'
-    options: 'hpl'
-    icon: 'palette'
+    options: 'hp!'
     color: 'lightbrown'
 
 ]

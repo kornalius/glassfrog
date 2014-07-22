@@ -818,11 +818,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
 
               if !ok
                 s =
-                  label: cf.join(' ').humanize()
+                  label: _.str.humanize(cf.join(' '))
                   type: 'subform'
                   fieldname: f
                   subform:
-                    label: cf.join(' ').humanize()
+                    label: _.str.humanize(cf.join(' '))
                     name: 'sub_' + cf.join('_')
                     layout: {type:'sub{0}'.format(layout), style: style}
                     fields: []
@@ -856,7 +856,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'numberAttributes', 
           if p.options and p.options.label
             label = p.options.label
           else
-            label = fn.humanize()
+            label = _.str.humanize(fn)
 
           _type = "string"
           if p.instance

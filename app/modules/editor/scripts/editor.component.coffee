@@ -2,8 +2,9 @@ angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.n
 
 .factory('EditorComponent', [
   '$timeout'
+  'Editor'
 
-  ($timeout) ->
+  ($timeout, Editor) ->
 
     componentNodes: []
     origComponentNodes: null
@@ -29,7 +30,7 @@ angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.n
     refresh: (selected, cb) ->
       that = @
       require(['vc_component'], (Component) ->
-        that.componentNodes = Component.list(selected)
+        that.componentNodes = Component.list(selected, Editor.module)
         that.origComponentNodes = _.cloneDeep(that.componentNodes)
         if Component.scope()
           Component.scope().$apply()
@@ -79,13 +80,13 @@ angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.n
               if parentNodeScope
                 p = parentNodeScope.$modelValue
               else if !d
-                p = Editor.module.getRoot()
+                p = VCGlobal.module().getRoot()
               else
                 p = null
-              n = { name: c.name, component: c.name }
-              Node.make(n, p, Editor.module)
+              n = c.add(c.name, VCGlobal.module(), p)
               nodes.splice(idx, 1)
               n.setOrder(idx)
+              EditorNode.setSelection(n)
             )
           )
 

@@ -5,8 +5,8 @@ module.exports = [
   extra:
     inherit: 'Object'
     icon: 'database'
-    accepts: ['Field']
-    default_children: ['Field']
+    accepts: ['Field+', 'Method+']
+    defaults: ['Field']
     color: 'darkorange'
     code:
 #      render: (node) ->
@@ -17,68 +17,80 @@ module.exports = [
 #            e.attr('style', s + 'font-weight: bold; ')
 
       generate: (node, client) ->
+        c = new cg()
+
         if client
-          s = "schema" + '\n'
-          c = node.getComponent()
-          if node.hasChildren()
-            for n in node.childrenOfKind('Field')
-              if n.hasClientCode()
-                c = n.getComponent()
-                s += n.doGenerate() + '\n'
+
         else
-          model = node.getName().toProperCase()
+          model = node.varName()
           schema = model + 'Schema'
 
-          s =
-            'var app = require("../app"),\n' +
-            'mongoose = require("../app").mongoose,\n' +
-            'timestamps = require("mongoose-time")(),\n' +
-            'utils = require("../lib/mongoose-utils"),\n' +
-            'mongooseEncrypted = require("mongoose-encrypted").loadTypes(mongoose),\n' +
-            'encryptedPlugin = mongooseEncrypted.plugins.encryptedPlugin;\n'
+#          c.variable('app', 'require("../app")')
+#          c.variable('mongoose', 'require("../app").mongoose')
+#          c.variable('timestamps', 'require("mongoose-time")()')
+#          c.variable('utils', 'require("../lib/mongoose-utils")')
+#          c.variable('mongooseEncrypted', 'require("mongoose-encrypted").loadTypes(mongoose)')
+#          c.variable('encryptedPlugin', 'mongooseEncrypted.plugins.encryptedPlugin')
 
-          s += schema + ' = mongoose.Schema({\n'
+#          c.variable(schema, ->
+#            @member_expr('mongoose', 'Schema', ->
+#              @block_expr(() ->
+#                modules = node.childrenOfKind('ModuleRef')
+#                if modules.length
+#                  for m in modules
+#                    for n in m.getRoot().childrenOfKind(['Field'])
+#                      @sequence(n.doGenerate(client))
+#
+#                fields = node.childrenOfKind(['Field'])
+#                if fields.length
+#                  for n in fields
+#                    @sequence(n.doGenerate(client))
+#              )
+#            )
+#          )
 
-          d = []
-
-          for m in node.childrenOfKind('ModuleRef')
-            for n in m.getRoot().childrenOfKind(['Field'])
-              d.push(n.doGenerate(node, false))
-
-          for n in node.childrenOfKind(['Field'])
-            d.push(n.doGenerate(node, false))
-          s += d.join(',\n') + '\n});\n'
-
-          s += schema + '.plugin(timestamps);\n'
+          c.member_stmt(schema, 'plugin', -> @literal('timestamps'))
           if node.childrenOfKind('Encrypted', true)
-            s += schema + '.plugin(encryptedPlugin);\n'
+            c.member_stmt(schema, 'plugin', -> @literal('encryptedPlugin'))
 
-          s += schema + '.method({\n'
-          s += '});'
+          c.member_stmt(schema, 'method', (-> @string_literal(node.varName())), ->
+            @fct_expr(->
+              methods = node.childrenOfKind(['Method'])
+              if methods.length
+                for m in methods
+                  for n in m.children()
+                    @lines(n.doGenerate(client))
+            )
+          )
 
-          s += schema + '.static({\n'
-          s += '});'
+#          c.variable('module.exports', -> @member_expr('mongoose', 'model', 'model', 'schema'))
 
-          s += 'module.exports = mongoose.model(' + model + ',' + schema + ');'
-
-        return s
+        return c.code
 ,
 
   name: 'SchemaRef'
   desc: 'Schema reference'
   extra:
+    options: 'h!'
     inherit: 'ObjectRef'
     icon: 'database'
-    enum: ['@Schema']
 ,
 
   name: 'SchemaRef.Find'
   desc: 'Find a record'
   extra:
-    inherit: 'MethodCall'
+    inherit: 'Method'
     icon: 'magnifier'
-    accepts: ['FieldRef', 'String']
-    default_children: ['FieldRef']
+    args: [
+      name: 'Field'
+      desc: 'Field to search on'
+      component: 'FieldRef'
+    ,
+      name: 'Value'
+      desc: 'Value to search for'
+      component: 'String'
+    ]
+    accepts: []
     code:
       generate: (node, client) ->
         if client
@@ -92,7 +104,7 @@ module.exports = [
   desc: 'Field definition'
   extra:
     inherit: 'Object'
-    accepts: ['Validator', 'Decorator', 'Type']
+    accepts: ['Validator+', 'Color', 'Font', 'Field.Type']
     icon: 'uniF6CA'
     color: 'pink'
     code:
@@ -104,30 +116,32 @@ module.exports = [
               c.doRender(node)
 
       generate: (node, client) ->
-        s = ''
         if !client
-          s = "field" + '\n'
-#          c = node.getComponent()
-          if node.hasChildren()
-            for n in node.childrenOfKind(['Attribute', 'Validator'])
-#              c = n.getComponent()
-              s += n.doGenerate() + '\n'
-        return s
+          return new cg().label("field" + node.varName(), ->
+            @block_expr(() ->
+              @code = "FIELD " + node.name
+              return @
+    #          for n in node.childrenOfKind(['Attribute', 'Validator'])
+    #            s += n.doGenerate(client) + '\n'
+            ).cr()
+          ).code
+        else
+          return ""
 ,
 
   name: 'FieldRef'
   desc: 'Field reference'
   extra:
+    options: 'h!'
     inherit: 'ObjectRef'
     icon: 'uniF6CA'
-    enum: ['@Field']
 ,
 
-  name: 'Type'
+  name: 'Field.Type'
   desc: 'Field or Input data type'
   extra:
     inherit: 'Object'
-    options: 'hpl'
+    options: 'hp!'
     color: 'lightpink'
     icon: 'type2'
 ,
@@ -136,71 +150,63 @@ module.exports = [
   desc: 'Text type'
   extra:
     icon: 'uniF4E8'
-    inherit: 'Type'
-#      code: 'text.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Number'
   desc: 'Number type'
   extra:
     icon: 'hash'
-    inherit: 'Type'
-    code: 'number.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Boolean'
   desc: 'Boolean type'
   extra:
     icon: 'switchon'
-    inherit: 'Type'
-    code: 'boolean.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Currency'
   desc: 'Currency type'
   extra:
     icon: 'dollar32'
-    inherit: 'Type'
-    code: 'currency.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Percent'
   desc: 'Percent type'
   extra:
     icon: 'coupon'
-    inherit: 'Type'
-    code: 'percent.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Email'
   desc: 'Email type'
   extra:
     icon: 'email22'
-    inherit: 'Type'
-    code: 'email.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Date'
   desc: 'Date type'
   extra:
     icon: 'calendar32'
-    inherit: 'Type'
-    code: 'date.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Time'
   desc: 'Time type'
   extra:
     icon: 'clock22'
-    inherit: 'Type'
-    code: 'time.js'
+    inherit: 'Field.Type'
 ,
 
   name: 'Validator'
   desc: 'Field validator'
   extra:
     inherit: 'Object'
-    options: 'hpl'
+    options: 'hp!'
     icon: 'check'
     color: 'red'
 ,
@@ -210,7 +216,6 @@ module.exports = [
   extra:
     icon: 'spam2'
     inherit: 'Validator'
-    code: 'required.js'
 ,
 
   name: 'ReadOnly'
@@ -218,16 +223,14 @@ module.exports = [
   extra:
     icon: 'lock32'
     inherit: 'Validator'
-    code: 'readonly.js'
 ,
 
   name: 'Attribute'
   desc: 'Field attribute'
   extra:
     inherit: 'Object'
-    options: 'hpl'
+    options: 'hp!'
     icon: 'tools'
-    color: 'lightgreen'
 ,
 
   name: 'Encrypted'
@@ -235,7 +238,6 @@ module.exports = [
   extra:
     icon: 'security2'
     inherit: 'Attribute'
-    code: 'encrypted.js'
 ,
 
   name: 'Populate'
@@ -243,6 +245,5 @@ module.exports = [
   extra:
     icon: 'document-fill'
     inherit: 'Attribute'
-    code: 'populate.js'
 
 ]

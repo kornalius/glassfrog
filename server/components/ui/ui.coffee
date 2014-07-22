@@ -3,7 +3,7 @@ module.exports = [
   name: 'UI'
   desc: 'UI element'
   extra:
-    options: 'hpl'
+    options: 'hp!'
 #      accepts: ['View', 'Menubar']
     color: 'lightpurple'
 ,
@@ -14,7 +14,7 @@ module.exports = [
     inherit: 'UI'
     icon: 'canvasrulers'
     accepts: ['View', 'Menubar']
-    default_children: ['View', 'Menubar']
+    defaults: ['View', 'Menubar']
     color: 'lightpurple'
 ,
 
@@ -24,7 +24,7 @@ module.exports = [
     inherit: 'UI'
     icon: 'article2'
     accepts: ['Control']
-    default_children: ['Label']
+    defaults: ['Label']
     color: 'blue'
 
 ]

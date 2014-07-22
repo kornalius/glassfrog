@@ -14,8 +14,8 @@
     .modules
       #editor-modules-list
         .modules-tree(ui-tree="treeOptions", data-drag-enabled="false", data-empty-place-holder-enabled="false", data-max-depth="1", data-drag-delay="250", ng-cloak)
-          ol(ui-tree-nodes="", ng-model="moduleNodes", id="tree-modules-root", data-nodrop)
-            li(ng-repeat="m in moduleNodes | filter: search", ui-tree-node, ng-include="'/partials/module-template.html'")
+          ol#tree-modules-root(ng-model="moduleNodes")
+            li(ng-repeat="m in moduleNodes | filter: search", ng-include="'/partials/module-template.html'")
 
 
   .visible-xs#editor-modules-xs
@@ -23,5 +23,5 @@
     .modules-xs
       #editor-modules-xs-list
         .modules-tree(ui-tree="treeOptions", data-drag-enabled="false", data-empty-place-holder-enabled="false", data-max-depth="1", data-drag-delay="250", ng-cloak)
-          ol(ui-tree-nodes="", ng-model="moduleNodes", id="tree-modules-root", data-nodrop)
-            li(ng-repeat="m in moduleNodes | filter: search", ui-tree-node, ng-include="'/partials/module-xs-template.html'")
+          ol#tree-modules-root(ng-model="moduleNodes")
+            li(ng-repeat="m in moduleNodes | filter: search", ng-include="'/partials/module-xs-template.html'")

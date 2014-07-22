@@ -1,20 +1,10 @@
-td
+td.node-label-col(id="node-label-col_{{n.id()}}", ng-click="edit(n, $event)")
 
-  table(width="99%")
+  .node-label(id="node-label_{{n.id()}}", ng-show="!isEditing(n)") {{n.displayName()}}
+  //|  ({{n.flatOrder()}})
 
-    tr
+  span(ng-show="isEditing(n)")
 
-      include node-icon-template
+    input.node-input.form-control.input-small(type="text", id="node-input_{{n.id()}}", ng-click="$event.stopPropagation()", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", ng-show="!n.hasEnum()")
 
-      td.node-label-col(id="node-label-col_{{n.id()}}", ng-click="edit(n); $event.stopPropagation();")
-
-        .node-label(id="node-label_{{n.id()}}", ng-show="!isEditing(n)") {{n.displayName()}}
-        //|  ({{n.flatOrder()}})
-
-        span(ng-show="isEditing(n)")
-
-          input.node-input.form-control.input-small(type="text", id="node-input_{{n.id()}}", ng-click="$event.stopPropagation()", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", ng-show="!n.hasEnum()")
-
-          select2.node-input.node-select.input-small(id="node-select_{{n.id()}}", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", field="{config: { dropdownAutoWidth: true }, options: {{getEnum(n)}} }", ng-change="saveEdit(n)", ng-show="n.hasEnum()")
-
-      include node-parenticons-template
+    select2.node-input.node-select.input-small(id="node-select_{{n.id()}}", ng-blur="cancelEdit(n)", ng-model="n.name", ng-keyup="keyup($event)", field="{config: { dropdownAutoWidth: true }, options: {{getEnum(n)}} }", ng-change="saveEdit(n)", ng-show="n.hasEnum()")

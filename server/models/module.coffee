@@ -90,6 +90,20 @@ setTimeout( ->
             ,
               component: 'LightBlue'
             ]
+          ,
+            name: 'myMethod'
+            component: 'Method'
+            nodes: [
+              name: 'alert'
+              component: 'alert'
+              args: [
+                name: 'Hello'
+                component: 'String'
+              ,
+                name: 'World'
+                component: 'String'
+              ]
+            ]
           ]
         ]
   ,

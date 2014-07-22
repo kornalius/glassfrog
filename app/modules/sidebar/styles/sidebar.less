@@ -1,10 +1,13 @@
+#sidebar {
+  background-color: @background-color;
+}
+
 .sidebar {
   padding-top: 4px !important;
   padding-bottom: 4px;
 }
 
 .sidebar-footer {
-  background-color: #444;
   position: absolute;
   bottom: 4px;
 //  padding: 4px;
@@ -26,22 +29,22 @@
 }
 
 .sidebar-menu {
-  color: whitesmoke;
+  color: @light-text-color;
   background-color: transparent;
 //  text-shadow:0 0 2px #000000;
   padding: 2px !important;
 }
 
 .sidebar-menu.active {
-  color: #555555;
-  background-color: whitesmoke;
+  color: @text-color;
+  background-color: @control-color;
 //  text-shadow:0 0 2px #000000;
   padding: 2px !important;
 }
 
 .sidebar-menu:hover {
   color: whitesmoke !important;
-  background-color: #555555 !important;
+  background-color: @darker-gray-color !important;
 }
 
 .sidebar-menu-icon {
