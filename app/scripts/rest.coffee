@@ -1,14 +1,28 @@
 'use strict'
 
-mod = angular.module('rest.services', ['app.globals'])
+mod = angular.module('rest.services', ['app.globals', 'restangular'])
+
+.config([
+  'RestangularProvider'
+
+  (RestangularProvider) ->
+    RestangularProvider.setBaseUrl('/api')
+
+    RestangularProvider.setRestangularFields(
+      id: "_id"
+      selfLink: 'self.link'
+    )
+
+])
 
 .factory('Rest', [
   'Globals'
   '$timeout'
   '$resource'
   '$http'
+  'Restangular'
 
-  (globals, $timeout, $resource, $http) ->
+  (globals, $timeout, $resource, $http, Restangular) ->
 
     # Initialization
     Rest = (modelName) ->
@@ -19,7 +33,7 @@ mod = angular.module('rest.services', ['app.globals'])
       @sort = ['_id']
       @select = null
       @populate = null
-      @rows = []
+      @rows = null
       @total = 0
       @display = 0
       @pages = 1
@@ -32,8 +46,6 @@ mod = angular.module('rest.services', ['app.globals'])
       @prevPage = 1
       @nextPage = 1
 
-      @fetchTimeout = null
-      @resource = $resource('/api/{0}/:id'.format(modelName), { id: '@_id' }, { 'update': { method:'PUT' } })
       return @
 
     Rest.prototype =
@@ -71,9 +83,10 @@ mod = angular.module('rest.services', ['app.globals'])
         console.log "Rest fetch start...", that
 
         that.fetchTimeout = $timeout( ->
+
           if id?
-            p = that.resource.get({id: id}, {select: that.select, populate: that.populate}, (result) ->
-              result.$data = {}
+            that.rows = Restangular.one(that.modelName, id)
+            p = that.rows.get({select: that.select, populate: that.populate}).then((result) ->
               that.total = 1
               that.display = 1
               that.pages = 1
@@ -90,11 +103,17 @@ mod = angular.module('rest.services', ['app.globals'])
               console.log "Rest fetch end...", that
 
               cb(result) if cb
+
+            , (err) ->
+              console.log "Rest fetch end with error...", that, err
+
+              cb(null) if cb
             )
 
           else
 
-            p = that.resource.query({sort:that.sort, perPage:that.perPage, page:that.page, filter:that.filter, select: that.select, populate: that.populate}, (result) ->
+            that.rows = Restangular.all(that.modelName)
+            p = that.rows.getList({sort:that.sort, perPage:that.perPage, page:that.page, filter:that.filter, select: that.select, populate: that.populate}).then((result) ->
               info = result[0]
               that.total = info.total
               that.display = info.displayCount
@@ -113,97 +132,117 @@ mod = angular.module('rest.services', ['app.globals'])
               console.log "Rest fetch end...", that
 
               cb(result) if cb
+
+            , (err) ->
+              console.log "Rest fetch end with error...", that, err
+
+              cb(null) if cb
             )
 
-          globals.loadingTracker.addPromise(p.$promise)
+          globals.loadingTracker.addPromise(p)
+
         , 250)
 
       update: (row, cb) ->
         that = @
 
-        c = that.resource.update
-
         console.log "Rest update start...", that
 
-        oData = row.$data
-        delete row.$data
+        p = row.save().then((result) ->
+          x = that.getFromRows(result._id)
+          if x != -1
+            that.rows[x] = result
 
-        p = c(row, (result) ->
-          console.log "Rest update end...", that
+          console.log "Rest update end...", that, result
+
           cb(result) if cb
         )
 
-        row.$data = oData
-
-        globals.loadingTracker.addPromise(p.$promise)
+        globals.loadingTracker.addPromise(p)
 
       delete: (row, cb) ->
         that = @
 
         console.log "Rest delete start...", that
 
-        if that.$remove?
-          c = that.$remove
-        else
-          c = that.resource.remove
-
-        oData = row.$data
-        delete row.$data
-
-        p = c(row, (result) ->
-          x = that.getFromRows(id)
+        p = row.remove().then((result) ->
+          x = that.getFromRows(row._id)
           if x != -1
-            that.rows.splice(x, 1)
-          console.log "Rest delete end...", that
+            that.rows.splice(x)
+
+          console.log "Rest delete end...", that, result
+
           cb(result) if cb
-        )
 
-        row.$data = oData
+        , (err) ->
+          x = that.getFromRows(row._id)
+          if x != -1
+            that.rows.splice(x)
 
-        globals.loadingTracker.addPromise(p.$promise)
+          console.log "Rest delete end with error...", that, err
 
-      push: (row, cb) ->
-        that = @
-
-        console.log "Rest push start...", that
-
-        r = $resource('/api/{0}'.format(@modelName), {}, {})
-
-        oData = row.$data
-        delete row.$data
-
-        p = r.save(row, (results) ->
-          console.log "Rest push end...", that
-          cb(results) if cb
-#          that.fetchAll()
-        )
-
-        row.$data = oData
-
-        globals.loadingTracker.addPromise(p.$promise)
-
-      new: (cb) ->
-        that = @
-
-        p = $http.get('/api/{0}/defaults'.format(@modelName))
-
-        p.success((data, status) ->
-          that.rows = [data]
-          cb(data) if cb
-        )
-
-        p.error((data, status) ->
           cb(null) if cb
         )
 
         globals.loadingTracker.addPromise(p)
 
+      create: (data, cb) ->
+        that = @
+
+        console.log "Rest create start...", that
+
+        if !that.rows
+          that.rows = Restangular.all(that.modelName)
+
+        p = that.rows.post(data).then((result) ->
+          console.log "Rest create end...", that
+          cb(result) if cb
+        , (err) ->
+          console.log "Rest create end with error...", that, err
+          cb(null) if cb
+        )
+
+        globals.loadingTracker.addPromise(p)
+
+
+      createTemp: (data, cb) ->
+        that = @
+
+        console.log "Rest createTemp start...", that
+
+        p = $http.get('/api/{0}/defaults'.format(that.modelName))
+
+        p.success((defaults, status) ->
+
+          data = angular.extend(data, defaults)
+          delete data._id
+
+          if !that.rows
+            that.rows = Restangular.all(that.modelName)
+
+          d = Restangular.one(that.modelName, data._id)
+          d = angular.extend(d, data)
+          console.log "restangularized", d
+          that.rows.push(d)
+          console.log "Rest create end...", that, d
+          cb(d) if cb
+        )
+
+        p.error((err) ->
+          console.log "Rest create end with error...", that, err
+          cb(null) if cb
+        )
+
+        globals.loadingTracker.addPromise(p)
+
+
       getFromRows: (id) ->
         id = id.toString()
-        for r in @rows
-          if r.id.toString() == id
-            return r
-        return null
+        for i in [0..@rows.length - 1]
+          r = @rows[i]
+          if r._id? and r._id.toString() == id
+            return i
+        return -1
 
     return Rest
 ])

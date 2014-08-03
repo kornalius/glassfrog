@@ -1,4 +1,4 @@
-order = ((schema, options) ->
+module.exports = ((schema, options) ->
   schema.add(
     _order:
       type: Number
@@ -91,5 +91,3 @@ order = ((schema, options) ->
       )
   )
 )
-
-module.exports = order

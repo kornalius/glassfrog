@@ -19,6 +19,39 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
       layout: {type:'form', style:'horizontal'}
 
       fields: [
+        type: "tabs"
+        tabs: [
+          label: 'Main'
+        ,
+          label: 'Country/State'
+        ,
+          label: 'Check/Radio'
+        ,
+          label: 'Select'
+        ,
+          label: 'List'
+        ]
+      ,
+        label: "Country"
+        type: "country"
+        description: "Where are you from?"
+        fieldname: 'country'
+        config:
+          openOnFocus: true
+        placeholder: "Select a Country..."
+        required: true
+        tab: 1
+      ,
+        label: "State"
+        type: "state"
+        description: "Which city are you from?"
+        fieldname: 'state'
+        config:
+          openOnFocus: true
+        placeholder: "Select a State..."
+        required: true
+        tab: 1
+      ,
         label: "ID"
         type: "input"
         description: "id of the record"
@@ -26,9 +59,11 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #        number: true
 #        min: 0
 #        max: 10
-        style: {name:'color', value:'darkorange'}
+#        style: {name:'color', value:'darkorange'}
+        color: 'darkorange'
+        italic: true
   #          hidden: false
-  #          disabled: true
+        disabled: true
         required: true
       ,
         label: "Dates Section"
@@ -73,6 +108,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           value: 5
         ]
         fieldname: 'id2'
+        tab: 2
       ,
         label: "Radio Tests 2"
         type: "radiobutton"
@@ -88,6 +124,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           value: 3
         ]
         fieldname: 'id21'
+        tab: 2
       ,
         label: "Is it true?"
         caption: "I think it is true but I can be mistaken"
@@ -102,6 +139,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #          width: 40
 #          height: 20
 #          button_width: 20
+        tab: 2
       ,
         label: "TextArea"
         type: "textarea"
@@ -115,52 +153,52 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         money: true
   #        placeholder: "2.34"
       ,
-        label: "Select 2"
+        label: "Select"
         type: "select"
-        value: 3
         description: "make your selection my friend"
-        options: [
-          {value:1, label:"Alain Deschênes"}
-          {value:2, label:"Mélissa Dubé"}
-          {value:3, label:"Ariane Deschênes"}
-          {value:4, label:"Maggie Deschênes"}
-          {value:5, label:"Mathilde Lauzon"}
-          {value:6, label:"Pascal Lauzon"}
-          {value:7, label:"Clermont Deschênes"}
-          {value:8, label:"Jocelyne Jean"}
-          {value:9, label:"Gaston Dubé"}
-          {value:10, label:"Suzanne St-Martin"}
-        ]
         config:
-          allowClear: true
+          openOnFocus: true
+        options: [
+          {value: 1, label: "Alain Deschênes"}
+          {value: 2, label: "Mélissa Dubé"}
+          {value: 3, label: "Ariane Deschênes"}
+          {value: 4, label: "Maggie Deschênes"}
+          {value: 5, label: "Mathilde Lauzon"}
+          {value: 6, label: "Pascal Lauzon"}
+          {value: 7, label: "Clermont Deschênes"}
+          {value: 8, label: "Jocelyne Jean"}
+          {value: 9, label: "Gaston Dubé"}
+          {value: 10, label: "Suzanne St-Martin"}
+        ]
         placeholder: "Select a selection..."
         fieldname: 'id6'
+        tab: 3
       ,
-        label: "Select 2 Multiple/Ajax"
+        label: "Select Multiple/Ajax"
         type: "select"
-        value: ['1', '15', '25']
         description: "make your selection my friend"
         config:
+          hideSelected: true
+          maxItems: 5
           url: '/api/test?perPage=10'
-          field: 'value'
-          multiple: true
-          minimumInputLength: 1
-        placeholder: "Select a selection..."
+
+        placeholder: "Select multiple..."
         fieldname: 'id7'
+        tab: 3
       ,
         label: "Two lists"
         type: "twolist"
         options: [
-          {value:1, label:"Alain Deschênes"}
-          {value:2, label:"Mélissa Dubé"}
-          {value:3, label:"Ariane Deschênes"}
-          {value:4, label:"Maggie Deschênes"}
-          {value:5, label:"Mathilde Lauzon"}
-          {value:6, label:"Pascal Lauzon"}
-          {value:7, label:"Clermont Deschênes"}
-          {value:8, label:"Jocelyne Jean"}
-          {value:9, label:"Gaston Dubé"}
-          {value:10, label:"Suzanne St-Martin"}
+          {value: 1, label: "Alain Deschênes"}
+          {value: 2, label: "Mélissa Dubé"}
+          {value: 3, label: "Ariane Deschênes"}
+          {value: 4, label: "Maggie Deschênes"}
+          {value: 5, label: "Mathilde Lauzon"}
+          {value: 6, label: "Pascal Lauzon"}
+          {value: 7, label: "Clermont Deschênes"}
+          {value: 8, label: "Jocelyne Jean"}
+          {value: 9, label: "Gaston Dubé"}
+          {value: 10, label: "Suzanne St-Martin"}
         ]
         selected: ["Ariane Deschênes", "Clermont Deschênes"]
         config:
@@ -168,20 +206,21 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           selectionHeader: "Selected names"
           keepOrder: true
         fieldname: 'id10'
+        tab: 4
       ,
         label: "Check List"
         type: "checklistbox"
         options: [
-          {value:1, label:"Alain Deschênes"}
-          {value:2, label:"Mélissa Dubé"}
-          {value:3, label:"Ariane Deschênes"}
-          {value:4, label:"Maggie Deschênes"}
-          {value:5, label:"Mathilde Lauzon"}
-          {value:6, label:"Pascal Lauzon"}
-          {value:7, label:"Clermont Deschênes"}
-          {value:8, label:"Jocelyne Jean"}
-          {value:9, label:"Gaston Dubé"}
-          {value:10, label:"Suzanne St-Martin"}
+          {value: 1, label: "Alain Deschênes"}
+          {value: 2, label: "Mélissa Dubé"}
+          {value: 3, label: "Ariane Deschênes"}
+          {value: 4, label: "Maggie Deschênes"}
+          {value: 5, label: "Mathilde Lauzon"}
+          {value: 6, label: "Pascal Lauzon"}
+          {value: 7, label: "Clermont Deschênes"}
+          {value: 8, label: "Jocelyne Jean"}
+          {value: 9, label: "Gaston Dubé"}
+          {value: 10, label: "Suzanne St-Martin"}
         ]
         selected: ["Ariane Deschênes", "Clermont Deschênes"]
         config:
@@ -189,6 +228,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           selectionHeader: "Selected names"
           keepOrder: true
         fieldname: 'id10'
+        tab: 4
       ,
         label: "Mask"
         type: "input"

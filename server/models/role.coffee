@@ -180,9 +180,9 @@ RoleSchema.method(
         id = user._id.toString()
         for rule in rules
           if (!row or !user) or (rule.owned and row.owner_id.toString() == id)
-            cb(true) if cb
+            cb(rule) if cb
             return
-      cb(false) if cb
+      cb(null) if cb
     )
 )
 

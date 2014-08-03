@@ -1,0 +1,14 @@
+// row_subfield.html
+
+div(ng-controller="dynFormObjectCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';")
+  div(ng-init="subfieldInit()")
+
+    .container-fluid
+      .row-fluid
+
+        ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in [row[$parent.fn]] track by $index", novalidate)
+          .row-fluid(ng-controller="dynFormObjectCtrl", ng-show="$parent.fields[fi].type === 'tabs' || $parent.fields[fi].tab == form.activeTab")
+            .form-group
+              // <fields>
+
+      .row-fluid

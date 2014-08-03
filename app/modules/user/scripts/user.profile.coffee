@@ -56,13 +56,26 @@ angular.module('user.profile', ['dynamicForm'])
       ,
         label: "First Name"
         type: "input"
-        fieldname: 'firstname'
+        fieldname: 'name.first'
         required: true
       ,
         label: "Last Name"
         type: "input"
-        fieldname: 'lastname'
+        fieldname: 'name.last'
         required: true
+      ,
+        fieldname: 'name'
+        fields: [
+          label: "First Name"
+          type: "input"
+          fieldname: 'first'
+          required: true
+        ,
+          label: "Last Name"
+          type: "input"
+          fieldname: 'last'
+          required: true
+        ]
       ,
         label: "Address"
         type: "input"
@@ -73,25 +86,15 @@ angular.module('user.profile', ['dynamicForm'])
         type: "input"
         fieldname: 'city'
         city: true
-        required: true
       ,
         label: "State"
-        type: "select"
+        type: "state"
         fieldname: 'state'
-        options: []
-        config:
-          url: '/api/state?where="country" = \'{0}\'&limit=100'.format("CA")
-          field: 'name'
         state: true
-        required: true
       ,
         label: "Country"
-        type: "select"
+        type: "country"
         fieldname: 'country'
-        options: []
-        config:
-          url: '/api/country?limit=100'
-          field: 'name'
         country: true
         required: true
       ,
@@ -105,19 +108,16 @@ angular.module('user.profile', ['dynamicForm'])
         type: "input"
         fieldname: 'tel'
         phone: true
-        required: true
       ,
         label: "Fax"
         type: "input"
         fieldname: 'fax'
         phone: true
-        required: true
       ,
         label: "Web Site"
         type: "input"
         fieldname: 'url'
         url: true
-        required: true
       ]
     dynForm.build($scope, userProfileForm, $scope.usr, '#form')
   )

@@ -16,7 +16,7 @@ _validateField = (assure, field) ->
       msg: 'invalid date and/or time'
 
     email:
-      pattern: /^(([^<>()[\\]\\\.,;:\\s@\\"]+(\\.[^<>()[\\]\\\.,;:\\s@\\"]+)*)|(\\".+\\"))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\-0-9]+\\.)+[a-zA-Z]{2,}))$/i
+      pattern: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i
       msg: 'email is invalid'
 
     lowercase:
@@ -77,7 +77,12 @@ _validateField = (assure, field) ->
 
 
   if field.required
-    assure.me(field.fieldname).required()
+    assure.me(field.fieldname).required().custom((val, errors) ->
+      if !val? or val.length == 0
+        return new errors.MissingParameter('this parameter is required', val)
+      else
+        return null
+    )
 
   if field.number
     assure.me(field.fieldname).isInt()
@@ -117,7 +122,7 @@ _validateField = (assure, field) ->
     assure.me(field.fieldname).matches(field.matches)
 
   for k of patterns
-    if field[k]?
+    if field[k]? and assure.object[field.fieldname]?
       e = assure.me(field.fieldname).matches(patterns[k].pattern)
       if e and e.errors
         for ee in e.errors

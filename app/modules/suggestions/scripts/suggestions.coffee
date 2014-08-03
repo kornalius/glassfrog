@@ -9,45 +9,56 @@ angular.module('suggestions', ['app', 'dynamicForm'])
   'Rest'
 
 ($scope, $rootScope, $injector, globals, dynForm, Rest) ->
-  $scope.test = new Rest('suggestions')
-  $scope.test.rows.push(
-    name: ''
-    message: ''
-    type: '1'
+  $scope.suggestion = new Rest('suggestion')
+  $scope.suggestion.createTemp({}, () ->
+    form =
+      label: "Suggestions"
+      name: "suggestionsForm"
+      layout: {type:'form', style:'horizontal'}
+      container: true
+
+      fields: [
+        label: "Name"
+        type: "input"
+        description: "Enter your name"
+        fieldname: 'name'
+        required: true
+      ,
+        label: "Email"
+        type: "input"
+        description: "Enter your email so we can communicate with you"
+        fieldname: 'email'
+  #      email: true
+        required: true
+      ,
+        label: "Message"
+        type: "textarea"
+        description: "Enter a message"
+        fieldname: 'message'
+        required: true
+      ,
+        label: "Type"
+        type: "select"
+        description: "Select the type of suggestion"
+        options: [
+          "General Question"
+          "Server Issues"
+          "Billing Question"
+        ].sort()
+        fieldname: 'kind'
+        required: true
+      ]
+
+      events:
+        save: (row) ->
+          $scope.suggestion.createTemp({})
+
+        cancel: (row) ->
+          $scope.suggestion.createTemp({})
+
+
+    dynForm.build($scope, form, $scope.suggestion, '#form')
   )
-
-  form =
-    label: "Suggestions"
-    name: "suggestionsForm"
-    layout: {type:'form', style:'horizontal'}
-    container: true
-
-    fields: [
-      label: "Name"
-      type: "input"
-      description: "Enter your name"
-      fieldname: 'name'
-      required: true
-    ,
-      label: "Message"
-      type: "textarea"
-      description: "Enter a message"
-      fieldname: 'message'
-      required: true
-    ,
-      label: "Type"
-      type: "select"
-      description: "Select the type of suggestion"
-      options: [
-        "General Question"
-        "Server Issues"
-        "Billing Question"
-      ].sort()
-      fieldname: 'type'
-      required: true
-    ]
-
-  dynForm.build($scope, form, $scope.test, '#form')
 
 ])
 

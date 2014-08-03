@@ -11,31 +11,64 @@
 
   nav.collapse.navbar-collapse
 
-    ul.nav.navbar-nav(ng-repeat="m in navs()")
-      li(ui-sref-active="active")
-        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden") {{"nav." + m.name | i18next}}
-
-    ul.nav.navbar-nav.navbar-right
+    ul.nav.navbar-nav.navbar-right(style="margin-right: 15px;")
       li.dropdown
         a.dropdown-toggle(data-toggle="dropdown")
-          span.cic.cic-user32(style="font-size: 18px;")
+          span.cic.cic-user32(style="font-size: 21px;")
 
         ul.dropdown-menu
-          li: a.navbar-link(ui-sref="user.profile")
-            span.cic.cic-user32
-            | &nbsp;Profile
 
-          li.divider
+          //li: a.navbar-link(ui-sref="user.profile")
+          //  span.cic.cic-user32
+          //  | &nbsp;Profile
+          //
+          //li.divider
 
-          li: a.navbar-link(ui-sref="editor")
-            span.cic.cic-tools2
-            | &nbsp;Visual Editor
+          li
+            .navbar-content
+              .row
+                .col-md-6(style="padding-right: 15px;")
+                  .text-default.text-center(style="margin-bottom: 8px !important;")
+                    strong {{user.username}}
 
-          li.divider
+                  div(alt="Member's photo", style="width: 120px; height: 120px; border-radius: 60px; -webkit-border-radius: 60px; -moz-border-radius: 60px; margin: auto; background: url(http://lh5.googleusercontent.com/-b0-k99FZlyE/AAAAAAAAAAI/AAAAAAAAAAA/twDq00QDud4/s120-c/photo.jpg) no-repeat;")
 
-          li: a.navbar-link(href='/logout')
-            span.cic.cic-signout
-            | &nbsp;Sign Out
+                  p.text-center.small(style="margin-top: 8px !important;")
+                    a(ui-sref="user.photo") Change Photo
+
+                .col-md-6
+                  span {{user.name.full}}
+                  p.text-muted.small {{user.email}}
+                  .divider
+                  a.btn.btn-primary.btn-sm.btn-block(ui-sref="user.profile")
+                    span.cic.cic-contact(style="margin-right: 8px;")
+                    | View Profile
+
+            .navbar-footer
+              .navbar-footer-content
+                .row
+                  .col-md-6
+                    a.btn.btn-default.btn-sm(href="#")
+                      span.cic.cic-lock(style="margin-right: 8px;")
+                      | Change Password...
+                  .col-md-6
+                    a.btn.btn-default.btn-sm.pull-right(href="/logout")
+                      span.cic.cic-signout(style="margin-right: 8px;")
+                      | Sign Out
+
+          //li: a.navbar-link(ui-sref="editor")
+          //  span.cic.cic-tools2
+          //  | &nbsp;Visual Editor
+          //
+          //li.divider
+
+          //li: a.navbar-link(href='/logout')
+          //  span.cic.cic-signout
+          //  | &nbsp;Sign Out
+
+    ul.nav.navbar-nav.navbar-right(ng-cloak)
+      li(ng-repeat="m in navs()", ui-sref-active="active")
+        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden") {{"nav." + m.name | i18next}}
 
 //form.navbar-form.navbar-right(role='search')
 //  .form-group

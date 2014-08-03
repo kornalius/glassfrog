@@ -118,7 +118,7 @@ setTimeout( ->
       schemas: 2
       fields: 10
   ,
-    name: 'Basic'
+    name: 'Home'
     desc: ''
     price: 9.99
     limits:
@@ -127,7 +127,7 @@ setTimeout( ->
       schemas: 5
       fields: 25
   ,
-    name: 'Developer'
+    name: 'Freelancer'
     desc: ''
     price: 19.99
     limits:
@@ -139,7 +139,7 @@ setTimeout( ->
   ,
     name: 'Startup'
     desc: ''
-    price: 59.99
+    price: 49.99
     limits:
       records: 100000
       projects: 10
@@ -157,7 +157,7 @@ setTimeout( ->
       fields: -1
       options: 'cd'
   ,
-    name: 'Enterprise'
+    name: 'Unlimited'
     desc: ''
     price: 399.99
     limits:

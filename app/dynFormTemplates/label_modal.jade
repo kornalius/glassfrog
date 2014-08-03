@@ -1,0 +1,7 @@
+// label_modal.html
+
+div(class="{{fields[{%fieldIndex%}].getLabelClass()}}", ng-if="fields[{%fieldIndex%}].label != null && fields[{%fieldIndex%}].type != 'subform'")
+
+  div(ng-show="fields[{%fieldIndex%}].type != 'group'")
+
+    label.control-label.dynform-label(dyn-id="{{fields[{%fieldIndex%}].domId('label', $index)}}", name="{{fields[{%fieldIndex%}].domName('label', $index)}}") {{fields[{%fieldIndex%}].label}}

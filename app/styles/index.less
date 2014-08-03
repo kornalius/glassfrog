@@ -89,14 +89,14 @@
   .feature-item {
     margin-bottom: 50px;
     > i {
-      font-size: 32px;
+      font-size: 42px;
       line-height: 100px;
       height: 100px;
       width: 100px;
       padding: 25px;
       border-radius: 50%;
       border: 2px solid @gray-light;
-      color: @gray-light;
+      color: #688ec0;
     }
 
     .desc {
@@ -175,6 +175,94 @@
       }
     }
   }
+}
+
+.pricing {
+//  background-color: #f2f4f8;
+  padding: 48px 0px 48px 0px !important;
+}
+
+.pricing-table .plan {
+  background: #fff;
+  border: 1px solid #d5d5d5;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  -webkit-box-shadow: 0 0 3px rgba(0, 0, 0, 0.08);
+  -moz-box-shadow: 0 0 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.08);
+  margin: 0 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.pricing-table .plan:hover {
+  border-color: #ccc #ccc #bbb;
+  -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.pricing-table .plan-name {
+  padding: 30px 0;
+}
+
+.pricing-table .plan-name h2 {
+  margin: 0;
+  font-weight: 400;
+}
+
+.pricing-table .plan-name h2 + p {
+  margin: 10px 15px 0;
+}
+
+.pricing-table .plan-price {
+  background: #fafafa;
+  border-top: 1px solid #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 15px 0;
+}
+
+.pricing-table .plan-price b {
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.pricing-table .plan-price b b {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.pricing-table .prefered .plan-price {
+  background: #fff7e3;
+  color: #b0a996;
+}
+
+.pricing-table .prefered .plan-price b {
+  color: #d95246;
+}
+
+.pricing-table .plan-details {
+  padding: 0 10px;
+}
+
+.pricing-table .plan-details > div {
+  background: #fff;
+  padding: 15px;
+}
+
+.pricing-table .plan-details > div + div {
+  border-top: 1px solid #e5e5e5;
+}
+
+.pricing-table .plan-action {
+  background: #fafafa;
+  -webkit-border-radius: 0 0 2px 2px;
+  -moz-border-radius: 0 0 2px 2px;
+  border-radius: 0 0 2px 2px;
+  border-top: 1px solid #e5e5e5;
+  padding: 15px;
 }
 
 .testimonials {

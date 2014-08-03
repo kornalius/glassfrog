@@ -8,43 +8,48 @@ block content
       .panel.panel-default
 
         .panel-heading
-          .panel-title Sign In
-          div(style='float: right; font-size: 80%; position: relative; top: -10px;')
-            a(href='/forgot') Forgot password?
+          .panel-title Please sign in
 
-        .panel-body(style='padding-top: 30px;')
+        .panel-body
 
-          #login-alert.alert.alert-danger.col-sm-12(style='display: none;')
+          #login-alert.alert.alert-danger(style='display: none;')
 
           form#loginform.form-horizontal(role='form', action="/login", method="post")
             input(type="hidden", name="_csrf", value="#{csrftoken}")
 
             .form-group
-              .input-group
-                input#login-username.form-control(type='text', name='username', value='', placeholder='username or email', required)
-                span.input-group-addon
-                  i.cic.cic-user32
+              label.col-md-4.control-label(for='username') Username
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.cic.cic-user32
+                  input#login-username.form-control(type='text', name='username', value='', placeholder='username or email', required, autofocus)
 
             .form-group
-              .input-group
-                input#login-password.form-control(type='password', name='password', placeholder='password', required)
-                span.input-group-addon
-                  i.cic.cic-lock32
+              label.col-md-4.control-label(for='password') Password
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.cic.cic-lock
+                  input#login-password.form-control(type='password', name='password', placeholder='password', required)
 
             .form-group
-              .input-group
-                .checkbox
-                  label
-                    input#login-remember(type='checkbox', name='rememberme', value='1')
-                    | Remember me
+              .col-md-offset-4.col-md-8
+                .input-group
+                  .checkbox
+                    label
+                      input#login-remember(type='checkbox', name='rememberme', value='1')
+                      | Remember me&nbsp;
 
             .form-group
-              .col-sm-12.controls
-                input.btn.btn-primary(type="submit", value="Login")
+              .col-md-offset-4.col-md-8
+                input.btn.btn-primary.btn-block(type="submit", value="Login")
 
             .form-group
-              .col-md-12.control
-                div(style='border-top: 1px solid#888; padding-top: 15px;')
+              div(style='border-top: 1px solid#888; padding-top: 15px;')
+                .text-right
+                  | Forgot your password?&nbsp;
+                  a(href='/forgot') Reset password
+                .text-right
                   | Don't have an account?&nbsp;
-                  a(href="/signup")
-                    | Register Here
+                  a(href="/signup") Register Here

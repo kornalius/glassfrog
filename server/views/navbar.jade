@@ -13,18 +13,10 @@
   nav.collapse.navbar-collapse
 
     ul.nav.navbar-nav.navbar-right
-      li.dropdown
-        a.dropdown-toggle(data-toggle="dropdown")
-          span.cic.cic-user32(style="font-size: 18px;")
-        ul.dropdown-menu
-          li
-            a.navbar-link(href='/login')
-              span.cic.cic-signin
-              | &nbsp;Sign In
-          li
-            a.navbar-link(href='/signup')
-              span.cic.cic-edit32
-              | &nbsp;Register
+      a.btn.btn-default(href="/signup", style="margin: 8px 8px 0px 15px;")
+        | Register
+      a.btn.btn-primary(href="/login", style="margin: 8px 15px 0px 0px;")
+        b Sign in
 
     ul.nav.navbar-nav.navbar-right
       li: a.navbar-link.smooth-link(href='/#') Home
@@ -32,11 +24,6 @@
       //li: a.navbar-link(href='/whatisglassfrog') What is Glassfrog?
       li: a.navbar-link.smooth-link(href='/#features') Features
       li: a.navbar-link.smooth-link(href='/#details') Details
+      li: a.navbar-link.smooth-link(href='/#pricing') Pricing
       li: a.navbar-link.smooth-link(href='/#testimonials') Testimonials
       li: a.navbar-link.smooth-link(href='/#contactus') Contact Us
-
-//form.navbar-form.navbar-right(role='search')
-//  .form-group
-//    input.form-control(type='text', placeholder='Search')
-//  .form-group
-//    button.btn.btn-default(type='submit') Submit

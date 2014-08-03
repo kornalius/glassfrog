@@ -1,0 +1,3 @@
+// state.html
+
+select#country_states(selectize="{{fields[{%fieldIndex%}].config}}", name="{{form.domName('input', $index)}}", field="fields[{%fieldIndex%}]", ng-model="row[fn]", ng-class="{'static': !isEditing($index)}", ng-disabled="!isEditing($index) || fields[{%fieldIndex%}].disabled", attributes="fields[{%fieldIndex%}]", placeholder="{{fields[{%fieldIndex%}].placeholder}}", style="width: 100% !important;")

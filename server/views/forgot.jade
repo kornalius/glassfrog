@@ -1,35 +1,40 @@
 extend layout
 
 block content
+
   .container#forgot
+
     #loginbox.mainbox.col-md-6.col-md-offset-3.col-sm-8.col-sm-offset-2
 
       .panel.panel-default
 
         .panel-heading
           .panel-title Forgot password
-          div(style='float: right; font-size: 80%; position: relative; top: -10px;')
-            a(href='/login') Sign in
 
-        .panel-body(style='padding-top: 30px;')
+        .panel-body
+
           #login-alert.alert.alert-danger.col-sm-12(style='display: none;')
 
           form#loginform.form-horizontal(role='form', action="/forgot", method="post")
             input(type="hidden", name="_csrf", value="#{csrftoken}")
 
             .form-group
-              .input-group
-                input#login-username.form-control(type='text', name='username', value='', placeholder='Username', required)
-                span.input-group-addon
-                  i.cic.cic-user32
+              label.col-md-4.control-label(for='username') Username
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.cic.cic-user32
+                  input#login-username.form-control(type='text', name='username', value='', placeholder='Username', required, autofocus)
 
             .form-group
-              .col-sm-12.controls
-                input.btn.btn-primary(type="submit", value="Submit")
+              .col-md-offset-4.col-md-8
+                input.btn.btn-primary.btn-block(type="submit", value="Submit")
 
             .form-group
-              .col-md-12.control
-                div(style='border-top: 1px solid#888; padding-top: 15px;')
+              div(style='border-top: 1px solid#888; padding-top: 15px;')
+                div.text-right
+                  | Already a member?&nbsp;
+                  a(href='/login') Sign in
+                div.text-right
                   | Don't have an account?&nbsp;
-                  a(href="/signup")
-                    | Register Here
+                  a(href="/signup") Register Here

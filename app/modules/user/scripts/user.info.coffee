@@ -19,22 +19,26 @@ angular.module('user.info', ['dynamicForm'])
 
       fields: [
         fieldname: 'fullname'
+        username: true
         bold: true
         break: true
       ,
         fieldname: 'address'
+        address: true
         break: true
       ,
         fieldname: 'city'
+        city: true
       ,
         fieldname: 'state'
-        prefix: ", "
+        state: true
       ,
         fieldname: 'zip'
-        prefix: ", "
+        zipcode: true
         break: true
       ,
         fieldname: 'country'
+        country: true
         break: true
       ,
         fieldname: 'tel'
@@ -43,7 +47,7 @@ angular.module('user.info', ['dynamicForm'])
       ,
         hidden: 'true'
         fieldname: 'fax'
-        phone: true
+        fax: true
         break: true
       ,
         fieldname: 'url'

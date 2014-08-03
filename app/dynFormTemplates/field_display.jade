@@ -1,2 +1,4 @@
-span(ng-show="fields[fieldIndex].show && fields[fieldIndex].type != 'group'")
+// field_display.html
+
+div(class="{{fields[{%fieldIndex%}].getInputClass()}}")
   // <input>

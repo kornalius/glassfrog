@@ -38,7 +38,7 @@ InvoiceSchema.plugin(payment)
 InvoiceSchema.plugin(autoIncrement.plugin,
   model: 'Invoice'
   field: 'invoiceNo'
-  startAt: 1000
+  startAt: 0
   incrementBy: 1
 )
 

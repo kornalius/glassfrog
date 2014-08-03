@@ -1,2 +1,4 @@
-.form-icon(attributes="fields[fieldIndex]")
-  span.cic(name="{{fields[fieldIndex].domName('label', $index)}}", ng-class="{ 'cic-{{fields[fieldIndex].value}}': true}")
+// icon.html
+
+.form-icon(attributes="fields[{%fieldIndex%}]")
+  span.cic(name="{{fields[{%fieldIndex%}].domName('label', $index)}}", ng-class="{ 'cic-{{fields[{%fieldIndex%}].value}}': true}")

@@ -2,33 +2,27 @@ angular.module('layoutAttributes', [])
 
 .factory('layoutAttributes', [
   '$parse'
+  '$timeout'
   'dynForm'
 
-  ($parse, dynForm) ->
+  ($parse, $timeout, dynForm) ->
 
     hidden:
       type: 'layout'
       code: (scope, element, field) ->
-        element.attr('ng-hide', field.hidden)
-#        input = element.find('input')
-#        input.attr('ng-hide', params)
-
-    disabled:
-      type: 'layout'
-      code: (scope, element, field) ->
-        element.attr('ng-disabled', field.disabled)
-#        input = element.find('input')
-#        input.attr('ng-disabled', params)
+        input = dynForm.getFieldDOM(element)
+        if input and input.length and input[0].nodeName == 'INPUT'
+          input.attr('ng-hide', field.hidden)
+          console.log input
 
     required:
       type: 'layout'
       code: (scope, element, field) ->
-        label = angular.element("#" + field.domId('label', scope.$index))
-        if label.find('i').length == 0
-          label.prepend('<i class="cic cic-exclamation" style="color:darkgray;" title="This field is required"></i>&nbsp;')
-#        input = element.find('input')
-#        input.attr('required', "true")
-#        input.attr('ng-required', params.required)
+        $timeout(->
+          label = angular.element('#' + field.domId('label', scope.$index))
+          if label.length
+            label.addClass('required')
+        )
 
     readonly:
       type: 'layout'
@@ -93,7 +87,7 @@ angular.module('layoutAttributes', [])
         element.removeAttr('bold')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          input.css({'font-weight': 'bold'})
+          input.addClass('bold')
 
     italic:
       type: 'layout'
@@ -101,7 +95,7 @@ angular.module('layoutAttributes', [])
         element.removeAttr('italic')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          input.css({'font-style': 'italic'})
+          input.addClass('italic')
 
     underline:
       type: 'layout'
@@ -109,7 +103,7 @@ angular.module('layoutAttributes', [])
         element.removeAttr('underline')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          input.css({'text-decoration': 'underline'})
+          input.addClass('underline')
 
     strikethrough:
       type: 'layout'
@@ -117,7 +111,15 @@ angular.module('layoutAttributes', [])
         element.removeAttr('strikethrough')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          input.css({'text-decoration': 'line-through'})
+          input.addClass('strikethrough')
+
+    color:
+      type: 'layout'
+      code: (scope, element, field) ->
+        element.removeAttr('color')
+        input = dynForm.getFieldDOM(element)
+        if input.tagName != 'input'
+          input.css({'color': field.color})
 
     center:
       type: 'layout'
@@ -125,7 +127,7 @@ angular.module('layoutAttributes', [])
         element.removeAttr('center')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          input.css({'text-center': true})
+          input.addClass('text-center')
 
     vcenter:
       type: 'layout'

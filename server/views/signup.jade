@@ -1,15 +1,15 @@
 extend layout
 
 block content
+
   .container#signup
+
     #registerbox.mainbox.col-md-6.col-md-offset-3.col-sm-8.col-sm-offset-2
 
       .panel.panel-default
 
         .panel-heading
           .panel-title Register
-          div(style='float: right; font-size: 85%; position: relative; top: -10px;')
-            a#signinlink(href='/login') Sign In
 
         .panel-body
 
@@ -23,9 +23,9 @@ block content
               label.col-md-4.control-label(for='username') Username
               .col-md-8
                 .input-group
-                  input.form-control(type='text', name='username', placeholder='Username', required)
                   span.input-group-addon
                     i.cic.cic-user32
+                  input.form-control(type='text', name='username', placeholder='Username', required, autofocus)
 
             .form-group
               label.col-md-4.control-label(for='firstname') First Name
@@ -41,26 +41,32 @@ block content
               label.col-md-4.control-label(for='email') Email
               .col-md-8
                 .input-group
-                  input.form-control(type='email', name='email', placeholder='Email Address', required)
                   span.input-group-addon
                     i.cic.cic-email22
+                  input.form-control(type='email', name='email', placeholder='Email Address', required)
 
             .form-group
               label.col-md-4.control-label(for='password') Password
               .col-md-8
                 .input-group
-                  input.form-control(type='password', name='password', placeholder='Password', required)
                   span.input-group-addon
                     i.cic.cic-lock32
+                  input.form-control(type='password', name='password', placeholder='Password', required)
 
             .form-group
               label.col-md-4.control-label(for='re-password') Re-enter password
               .col-md-8
                 .input-group
-                  input.form-control(type='password', name='re-password', placeholder='Password', required)
                   span.input-group-addon
                     i.cic.cic-lock32
+                  input.form-control(type='password', name='re-password', placeholder='Password', required)
 
             .form-group
               .col-md-offset-4.col-md-8
-                input.btn.btn-primary(type="submit", value="Register")
+                input.btn.btn-primary.btn-block(type="submit", value="Register")
+
+            .form-group
+              div(style='border-top: 1px solid#888; padding-top: 15px;')
+                div.text-right
+                  | Already a member?&nbsp;
+                  a(href='/login') Sign in

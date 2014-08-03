@@ -8,11 +8,6 @@ body.dragging, body.dragging * {
   cursor: move !important;
 }
 
-.nav {
-//  font-family: Arial,sans-serif;
-//  font-size: 13px;
-}
-
 .table {
   margin-bottom: 0px !important;
 }
@@ -70,6 +65,11 @@ body.dragging, body.dragging * {
 //  margin-top: 4px;
 //}
 
+ul.nav-tabs li.active {
+  font-weight: bold;
+//  font-size: large;
+}
+
 #main {
   background-color: @control-color;
   padding-left: 0px;
@@ -81,7 +81,11 @@ body.dragging, body.dragging * {
 }
 
 #footer {
-  margin-bottom: 20px;
+//  margin-bottom: 20px;
+}
+
+#footer.navbar-default {
+  min-height: 24px;
 }
 
 //.col-sm-5 {
@@ -96,10 +100,6 @@ body.dragging, body.dragging * {
 .alert {
   margin-left: 1%;
   margin-right: 1%;
-}
-
-#footer .navbar-default {
-  min-height: 24px;
 }
 
 a.active {
@@ -127,8 +127,8 @@ a.active {
   color: @error-color;
 }
 
-.form-group {
-  margin-bottom: 4px !important;
+.dyn-form .form-group {
+  margin-bottom: 8px !important;
 }
 
 .panel-footer.form-group {
@@ -196,16 +196,16 @@ textarea.form-control {
   content: "\e080";
 }
 
-.modal-footer {
-  margin: 0px;
-}
-
 .modal-body > div > .panel {
   margin-bottom: 0px;
 }
 
 .modal-content > div > .panel {
   margin-bottom: 0px;
+}
+
+.modal-footer {
+  margin: 0px;
 }
 
 .radiobuttons > .btn.active {
@@ -267,4 +267,53 @@ textarea.form-control {
 .toolbar-group a, .toolbar-group a i {
   color: @control-color;
 //  font-weight: bold;
+}
+
+.selectize-dropdown {
+  margin-top: -3px !important;
+  border-top-left-radius: 0! important;
+  border-top-right-radius: 0! important;
+}
+
+.error-messages {
+  margin: 15px !important;
+}
+
+.display-icon {
+  margin-right: 12px;
+  color: @gray-color;
+}
+
+a .display-icon {
+  color: @dark-blue-color;
+}
+
+.display-label {
+  font-weight: normal;
+}
+
+.required:before {
+  font-family: 'cicons';
+  content: '\f19c';
+  color: @alert-danger-text;
+  font-weight: normal;
+  font-size: 10px;
+  vertical-align: text-top;
+  margin-right: 4px;
+}
+
+.bold {
+  font-style: bold;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.underline {
+  text-decoration: underline;
+}
+
+.strikethrough {
+  text-decoration: line-through;
 }

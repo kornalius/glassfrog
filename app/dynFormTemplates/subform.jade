@@ -1,4 +1,6 @@
-div(ng-controller="dynFormCtrl", ng-init="fi = fieldIndex;")
+// subform.html
+
+div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';")
   div(ng-init="subformInit()")
 
     .panel-subform
@@ -11,7 +13,7 @@ div(ng-controller="dynFormCtrl", ng-init="fi = fieldIndex;")
           .panel-body
             .container-fluid
               .row-fluid
-                //p {{form.name + ',' + $index + ',' + fields[fieldIndex].fieldname + ',' + rows[0]._id}}
-                ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in rows track by $index", novalidate)
+                ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in $parent.row[$parent.fn] track by $index", novalidate)
                   // <row>
               .row-fluid
+

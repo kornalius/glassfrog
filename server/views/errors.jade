@@ -1,9 +1,2 @@
-div(app-messages)
-  if errors
-    each message in errors
-      .alert.alert-danger
-        | #{message}
-  if warnings
-    each message in warnings
-      .alert.alert-warning
-        | #{message}
+.error-messages(app-messages)
+

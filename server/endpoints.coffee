@@ -1,8 +1,9 @@
 app = require("./app")
 mongoose = require("./app").mongoose
 RestEndpoints = require('mongoose-rest-endpoints')
+require('simple-errors')
 
-#RestEndpoints.log.verbose(process.env.NODE_ENV == 'development')
+RestEndpoints.log.verbose(process.env.NODE_ENV == 'development')
 #RestEndpoints.log.verbose(true)
 
 register = (k, req, show, hide, readOnly, populate) ->
@@ -51,10 +52,12 @@ register = (k, req, show, hide, readOnly, populate) ->
 #        for k of req.query
 #          if k.startsWith('$in_') and !(req.query[k] instanceof Array)
 #            req.query[k] = req.query[k].split(',')
-#            console.log req.query[k]
+#            log req.query[k]
 #        next()
 
       endpoint.tap('pre_filter', '*', (req, query, next) ->
+        that = endpoint
+
         for k of query
           for kk of query[k]
             if kk == '$in' and query[k][kk] instanceof Array and query[k][kk].length == 1 and typeof query[k][kk][0] == 'string'
@@ -63,14 +66,16 @@ register = (k, req, show, hide, readOnly, populate) ->
       )
 
       endpoint.tap('pre_response', '*', (req, query, next) ->
-        that = @
+        that = endpoint
+
         if req.method.toUpperCase() == 'GET' and query instanceof Array
-          that.$$modelClass.count((err, count) ->
+          that.$modelClass.count((err, count) ->
             r = []
             for q in query
               if !hasOwner(that) or isOwned(that, q, req.user)
                 r.push(q)
-            config = that.$$getPaginationConfig(req)
+            epr = new RestEndpoints.request(that)
+            config = epr.$$getPaginationConfig(req)
             limit = parseInt(config.perPage, 0)
             skip = Number(config.page * config.perPage || 0)
             pages = Math.round(count / config.perPage)
@@ -98,45 +103,50 @@ register = (k, req, show, hide, readOnly, populate) ->
       )
 
       hasOwner = (endpoint) ->
-        return endpoint.$$modelClass.schema.owner_id?
+        return endpoint.$modelClass.owner_id?
 
       isOwned = (endpoint, doc, user) ->
         return hasOwner(endpoint) and doc.owner_id? and doc.owner_id.toString() != user._id.toString()
 
       endpoint.tap('post_retrieve', '*', (req, doc, next) ->
+        that = endpoint
+
         actions = []
         mt = req.method.toUpperCase()
         if mt == 'PUT'
           actions.push('update')
         else if mt == 'DELETE'
           actions.push('delete')
-        that = @
-        console.log "post_retrieve", actions, that
-        req.user.can(actions, that.$$modelClass.schema.name, (rule) ->
-          console.log "post_retrieve", rule, isOwned(that, doc, req.user)
-          if !rule or !isOwned(that, doc, req.user)
-            error = new Error('Unauthorized')
-            error.code = 403
-            next(error)
-          else
-            next(doc)
+
+#        log "endpoints.post_retrieve", that.modelId
+        that.$modelClass.findById(req.params.id, (err, row) ->
+          if row
+            req.user.can(actions, that.modelId, row, (rule) ->
+              console.info "endpoints.post_retrieve", rule, doc, row, isOwned(that, doc, req.user), that.modelId
+              if !rule or (!isOwned(that, doc, req.user) and rule != 'admin')
+#              if !rule or (!isOwned(that, doc, req.user))
+                next(Error.http(403, null, {method: req.method, model: that.modelId, id: doc._id}))
+              else
+                next(doc)
+            )
         )
       )
 
       endpoint.tap('pre_save', '*', (req, doc, next) ->
+        that = endpoint
+
         actions = []
         mt = req.method.toUpperCase()
         if mt == 'POST'
           actions.push('create')
         else if mt == 'PUT'
           actions.push('update')
-        that = @
-        console.log "that.$$modelClass.schema", that.$$modelClass.schema
-        req.user.can(actions, that.$$modelClass.schema.name, (rule) ->
+
+#        log "endpoints.pre_save", that.modelId
+        req.user.can(actions, that.modelId, doc, (rule) ->
+          console.info "endpoints.pre_save", rule, isOwned(that, doc, req.user), that.modelId
           if !rule
-            error = new Error('Unauthorized')
-            error.code = 403
-            next(error)
+            next(Error.http(403, null, {method: req.method, model: that.modelId, id: doc._id}))
           else
             if hasOwner(that) and !isOwned(that, doc, req.user)
               doc.owner_id = req.user._id
@@ -145,15 +155,15 @@ register = (k, req, show, hide, readOnly, populate) ->
       )
 
       canSendField = (name, f) ->
-        return !f.options.private and (!name.startsWith('_') or name == '_id')
+        return !f.options.private and (!name.startsWith('_') or name == '_id' or name == '_order')
 
       endpoint.addMiddleware('*', (req, res, next) ->
+        that = endpoint
+
         if req._parsedUrl
           url = req._parsedUrl
           p = url.pathname.split('/')
-          if p.length > 2 and p[1] == 'api'
-
-            model = p[2].toProperCase()
+          if p.length > 1 and p[1] == 'api'
 
             if req.isAuthenticated()
               mt = req.method.toUpperCase()
@@ -170,75 +180,81 @@ register = (k, req, show, hide, readOnly, populate) ->
               else if mt == 'DELETE'
                 action = 'delete'
 
-    #          console.log action, model, req.params.id
+              action_name = action
+              if action == 'schema'
+                action_name = "read schema"
+              else if action == 'defaults'
+                action_name = "read default values"
+
+              if req.params.id?
+                console.info "endpoints.middleware()", action_name, "from/to model", that.modelId, "row with id", req.params.id
+              else
+                console.info "endpoints.middleware()", action_name, "from/to model", that.modelId, "all rows"
 
               if action == 'schema'
-                app.model(model, req, (m) ->
-                  if m
-                    req.user.can('schema', model, null, (ok) ->
-                      if !ok
-                        return res.send(403)
-                      else
-                        fields = {}
-                        m.schema.eachPath((name, f) ->
-                          if canSendField(name, f)
-                            fields[name] = f
-                        )
-                        return res.send(fields)
-                    )
+                req.user.can('schema', that.modelId, null, (rule) ->
+                  if !rule
+                    next(Error.http(403, {method: req.method, model: that.modelId, id: req.params.id}))
                   else
-                    return res.send(500, 'Schema not found')
+                    fields = {}
+                    that.$modelClass.schema.eachPath((name, f) ->
+                      if canSendField(name, f)
+                        fields[name] = f
+                    )
+
+                    console.info "schema", fields
+
+                    res.send(fields)
+
+                    next()
                 )
 
               else if action == 'defaults'
-                app.model(model, req, (m) ->
-                  if m
-                    req.user.can('defaults', model, null, (ok) ->
-                      if !ok
-                        return res.send(403)
-                      else
-                        fields = {}
-
-                        o = new m()
-                        fields._id = o._id
-
-                        m.schema.eachPath((name, f) ->
-                          if canSendField(name, f) and o[name]?
-                            fields[name] = o[name]
-                        )
-                        console.log fields
-                        return res.send(fields)
-                    )
+                req.user.can('defaults', that.modelId, null, (rule) ->
+                  if !rule
+                    next(Error.http(403, {method: req.method, model: that.modelId, id: req.params.id}))
                   else
-                    return res.send(500, 'Schema not found')
+                    fields = {}
+
+                    o = new m()
+                    fields._id = o._id
+
+                    that.$modelClass.schema.eachPath((name, f) ->
+                      if canSendField(name, f) and o[name]?
+                        fields[name] = o[name]
+                    )
+
+                    console.info "default values", fields
+
+                    res.send(fields)
+
+                    next(fields)
                 )
 
               else if req.params.id?
-                app.model(model, req, (m) ->
-                  if m
-                    m.findById(req.params.id, (err, row) ->
-                      req.user.can(action, model, row, (ok) ->
-                        if !ok
-                          return res.send(403)
-                        else
-                          return next()
-                      )
-                    )
-                  else
-                    return res.send(403)
+                that.$modelClass.findById(req.params.id, (err, row) ->
+                  req.user.can(action, that.modelId, row, (rule) ->
+                    if !rule
+                      next(Error.http(403, {method: req.method, model: that.modelId, id: req.params.id}))
+                    else
+                      next()
+                  )
                 )
 
               else
-                req.user.can(action, model, null, (ok) ->
-                  if !ok
-                    return res.send(403)
+                req.user.can(action, that.modelId, null, (rule) ->
+                  if !rule
+                    next(Error.http(403, {method: req.method, model: that.modelId, id: req.params.id}))
                   else
-                    return next()
+                    next()
                 )
 
-              return
+              return null
 
-        return next()
+            else
+
+              next(Error.http(403, {method: req.method, model: that.modelId, id: req.params.id}))
+
       )
 
       endpoint.register(app.app)

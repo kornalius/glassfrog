@@ -1,3 +1,5 @@
+// table.html
+
 div(ng-controller="dynTableCtrl")
   .panel.panel-primary(ng-init="srow = -1", container="form.container")
     .panel-heading
@@ -26,7 +28,7 @@ div(ng-controller="dynTableCtrl")
             tfoot
               tr
                 td
-                td(ng-repeat="f in fields") {{$eval(f.sum)}}
+                td(ng-repeat="f in fields") {{f.sum ? $eval(f.sum) : ""}}
                 td
 
             tbody

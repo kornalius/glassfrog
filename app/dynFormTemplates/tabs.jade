@@ -1,0 +1,7 @@
+// tabs.html
+
+ul.nav.nav-tabs(role="tablist")
+
+  li(ng-repeat="tab in fields[{%fieldIndex%}].tabs", ng-class="{ 'active': $index == (form.activeTab ? form.activeTab : 0) }")
+
+    a(href="", ng-click="form.activeTab = $index") {{tab.label}}

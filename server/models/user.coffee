@@ -2,11 +2,16 @@ app = require("../app")
 mongoose = require("../app").mongoose
 locking = require('mongoose-account-locking')
 timestamps = require('mongoose-time')()
-payment = require('../mongoose_plugins/mongoose-payment')
 async = require('async')
 bcrypt = require('bcrypt')
 endpoints = require('../endpoints')
 safejson = require('safejson')
+
+person = require('../mongoose_plugins/mongoose-person')
+password = require('../mongoose_plugins/mongoose-password')
+address = require('../mongoose_plugins/mongoose-address')
+picture = require('../mongoose_plugins/mongoose-picture')
+payment = require('../mongoose_plugins/mongoose-payment')
 
 UserSchema = mongoose.Schema(
   username:
@@ -16,14 +21,6 @@ UserSchema = mongoose.Schema(
     trim: true
     required: true
     label: 'Username'
-
-  password:
-    type: String
-    trim: true
-    required: true
-    label: 'Password'
-    private: true
-    readOnly: true
 
   email:
     type: String
@@ -56,87 +53,12 @@ UserSchema = mongoose.Schema(
     readOnly: true
     label: 'Status'
 
-  name:
-    first:
-      type: String
-      required: true
-      trim: true
-      label: 'First Name'
-      inline: true
-
-    middle:
-      type: String
-      trim: true
-      label: 'Middle Name'
-      inline: true
-
-    last:
-      type: String
-      required: true
-      trim: true
-      label: 'Last Name'
-      inline: true
-
-  address:
-    type: String
-    label: 'Address'
-
-  city:
-    type: String
-    trim: true
-    label: 'City'
-
-  state:
-    type: String
-    trim: true
-    label: 'State'
-
-  country:
-    type: String
-    trim: true
-    label: 'Country'
-
-  zip:
-    type: String
-    trim: true
-    label: 'Zip or Postal Code'
-
-  tel:
-    type: String
-    trim: true
-    label: 'Telephone'
-
-  fax:
-    type: String
-    trim: true
-    label: 'Fax'
-
-  picture:
-    type: Buffer
-    label: 'Avatar'
-
   plan:
     type: mongoose.Schema.ObjectId
     ref: 'Plan'
     label: 'Payment plan'
     readOnly: true
     populate: true
-
-  gender:
-    type: String
-    enum: ['', 'M', 'F']
-    default: ''
-    label: 'Gender'
-
-  timezone:
-    type: Number
-    default: 0
-    label: 'Timezone'
-
-  locale:
-    type: String
-    default: 'en_us'
-    label: 'Locale'
 
   data:
     type: String
@@ -190,6 +112,12 @@ UserSchema = mongoose.Schema(
   label: 'Users'
 )
 
+UserSchema.plugin(person)
+UserSchema.plugin(password)
+UserSchema.plugin(address)
+UserSchema.plugin(picture)
+UserSchema.plugin(payment)
+
 UserSchema.plugin(timestamps)
 UserSchema.plugin(locking,
   maxLoginAttempts = 5
@@ -197,7 +125,6 @@ UserSchema.plugin(locking,
   username = 'username'
   password = 'password'
 )
-UserSchema.plugin(payment)
 
 UserSchema.pre('save', (next) ->
   if !@plan?
@@ -208,19 +135,6 @@ UserSchema.pre('save', (next) ->
     )
   else
     next()
-)
-
-UserSchema.virtual('name.full').get( ->
-  if @name.middle?
-    "{0} {1} {2}".format(@name.first, @name.middle, @name.last)
-  else
-    "{0} {1}".format(@name.first, @name.last)
-)
-
-UserSchema.virtual('name.full').set((name) ->
-  split = name.split(' ')
-  @name.first = split[0]
-  @name.last = split[1]
 )
 
 UserSchema.virtual('isVerified').get( ->
@@ -278,12 +192,16 @@ UserSchema.method(
     )
 
   hasRole: (name, cb) ->
+    that = @
     name = name.toLowerCase()
     @allRoles((roles) ->
-      for role in roles
-        if role.name == name
-          cb(role) if cb
-          return
+      if roles
+        for role in roles
+          if role.name == name
+            console.log that.username, "has role", name
+            cb(role) if cb
+            return
+      console.log that.username, "does not have role", name
       cb(null) if cb
     )
 
@@ -337,19 +255,48 @@ UserSchema.method(
 
   can: (actions, subject, row, cb) ->
     that = @
-    @isAdmin((ok) ->
-      if ok
-        cb(true) if cb
-        return
+
+    if row?
+      console.log "can", that.username, actions, "from/to model", subject, "with data", row, "?"
+    else
+      console.log "can", that.username, actions, "from/to model", subject, "?"
+
+    if type(actions) is 'string'
+      actions = [actions]
+    action_names = []
+    for action in actions
+      if action == 'schema'
+        action_names.push("read schema")
+      else if action == 'defaults'
+        action_names.push("read default values")
+      else
+        action_names.push(action)
+    action_names = action_names.join(' or ')
+
+    @isAdmin((adminRole) ->
+      if adminRole
+        console.log that.username, "can", action_names, "from/to model", subject
+        cb('admin') if cb
       else
         that.allRoles((roles) ->
-          for role in roles
-            role.can(that, actions, subject, row, (ok) ->
-              if ok
-                cb(true) if cb
-                return
+          if roles
+            r = null
+            async.eachSeries(roles, (role, callback) ->
+              if !r and role
+                role.can(that, actions, subject, row, (rule) ->
+                  if rule
+                    r = rule
+                  callback()
+                )
+              else
+                callback()
+            , (err) ->
+              console.log that.username, "cannot", action_names, "from/to model", subject
+              cb(r) if cb
             )
-          cb(false) if cb
+          else
+            console.log that.username, "cannot", action_names, "from/to model", subject
+            cb(null) if cb
         )
     )
 
@@ -388,70 +335,6 @@ UserSchema.method(
       else
         throw err
     )
-
-  modules: (cb) ->
-    that = @
-    r = []
-    mongoose.model('Module').find({owner_id: that.id}, (err, modules) ->
-      if modules
-        for m in modules
-          r.push(m)
-
-      mongoose.model('Share').find({ $and: [{'users.user': that.id}, {'users.state': 'active'}] }).populate('module').exec((err, shares) ->
-        if shares
-          for s in shares
-            r.push(s.module)
-
-        cb(r) if cb
-      )
-    )
-
-#  generate: (nodes, cb) ->
-#    s = ""
-#    errors = []
-#    async.eachSeries(nodes, (n, callback) ->
-#      ok = true
-#      name = n.name.toLowerCase()
-#      for m in mongoose.models
-#        if m.name.toLowerCase() == name
-#          ok = false
-#      if !ok
-#        errors = new Error(n.name + ' is a reserved schema name')
-#      if ok and n.component?
-#        n.component.getServerCode((sc) ->
-#          if sc
-#            sc = app.safeEval(sc, errors)
-#            if sc and sc.generate
-#              s += sc.generate.call(n)
-#          callback()
-#        )
-#      else
-#        callback()
-#    , (err) ->
-#      cb(s, errors) if cb
-#    )
-#
-#  generateAllSchemas: (cb) ->
-#    errors = []
-#
-#    @getConnection((plan, c, prefix) ->
-#      schemas = @getSchemas()
-#      async.eachSeries(schemas, (n, callback) ->
-#        @generate([n], (schema, err) ->
-#          if err
-#            errors.concat(err)
-#          if schema?
-#            m = c.model(prefix + n.name, JSON.parse(schema))
-#            if m
-#              endpoints.register(name)
-#          callback()
-#        )
-#      , (err) ->
-#        if err
-#          errors.push(err)
-#        cb(schemas, errors) if cb
-#      )
-#    )
 
   getConnection: (cb) ->
     @populate('plan', (plan) ->

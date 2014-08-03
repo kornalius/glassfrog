@@ -15,7 +15,6 @@ moduleNames = [
   'test'
   'suggestions'
   'user'
-  'editor'
 ]
 
 modules = []
@@ -40,12 +39,15 @@ app = angular.module('app', [
   'ngCookies'
   'ngResource'
   'ngAnimate'
+  'ngSanitize'
 
   'webStorageModule'
 
   'ui.config'
   'ui.directives'
   'ui.filters'
+
+  'ui.selectize'
 
   'pagination.services'
 
@@ -72,7 +74,6 @@ app = angular.module('app', [
   'app.filters'
   'app.services'
 
-  'select.services'
   'switch.services'
   'twolist.services'
 

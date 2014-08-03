@@ -63,7 +63,7 @@ if !Array::zip
 if !Array::unique
   Array::unique = ->
     output = {}
-    output[@[key]] = @[key] for key in [0...@length]
+    output[@[key]] = @[key] for key in [0..@length - 1]
     value for key, value of output
 
 if !Array::toDict
@@ -74,59 +74,50 @@ if !Array::toDict
 
 if !Array::where
   Array::where = (query) ->
-      return [] if typeof query isnt "object"
-      hit = Object.keys(query).length
-      @filter (item) ->
-          match = 0
-          for key, val of query
-              match += 1 if item[key] is val
-          if match is hit then true else false
-
-if (window? and !window.type) or (global? and !global.type)
-  type = (obj) ->
-    if obj == undefined or obj == null
-      return String obj
-    classToType = {
-      '[object Boolean]': 'boolean',
-      '[object Number]': 'number',
-      '[object String]': 'string',
-      '[object Function]': 'function',
-      '[object Array]': 'array',
-      '[object Date]': 'date',
-      '[object RegExp]': 'regexp',
-      '[object Object]': 'object'
-    }
-    return classToType[Object.prototype.toString.call(obj)]
-
-  if window?
-    window.type = type
-  else if global?
-    global.type = type
+    return [] if typeof query isnt "object"
+    hit = Object.keys(query).length
+    @filter (item) ->
+      match = 0
+      for key, val of query
+        match += 1 if item[key] is val
+      if match is hit then true else false
 
 
-if (window? and !window.checksum) or (global? and !global.checksum)
-  checksum = (str) ->
-    i = 0
-    chk = 0x12345678
-    for i in [0..str.length - 1]
-      chk += str.charCodeAt(i) * (i + 1)
-    return chk
 
-  if window?
-    window.checksum = checksum
-  else if global?
-    global.checksum = checksum
+exp = {}
 
-if (window? and !window.makeId) or (global? and !global.makeId)
-  makeId = () ->
-    guid = () ->
-      s4 = () ->
-        return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
-      return s4() + s4() + s4() + s4() + s4() + s4()
+exp.type = (obj) ->
+  if obj == undefined or obj == null
+    return String obj
+  classToType = {
+    '[object Boolean]': 'boolean',
+    '[object Number]': 'number',
+    '[object String]': 'string',
+    '[object Function]': 'function',
+    '[object Array]': 'array',
+    '[object Date]': 'date',
+    '[object RegExp]': 'regexp',
+    '[object Object]': 'object'
+  }
+  return classToType[Object.prototype.toString.call(obj)]
 
-    return guid()
+exp.checksum = (str) ->
+  i = 0
+  chk = 0x12345678
+  for i in [0..str.length - 1]
+    chk += str.charCodeAt(i) * (i + 1)
+  return chk
 
-  if window?
-    window.makeId = makeId
-  else if global?
-    global.makeId = makeId
+exp.makeId = () ->
+  guid = () ->
+    s4 = () ->
+      return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+    return s4() + s4() + s4() + s4() + s4() + s4()
+  return guid()
+
+
+for k of exp
+  if window? and !window[k]
+    window[k] = exp[k]
+  else if global? and !global[k]
+    global[k] = exp[k]

@@ -1,2 +1,8 @@
-div(ng-controller="dynFormObjectCtrl")
-  span(ng-show="fields[fieldIndex].show && fields[fieldIndex].type != 'group'")
+// label_display.html
+
+div(class="{{fields[{%fieldIndex%}].getLabelClass()}}", ng-if="fields[{%fieldIndex%}].type != 'subform'")
+
+  div(ng-show="fields[{%fieldIndex%}].type != 'group'", attributes="fields[{%fieldIndex%}]")
+
+    //pre {{fields[{%fieldIndex%}].fieldname}}
+    label.control-label.display-label(dyn-id="{{fields[{%fieldIndex%}].domId('label', $index)}}", name="{{fields[{%fieldIndex%}].domName('label', $index)}}") {{row[fn]}}

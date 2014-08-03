@@ -1,4 +1,8 @@
-.radiobuttons.btn-group(data-toggle="buttons", name="{{field.domName('input', $index)}}", ng-disabled="!isEditing($index)", attributes="fields[fieldIndex]")
-  label.btn.btn-default.btn-sm(ng-repeat="item in fields[fieldIndex].options")
-    input(type="radio", name="{{fields[fieldIndex].domName('input', $index)}}", ng-model="row[fields[fieldIndex].fieldname]", value="{{item.value}}")
+// radiobutton.html
+
+.radiobuttons.btn-group(data-toggle="buttons", name="{{field.domName('input', $index)}}", ng-disabled="!isEditing($index) || fields[{%fieldIndex%}].disabled", attributes="fields[{%fieldIndex%}]")
+
+  label.btn.btn-default.btn-sm(ng-repeat="item in fields[{%fieldIndex%}].options", ng-class="{ 'active': row[fn] == item.value }", ng-click="row[fn] = item.value")
+
+    input(type="radio", name="{{fn}}", id="{{fields[{%fieldIndex%}].domName('input', $index)}}", value="{{item.value}}")
     | {{item.label}}

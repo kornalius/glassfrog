@@ -19,7 +19,9 @@ angular.module('twolist.services', ['app', 'app.globals'])
   ($document, $window, $timeout, $parse) ->
     restrict: 'A'
     require: '?ngModel'
+#    ngModel: '='
     controller: 'twolistCtrl'
+    priority: 1
 
     link: (scope, element, attrs, ctrl) ->
 
@@ -35,13 +37,13 @@ angular.module('twolist.services', ['app', 'app.globals'])
           ctrl.$setViewValue([])
 
 #        afterSelect: (values) ->
-#          scope.$apply(() ->
+#          $timeout(->
 #            console.log "afterSelect", ctrl.$viewValue, values
 #            ctrl.$setViewValue(ctrl.$viewValue.concat(values))
 #          )
-
+#
 #        afterDeselect: (values) ->
-#          scope.$apply(() ->
+#          $timeout(->
 #            console.log "afterDeselect", ctrl.$viewValue, values
 #            v = ctrl.$viewValue
 #            for i in values
@@ -51,6 +53,30 @@ angular.module('twolist.services', ['app', 'app.globals'])
 #          )
 
       , field.config)
+
+#      ctrl.$render = ->
+#        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
+#        element.multiSelect('select', newValue)
+
+#      element.on('change', ->
+#        console.log "change", element.val()
+#        if !angular.equals(ctrl.$viewValue, element.val())
+#          $timeout(->
+#            scope.$apply(->
+#              ctrl.$setViewValue(element.val())
+#            )
+#          )
+#      )
+
+      scope.$watch(attrs.ngModel, (newValue) ->
+        newValue = (if newValue then newValue else [])
+#        console.log "$watch", ctrl.$viewValue, newValue
+        if !angular.equals(ctrl.$viewValue, newValue)
+          $timeout(->
+            element.multiSelect('select', newValue)
+            element.multiSelect('refresh')
+          )
+      )
 
       $timeout( ->
         element.multiSelect(o)

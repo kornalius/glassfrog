@@ -1,6 +1,8 @@
+// modal.html
+
 div(ng-controller="dynModalCtrl")
   .modal-header(ng-if="form.label")
-    button.close(type="button", ng-click="modalCancel()") &times;
+    button.close(type="button", ng-click="modalClick('cancel')") &times;
     h4.modal-title {{form.label}}
 
   .modal-body
@@ -10,7 +12,6 @@ div(ng-controller="dynModalCtrl")
           // <row>
       .row-fluid
 
-  .modal-footer(ng-if="form.buttons || form.buttons.length > 0")
-    input.btn.btn-default(ng-if="!form.buttons || form.buttons.length >= 2", type='button', ng-click="modalCancel()", value="{{form.buttons ? form.buttons[1] : 'Cancel'}}")
-    //span(style="padding:4px;")
-    input.btn.btn-primary(type="button", ng-click="modalOk()", value="{{form.buttons ? form.buttons[0] : 'OK'}}", ng-disabled="hasErrors()")
+  .modal-footer(ng-show="form.buttons")
+    span(ng-repeat="b in form.buttons", style="padding:4px;")
+      input.btn(type="button", class="btn-{{b.class}}", ng-click="modalClick(b.url)", value="{{b.label}}")

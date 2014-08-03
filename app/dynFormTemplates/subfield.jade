@@ -1,0 +1,10 @@
+// subfield.html
+
+div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';")
+  div(ng-init="subfieldInit()")
+
+    .container-fluid(container="form.container")
+      .row-fluid
+        ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in [row[$parent.fn]] track by $index", novalidate)
+          // <row>
+      .row-fluid

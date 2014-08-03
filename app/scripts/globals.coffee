@@ -15,6 +15,7 @@ angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
       $('<div class="alert ' + cl + ' alert-dismissable"> <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + content + '</div>').hide().fadeIn("fast").delay(time).fadeOut("fast", ->
         $(@).remove()
       ).appendTo(@messagesDOM)
+      console.log @messagesDOM
 
 #    registerTabs: ($stateProvider, tabs) ->
 #      t = []
@@ -48,10 +49,10 @@ angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
   $httpProvider.responseInterceptors.push(($q, Globals) ->
     (promise) ->
       promise.then((successResponse) ->
-#        showMessage("successMessage", "alert-success", 5000)  unless successResponse.config.method.toUpperCase() is "GET"
+#        console.log("successMessage", "alert-success", 5000)  unless successResponse.config.method.toUpperCase() is "GET"
         successResponse
       , (errorResponse) ->
-#        console.log "ERROR", errorResponse.status, errorResponse.data
+        console.log "ERROR", errorResponse.status, errorResponse.data
         switch errorResponse.status
           when 401
             Globals.showMessage("Wrong usename or password", "alert-danger", 10000)

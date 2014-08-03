@@ -1,4 +1,4 @@
-version = ((schema, options) ->
+module.exports = ((schema, options) ->
   schema.add(
     version:
       major:
@@ -74,5 +74,3 @@ version = ((schema, options) ->
       @version.maintenance == 'r'
   )
 )
-
-module.exports = version

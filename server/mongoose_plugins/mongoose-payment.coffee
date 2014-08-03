@@ -2,12 +2,12 @@ validations = require('composed-validations')
 ccValidator = require('cv-credit-card')(validations)
 Currency = require('mongoose-currency')
 
-payment = ((schema, options) ->
+module.exports = ((schema, options) ->
   schema.add(
     payment:
       kind:
         type: String
-        enum: ['visa', 'master', 'amex', 'paypal']
+        enum: ['Visa', 'Master Card', 'American Express', 'Diners Club', 'Paypal', 'Check', 'Cash', 'ACH', 'Bank Transfer', 'Credit', 'Debit', 'Google Wallet', 'Stripe']
         label: 'Payment Type'
 
       owner:
@@ -44,18 +44,42 @@ payment = ((schema, options) ->
     schema.path('payment').index(options.index)
 
   schema.virtual('amount').get( ->
-    return (if @isTransaction() then @payment.transaction.amount else 0.00)
+    return (if @isTransaction then @payment.transaction.amount else 0.00)
+  )
+
+  schema.virtual('isTransaction').get( ->
+      @payment.transaction.date?
+  )
+
+  schema.virtual('isCreditCard').get( ->
+    @payment.kind in ['Visa', 'Master Card', 'American Express', 'Diners Club']
+  )
+
+  schema.virtual('isPaypal').get( ->
+    @payment.kind == 'Paypal'
+  )
+
+  schema.virtual('isCheck').get( ->
+    @payment.kind == 'Check'
+  )
+
+  schema.virtual('isCash').get( ->
+    @payment.kind == 'Cash'
+  )
+
+  schema.virtual('isDebit').get( ->
+    @payment.kind == 'Debit'
+  )
+
+  schema.virtual('isGoogleWallet').get( ->
+    @payment.kind == 'Google Wallet'
+  )
+
+  schema.virtual('isStripe').get( ->
+    @payment.kind == 'Stripe'
   )
 
   schema.method(
-    isTransaction: () ->
-      return @payment.transaction.date?
-
-    isCreditCard: () ->
-      return @payment.kind in ['visa', 'master', 'amex']
-
-    isPaypal: () ->
-      return @payment.kind == 'paypal'
 
     obfuscateCreditCard: () ->
       cc = @payment.number
@@ -69,11 +93,10 @@ payment = ((schema, options) ->
     displayString: ->
       if @isCreditCard()
         "{0} owner: {1} #: {2} exp. date: {3}".format(@payment.kind.toProperCase(), @payment.owner, @obfuscateCreditCard(@payment.number), @payment.date)
-      else if @isPaypal()
+      else if @is_paypal()
         "paypal: {0}".format(@payment.number)
       else
         ""
   )
-)
 
-module.exports = payment
+)
