@@ -32,12 +32,18 @@ if !String::format
 if !String::startsWith
   String::startsWith = (searchString, position) ->
     position = if position? then position else 0
-    return @indexOf(searchString, position) == position
+    if position > searchString.length - 1
+      return false
+    else
+      return @indexOf(searchString, position) == position
 
 if !String::endsWith
   String::endsWith = (searchString, position) ->
     position = if position? then position else (@length - searchString.length)
-    return @indexOf(searchString, position) == position
+    if position < 0
+      return false
+    else
+      return @indexOf(searchString, position) == position
 
 #if !String::humanize
 #  String::humanize = () ->
@@ -89,16 +95,15 @@ exp = {}
 exp.type = (obj) ->
   if obj == undefined or obj == null
     return String obj
-  classToType = {
-    '[object Boolean]': 'boolean',
-    '[object Number]': 'number',
-    '[object String]': 'string',
-    '[object Function]': 'function',
-    '[object Array]': 'array',
-    '[object Date]': 'date',
-    '[object RegExp]': 'regexp',
+  classToType =
+    '[object Boolean]': 'boolean'
+    '[object Number]': 'number'
+    '[object String]': 'string'
+    '[object Function]': 'function'
+    '[object Array]': 'array'
+    '[object Date]': 'date'
+    '[object RegExp]': 'regexp'
     '[object Object]': 'object'
-  }
   return classToType[Object.prototype.toString.call(obj)]
 
 exp.checksum = (str) ->

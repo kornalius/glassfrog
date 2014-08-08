@@ -1,4 +1,4 @@
-angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.node'])
+angular.module('editor.component', ['app.globals', 'editor.node'])
 
 .factory('EditorComponent', [
   '$timeout'
@@ -17,14 +17,14 @@ angular.module('editor.component', ['app.globals', 'dragdrop.service', 'editor.n
       if @popup
         $timeout.cancel(@popup)
       @popup = $timeout(->
-        $('#component-popover_' + c._id).popover('show')
+        $('#component-popover-id_' + c._id).popover('show')
       , 1500)
 
     hidepopup: (c) ->
       if @popup
         $timeout.cancel(@popup)
       $timeout(->
-        $('#component-popover_' + c._id).popover('hide')
+        $('#component-popover-id_' + c._id).popover('hide')
       )
 
     refresh: (selected, cb) ->

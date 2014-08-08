@@ -30,14 +30,17 @@ module.exports = ((schema, options) ->
         tid:
           type: String
           label: 'Transaction id'
+          readOnly: true
 
         date:
           type: Date
           label: 'Transaction date'
+          readOnly: true
 
         amount:
           type: Currency
           label: 'Transaction Amount'
+          readOnly: true
   )
 
   if options && options.index

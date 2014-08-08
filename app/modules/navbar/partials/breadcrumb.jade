@@ -1,0 +1,10 @@
+.navbar-static-top.navbar-fixed-top
+
+  ol.breadcrumb
+
+    li(ng-repeat="step in steps | limitTo:(steps.length-1)")
+      a(href="{{step.ncyBreadcrumbLink}}")
+        span(ng-bind-html="step.ncyBreadcrumbLabel")
+
+    li.active(ng-repeat="step in steps | limitTo:-1")
+      span(ng-bind-html="step.ncyBreadcrumbLabel")

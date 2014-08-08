@@ -15,6 +15,7 @@ moduleNames = [
   'test'
   'suggestions'
   'user'
+  'editor'
 ]
 
 modules = []
@@ -50,6 +51,7 @@ app = angular.module('app', [
   'ui.selectize'
 
   'pagination.services'
+  'ncy-angular-breadcrumb'
 
   'rest.services'
 
@@ -60,6 +62,7 @@ app = angular.module('app', [
   'underscore.string'
 
   'Datetimepicker'
+  'angularSpectrumColorpicker'
 
 #  'ngDatatables'
 #  'ngBaseDataTables'
@@ -121,8 +124,9 @@ app = angular.module('app', [
   '$stateProvider'
   '$urlRouterProvider'
   '$i18nextProvider'
+  '$breadcrumbProvider'
 
-  ($stateProvider, $urlRouterProvider, $i18nextProvider) ->
+  ($stateProvider, $urlRouterProvider, $i18nextProvider, $breadcrumbProvider) ->
 
 #    _.mixin(_.string.exports())
 
@@ -152,4 +156,9 @@ app = angular.module('app', [
 #            templateUrl: m.templateUrl
 #      )
 
+    $breadcrumbProvider.setOptions(
+      prefixStateName: 'home'
+#      template: 'bootstrap3'
+      templateUrl: 'partials/breadcrumb.html'
+    )
 ])

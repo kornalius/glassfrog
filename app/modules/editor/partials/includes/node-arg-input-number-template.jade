@@ -1,0 +1,4 @@
+input.node-arg-input.node-arg-input-number.form-control.input-small(type="text", id="node-arg-number-id_{{a.getName()}}", name="node-arg-number_{{a.getName()}}", ng-click="$event.preventDefault(); $event.stopPropagation();", ng-blur="saveEdit()", ng-model="a.value", ng-keyup="keyup($event)")
+
+script.
+  $('.node-arg-input-number').TouchSpin({min: NaN, max: NaN, boostat: 5, maxboostedstep: 10});

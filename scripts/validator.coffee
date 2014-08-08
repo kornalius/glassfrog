@@ -16,7 +16,8 @@ _validateField = (assure, field) ->
       msg: 'invalid date and/or time'
 
     email:
-      pattern: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i
+#      pattern: /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/i
+      pattern: /^[a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,4}$/i
       msg: 'email is invalid'
 
     lowercase:
@@ -122,7 +123,7 @@ _validateField = (assure, field) ->
     assure.me(field.fieldname).matches(field.matches)
 
   for k of patterns
-    if field[k]? and assure.object[field.fieldname]?
+    if field[k]? and assure.object and assure.object[field.fieldname]?
       e = assure.me(field.fieldname).matches(patterns[k].pattern)
       if e and e.errors
         for ee in e.errors
@@ -140,20 +141,22 @@ vd =
     else
       i = 0
 
-    for r in rows
-      for f in fields
-        assure = assurance.restart(r)
-        e = _validateField(assure, f)
-        if e
-          for ee in e
-            errors.push(
-              idx: i
-              field: f.fieldname
-              value: r[f.fieldname]
-              message: ee.message
-              type: ee.type
-            )
-        assure.end()
+    if assurance
+      for r in rows
+        for f in fields
+          assure = assurance.restart(r)
+          if assure
+            e = _validateField(assure, f)
+            if e
+              for ee in e
+                errors.push(
+                  idx: i
+                  field: f.fieldname
+                  value: r[f.fieldname]
+                  message: ee.message
+                  type: ee.type
+                )
+            assure.end()
       i++
 
     return if errors.length then errors else null

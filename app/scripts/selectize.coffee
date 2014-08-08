@@ -89,7 +89,7 @@ angular.module('ui.selectize', [])
         $timeout(->
           v = getValues()
           ngModel.$setViewValue(v.join(options.delimiter))
-          if v.length
+          if v.length and scope._changeSelection
             scope._changeSelection(scope.$eval(attrs.field), v[0])
         )
       )
@@ -115,7 +115,7 @@ angular.module('ui.selectize', [])
 
         if values
           for i in [0..values.length - 1]
-            if !values[i].label and !values[i].value
+            if values[i] and !values[i].label and !values[i].value
               values[i] = { value: i.toString(), label: values[i] }
 
         selectize.clearOptions()

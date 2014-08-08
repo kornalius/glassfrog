@@ -13,9 +13,11 @@ angular.module('numberAttributes', [])
           input.attr('type', 'text')
   #        input.attr('integer', 'true')
           input.attr('placeholder', "0")
-          input.parent().addClass("input-group")
-          element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').text("#")
+#          input.parent().addClass("input-group")
+#          element.find('span').addClass("input-group-addon").css("width", "39px")
+#          element.find('span').text("#")
+          element.css({'min-width': '150px', 'width': '150px'})
+          input.TouchSpin({min:(if field.min? then field.min else NaN), max:(if field.max? then field.max else NaN), boostat: 5, maxboostedstep: 10})
 
     money:
       type: 'validator'

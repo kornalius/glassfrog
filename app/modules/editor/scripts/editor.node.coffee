@@ -79,6 +79,8 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     clearSelection: () ->
       @setSelection(null)
+      if @currentEdit
+        @saveEdit()
 
     setSelection: (n) ->
       that = @
@@ -87,7 +89,8 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
         that.selected = n
 
         if n
-          that.makeVisible(n)
+          if n.$data and n.$data.isNode
+            that.makeVisible(n)
         else if Editor.module
           n = Editor.module.getRoot()
 
@@ -119,16 +122,30 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       n.element()
 
     labelElement: (n) ->
-      angular.element('#node-label_' + n.id())
+      if n and n.$data and n.$data.isNode
+        angular.element('#node-label-id_' + n.id())
+      else if n and n.$data and n.$data.isArg
+        angular.element('#node-arg-label-id_' + n.getName())
 
     iconElement: (n) ->
-      angular.element('#node-icon_' + n.id())
+      angular.element('#node-icon-id_' + n.id())
 
     attributesElement: (n) ->
-      angular.element('#node-attributes_' + n.id())
+      angular.element('#node-attributes-id_' + n.id())
+
+    inputElement: (n) ->
+      if n and n.$data
+        if n.$data.isNode
+          if n.hasEnum()
+            return angular.element('#node-select-id_' + n.id())
+          else
+            return angular.element('#node-input-id_' + n.id())
+        else if n.$data.isArg
+          return angular.element('#node-arg-' + n.getInputType() + '-id_' + n.getName())
+      return null
 
     canEdit: (n) ->
-      if n and n.$data and n.$data.isNode
+      if n and n.$data and (n.$data.isNode or n.$data.isArg)
         return n.canEdit()
       else
         return false
@@ -152,42 +169,61 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     edit: (n, $event) ->
       if @canEdit(n)
+        if @currentEdit
+          @saveEdit()
         @currentEdit = n
-        @oldEditValue = n.name
-        if n.hasEnum()
-          i = angular.element('#node-select_' + n.id())
-          if i
-            i.select2('data', { id: n.id(), text: n.name })
-          $timeout(->
-            i.select2('focus')
-          )
-        else
-          i = angular.element('#node-input_' + n.id())
-          $timeout(->
-            i.focus()
-            i.select()
-          )
+        if n.$data and n.$data.isNode
+          @oldEditValue = n.name
+        else if n.$data and n.$data.isArg
+          @oldEditValue = n.value
+#        console.trace "edit()", @currentEdit, @oldEditValue
+        that = @
+        $timeout(->
+          i = that.inputElement(n)
+          if i and i.length
+            if i[0].selectize
+              i[0].selectize.focus()
+            else
+              i[0].focus()
+            if i[0].select
+              i[0].select()
+        , 100)
         if $event
           $event.stopPropagation()
 
     saveEdit: () ->
       n = @currentEdit
-      if n and @oldEditValue and @oldEditValue != n.name
-        if n.hasEnum() and typeof n.name != 'string'
-          id = n.name.id
-          n.name = null
-          require(['vc_global'], (VCGlobal) ->
-            n.setLink(id)
-          )
-        else
-          n.setName(n.name)
+#      console.trace "saveEdit()", @currentEdit, @oldEditValue
+      if n
+        if n.$data and n.$data.isNode and @oldEditValue and @oldEditValue != n.name
+          if n.hasEnum() and typeof n.name != 'string'
+            id = n.name.id
+            n.name = null
+            require(['vc_global'], (VCGlobal) ->
+              n.setLink(id)
+            )
+          else
+            n.setName(n.name)
+        else if n.$data and n.$data.isArg and @oldEditValue and @oldEditValue != n.value
+          n.setValue(n.value)
+
+#        e = n.element()
+#        if e and e.length
+#          e = e.find('input')
+#          if e and e.length
+#            $(e).hide()
+
       @currentEdit = null
       @oldEditValue = null
 
     cancelEdit: () ->
       n = @currentEdit
-      if n and @currentEdit == n and @oldEditValue
-        n.setName(@oldEditValue)
+#      console.trace "cancelEdit()", @currentEdit, @oldEditValue
+      if n and @oldEditValue
+        if n.$data and n.$data.isNode
+          n.setName(@oldEditValue)
+        else if n.$data and n.$data.isArg
+          n.setValue(@oldEditValue)
       @currentEdit = null
       @oldEditValue = null
 
@@ -488,11 +524,11 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       )
 
     $scope.keyup = ($event) ->
-      if @n and @isEditing(@n)
+      if EditorNode.currentEdit
         if $event.keyCode == 13
-          @saveEdit(@n)
+          @saveEdit(EditorNode.currentEdit)
         else if $event.keyCode == 27
-          @cancelEdit(@n)
+          @cancelEdit()
 ])
 
 .directive('renderNode', [

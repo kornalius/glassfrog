@@ -1,0 +1,15 @@
+td.node-args-col(ng-if="n.hasArgs()")
+
+  table
+
+    td(ng-repeat="a in n.argsToArray()")
+
+      table
+
+        include node-arg-name-template
+
+        td(ng-if="!a.noinput || a.noinput == false")
+
+          table.node-arg(id="node-arg-element-id_{{a.getName()}}", name="node-arg-element_{{a.getName()}}", ng-click="$event.stopPropagation();", ng-mouseover="setOver(a); $event.stopPropagation();", ng-mouseleave="setOver(null); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(a), 'selected': isSelection(a) }", ng-style="a.getInputType() == 'color' ? {'background-color': a.getValue()} : {}")
+
+            include node-arg-label-template

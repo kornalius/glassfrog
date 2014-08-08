@@ -1,4 +1,4 @@
-mongoose = require("../app").mongoose
+mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 Currency = require('mongoose-currency')
 payment = require('../mongoose_plugins/mongoose-payment')

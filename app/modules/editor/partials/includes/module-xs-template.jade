@@ -1,6 +1,6 @@
-div(id="module-popover_{{m._id}}", data-placement="left", data-content="{{m.desc}}", data-container="body")
+div(id="module-popover-id_{{m._id}}", name="module-popover_{{m._id}}", data-placement="left", data-content="{{m.desc}}", data-container="body")
 
-  table.module-xs(id="module-element_{{m._id}}", width="100%", ng-model="m", ng-mouseover="setOver(m); showpopup(m);", ng-mouseleave="setOver(null); hidepopup(m);", ng-class="{ 'module-xs-highlighted': isOver(m) && !isSelection(m), 'module-xs-selected': isSelection(m) && !isOver(m), 'module-xs-selected-highlighted': isSelection(m) && isOver(m) }", ng-click="setSelection(m); $event.stopPropagation();")
+  table.module-xs(id="module-element-id_{{m._id}}", name="module-element_{{m._id}}", width="100%", ng-model="m", ng-mouseover="setOver(m); showpopup(m);", ng-mouseleave="setOver(null); hidepopup(m);", ng-class="{ 'module-xs-highlighted': isOver(m) && !isSelection(m), 'module-xs-selected': isSelection(m) && !isOver(m), 'module-xs-selected-highlighted': isSelection(m) && isOver(m) }", ng-click="setSelection(m); $event.stopPropagation();")
 
     include module-xs-color-template
 

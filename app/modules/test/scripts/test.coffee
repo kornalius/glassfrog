@@ -13,6 +13,9 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
         $scope.localVariable = "HELLO WORLD!"
 #      onEnter: () ->
 #        console.log "enter test"
+      data:
+        ncyBreadcrumbLabel: 'Test'
+#          ncyBreadcrumbSkip: true
     )
 
     .state('test',
@@ -20,6 +23,8 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
       parent: 'test_root'
       data:
         root: 'test'
+        ncyBreadcrumbLabel: 'Test'
+#          ncyBreadcrumbSkip: true
       views:
         form:
           templateUrl: '/partials/test.form.html'
@@ -34,6 +39,9 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
       parent: 'test_root'
       data:
         root: 'test'
+        ncyBreadcrumbLabel: 'PO'
+        ncyBreadcrumbParent: 'test'
+#          ncyBreadcrumbSkip: true
       views:
         po:
           templateUrl: '/partials/test.po.html'
@@ -45,6 +53,9 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
       parent: 'test_root'
       data:
         root: 'test'
+        ncyBreadcrumbLabel: 'Details'
+        ncyBreadcrumbParent: 'test'
+#          ncyBreadcrumbSkip: true
       views:
         details:
           templateUrl: '/partials/test.details.html'
@@ -56,6 +67,9 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
       parent: 'test_root'
       data:
         root: 'test'
+        ncyBreadcrumbLabel: 'Info'
+        ncyBreadcrumbParent: 'test'
+#          ncyBreadcrumbSkip: true
       views:
         info:
           templateUrl: '/partials/test.info.html'

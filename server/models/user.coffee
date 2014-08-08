@@ -1,5 +1,5 @@
 app = require("../app")
-mongoose = require("../app").mongoose
+mongoose = require("mongoose")
 locking = require('mongoose-account-locking')
 timestamps = require('mongoose-time')()
 async = require('async')
@@ -334,6 +334,23 @@ UserSchema.method(
         that.save()
       else
         throw err
+    )
+
+  modules: (cb) ->
+    that = @
+    r = []
+    mongoose.model('Module').find({owner_id: that.id}, (err, modules) ->
+      if modules
+        for m in modules
+          r.push(m)
+
+      mongoose.model('Share').find({ $and: [{'users.user': that.id}, {'users.state': 'active'}] }).populate('module').exec((err, shares) ->
+        if shares
+          for s in shares
+            r.push(s.module)
+
+        cb(r) if cb
+      )
     )
 
   getConnection: (cb) ->

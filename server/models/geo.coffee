@@ -1,4 +1,4 @@
-mongoose = require("../app").mongoose
+mongoose = require("mongoose")
 
 GeoSchema = mongoose.Schema(
   code:

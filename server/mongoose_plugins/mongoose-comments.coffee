@@ -1,3 +1,5 @@
+mongoose = require("mongoose")
+
 module.exports = ((schema, options) ->
   schema.add(
     comments: [
@@ -5,7 +7,7 @@ module.exports = ((schema, options) ->
         type: mongoose.Schema.ObjectId
         ref: 'User'
         readOnly: true
-        populate: true
+        label: 'User'
 
       ip:
         type: String
@@ -14,22 +16,20 @@ module.exports = ((schema, options) ->
 
       message:
         type: String
-        readOnly: false
         label: 'Message'
     ]
   )
 
-  schema.static(
-    addComment: (user, schema, message, ip) ->
-      @create(
-        user: user.id
-        schemaName: schema if schema?
+  schema.method(
+
+    addComment: (user_id, message, ip) ->
+      @comments.push(
+        user: user_id
         message: message if message?
         ip: ip if ip?
-      , (err, c) ->
-        if c
-          @comments.push(c)
       )
+      @model.save()
+
   )
 
 )

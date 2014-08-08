@@ -1,5 +1,5 @@
 app = require("../../app")
-mongoose = require("../../app").mongoose
+mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 async = require('async')
 endpoints = require('../../endpoints')

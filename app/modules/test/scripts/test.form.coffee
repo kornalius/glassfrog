@@ -153,6 +153,14 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         money: true
   #        placeholder: "2.34"
       ,
+        label: "Number"
+        type: "input"
+        description: "input some number"
+        fieldname: 'id54'
+        number: true
+#        min: 0
+        max: 50
+      ,
         label: "Select"
         type: "select"
         description: "make your selection my friend"

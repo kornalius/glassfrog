@@ -1,6 +1,6 @@
 _app = require("../app")
 app = require("../app").app
-mongoose = require("../app").mongoose
+mongoose = require("mongoose")
 passport = require("../app").passport
 nodemailer = require("nodemailer")
 secure = require('node-secure')

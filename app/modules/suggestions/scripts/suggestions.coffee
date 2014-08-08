@@ -71,5 +71,8 @@ angular.module('suggestions', ['app', 'dynamicForm'])
     .state('suggestions',
       url:'/suggestions'
       templateUrl: '/partials/suggestions.html'
+      data:
+        ncyBreadcrumbLabel: 'Suggestions'
+#          ncyBreadcrumbSkip: true
     )
 ])

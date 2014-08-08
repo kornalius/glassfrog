@@ -17,7 +17,15 @@ secure = require("node-secure")
 mongoose = require('mongoose')
 
 global._ = require('lodash')
+_.mixin(require('lodash-deep'))
+require('underscore-query')(_)
 _.str = require("underscore.string")
+#require('lodash-prototype')
+
+require('mustache')
+
+global.traverse = require('traverse')
+global.tinycolor = require('tinycolor2')
 
 logErrors = (err, req, res, next) ->
   console.error(err.stack)

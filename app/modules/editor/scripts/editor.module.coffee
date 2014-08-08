@@ -123,14 +123,14 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
       if @popup
         $timeout.cancel(@popup)
       @popup = $timeout(->
-        $('#module-popover_' + m._id).popover('show')
+        $('#module-popover-id_' + m._id).popover('show')
       , 1500)
 
     hidepopup: (m) ->
       if @popup
         $timeout.cancel(@popup)
       $timeout(->
-        $('#module-popover_' + m._id).popover('hide')
+        $('#module-popover-id_' + m._id).popover('hide')
       )
 
     refresh: (cb) ->

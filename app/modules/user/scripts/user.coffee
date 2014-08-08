@@ -9,6 +9,9 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user_root',
       abstract: true
       templateUrl: '/partials/user.html'
+      data:
+        ncyBreadcrumbLabel: 'User'
+#          ncyBreadcrumbSkip: true
       controller: ($scope) ->
     )
 
@@ -18,6 +21,8 @@ angular.module('user', ['user.profile', 'user.info'])
       hidden: true
       data:
         root: 'user'
+        ncyBreadcrumbLabel: 'User'
+#          ncyBreadcrumbSkip: true
       views:
         info:
           templateUrl: '/partials/user.info.html'
@@ -30,6 +35,9 @@ angular.module('user', ['user.profile', 'user.info'])
       icon: 'user32'
       data:
         root: 'user'
+        ncyBreadcrumbLabel: 'Profile'
+        ncyBreadcrumbParent: 'user'
+#          ncyBreadcrumbSkip: true
       views:
         profile:
           templateUrl: '/partials/user.profile.html'
@@ -42,6 +50,9 @@ angular.module('user', ['user.profile', 'user.info'])
       icon: 'cash'
       data:
         root: 'user'
+        ncyBreadcrumbLabel: 'Invoices'
+        ncyBreadcrumbParent: 'user'
+#          ncyBreadcrumbSkip: true
       views:
         profile:
           templateUrl: '/partials/user.invoices.html'
@@ -54,6 +65,9 @@ angular.module('user', ['user.profile', 'user.info'])
       icon: 'share52'
       data:
         root: 'user'
+        ncyBreadcrumbLabel: 'Shares'
+        ncyBreadcrumbParent: 'user'
+#          ncyBreadcrumbSkip: true
       views:
         profile:
           templateUrl: '/partials/user.shares.html'

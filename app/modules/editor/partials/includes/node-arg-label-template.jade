@@ -1,0 +1,10 @@
+td.node-arg-label-col(id="node-arg-label-col-id_{{a.getName()}}", name="node-arg-label-col_{{a.getName()}}", ng-click="edit(a, $event); $event.stopPropagation();", class="node-arg-label-{{a.getInputType()}}-col")
+
+  .node-arg-label(id="node-arg-label-id_{{a.getName()}}", name="node-arg-label_{{a.getName()}}", ng-show="!isEditing(a)", class="node-arg-label-{{a.getInputType()}}") {{a.value | string}}
+
+  span(ng-if="isEditing(a) && a.getInputType() == 'string'", ng-include="'/partials/node-arg-input-string-template.html'")
+  span(ng-if="isEditing(a) && a.getInputType() == 'enum'", ng-include="'/partials/node-arg-input-enum-template.html'")
+  span(ng-if="isEditing(a) && a.getInputType() == 'number'", ng-include="'/partials/node-arg-input-number-template.html'")
+  span(ng-if="isEditing(a) && a.getInputType() == 'date'", ng-include="'/partials/node-arg-input-date-template.html'")
+  span(ng-if="isEditing(a) && a.getInputType() == 'color'", ng-include="'/partials/node-arg-input-color-template.html'")
+  span(ng-if="isEditing(a) && a.getInputType() == 'boolean'", ng-include="'/partials/node-arg-input-boolean-template.html'")

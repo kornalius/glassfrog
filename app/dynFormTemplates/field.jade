@@ -10,5 +10,5 @@ div(class="{{fields[{%fieldIndex%}].getInputClass()}}")
       div(ng-if="fields[{%fieldIndex%}].description") {{fields[{%fieldIndex%}].description}}
 
       div(ng-show="hasErrors(fields[{%fieldIndex%}], $index)")
-        .label.label-danger(ng-repeat="e in errors(fields[{%fieldIndex%}], $index)") {{e.message}}
+        .label.label-danger.label-form-error(ng-repeat="e in errors(fields[{%fieldIndex%}], $index)") {{e.message}}
 

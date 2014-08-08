@@ -6,4 +6,4 @@ td(ng-controller="dynFormObjectCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fiel
     // <input>
 
   .help-block(ng-show="fields[{%fieldIndex%}].hasErrors($index)")
-    .label.label-danger(ng-repeat="e in fields[{%fieldIndex%}].errors($index)") {{e.message}}
+    .label.label-danger.label-table-error(ng-repeat="e in fields[{%fieldIndex%}].errors($index)") {{e.message}}

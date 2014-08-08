@@ -4,12 +4,14 @@ module.exports = ((schema, options) ->
       date:
         type: Date
         required: true
+        readOnly: true
         label: 'Date'
 
       action:
         type: String
         trim: true
         label: 'Middle Name'
+        readOnly: true
         inline: true
 
       comment:
@@ -30,9 +32,9 @@ module.exports = ((schema, options) ->
 
   schema.static(
 
-    log: (user, action, comment) ->
+    log: (user_id, action, comment) ->
       @history.push(
-        user: user.id
+        user: user_id
         date: new Date()
         action: action
         comment: comment if comment?

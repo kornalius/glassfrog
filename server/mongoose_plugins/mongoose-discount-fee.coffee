@@ -73,5 +73,7 @@ module.exports = ((schema, options) ->
       d = @discounts(amount)
       f = @fees(d)
       return d + f
+
   )
+
 )

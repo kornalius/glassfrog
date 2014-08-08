@@ -1,2 +1,2 @@
 app = require("../app").app
-mongoose = require("../app").mongoose
+mongoose = require("mongoose")

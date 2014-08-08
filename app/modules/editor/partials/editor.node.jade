@@ -57,4 +57,4 @@
 
     //ol.nodes-tree.nested(ng-model="rootNodes", ng-if="rootNodes && rootNodes.length")
     ol.nodes-tree(ng-model="rootNodes")
-      li(ng-repeat="n in rootNodes", ng-include="'/partials/node-template.html'")
+      li.nodes-tree-line(ng-repeat="n in rootNodes", ng-include="'/partials/node-template.html'", ng-click="clearSelection()")

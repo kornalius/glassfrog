@@ -28,42 +28,6 @@
   border-radius: @border-radius-base;
 }
 
-//.nodes-tree .placeholder:before {
-//  position: absolute;
-//  content: "";
-//  width: 0;
-//  height: 0;
-////  margin-left: -4px;
-//  left: -12px;
-//  top: 6px;
-//  border: 6px solid transparent;
-//  border-left-color: @green-color;
-//  border-right: none;
-//}
-
-.nodes-args-tree .placeholder {
-  position: relative;
-  margin: 0px;
-  margin-right: 4px;
-//  padding: 0px;
-//  width: @node-width;
-//  height: @node-height;
-  border: thin dotted @green-color;
-  background-color: rgba(139, 247, 0, .1);
-  border-radius: @border-radius-base;
-}
-
-//.nodes-args-tree .placeholder:before {
-//  position: absolute;
-//  content: "";
-//  width: 0;
-//  height: 0;
-////  margin-left: -4px;
-////  left: -12px;
-////  top: 6px;
-//  border: none;
-//}
-
 #editor-nodes-root {
   padding-top: 8px;
   padding-bottom: 8px;
@@ -75,11 +39,17 @@
 
 ol.nodes-tree {
   list-style-type: none;
-//  padding: 0px;
   margin: 0px;
+  padding: 0px;
 //  border: thin dotted palevioletred;
 //  background-color: rgba(227, 135, 164, .1);
 //  border-radius: @border-radius-base;
+}
+
+ol.nodes-tree ol {
+  list-style-type: none;
+  margin: 0px;
+  padding-left: 20px;
 }
 
 //ol.nodes-tree li.active {
@@ -103,25 +73,6 @@ ol.nodes-tree li {
 //  background-color: rgba(255, 207, 127, .05);
 //  border-radius: @border-radius-base;
 //}
-
-ol.nodes-args-tree {
-  list-style-type: none;
-  padding: 0px;
-//  border: thin dotted greenyellow;
-//  background-color: rgba(139, 247, 0, .1);
-//  border-radius: @border-radius-base;
-}
-
-ol.nodes-args-tree li {
-  padding: 0px;
-  margin-right: 4px;
-//  height: @node-height + 4;
-  display: inline-block;
-  vertical-align: middle;
-//  border: thin dotted inset saddlebrown;
-//  background-color: rgba(158, 88, 23, .25);
-//  border-radius: @border-radius-base;
-}
 
 .node-line {
 //  border: thin dotted greenyellow;
@@ -154,16 +105,10 @@ ol.nodes-args-tree li {
   text-shadow: 1px 1px 2px @dark-gray-color;
 }
 
-.node-args-col .node-state-icon {
-  left: -6px;
-  top: -10px;
-  font-size: 16px;
-}
-
 .node-icon-col {
 //  padding-bottom: 2px;
-  width: 24px;
-  min-width: 24px;
+  width: 28px;
+  min-width: 28px;
   text-align: center;
 }
 
@@ -197,17 +142,26 @@ ol.nodes-args-tree li {
 }
 
 .node-label {
-  padding-left: 4px;
+//  padding-left: 4px;
   color: @text-color;
   text-shadow: 1px 1px 2px @shadow-color;
   vertical-align: middle;
-  min-width: 75px;
+//  min-width: 50px;
+  margin-right: 24px;
 }
 
 .node-input {
   font-size: small !important;
   height: 24px !important;
   min-width: 200px !important;
+  vertical-align: middle;
+}
+
+.node-select {
+  font-size: small !important;
+  height: 24px !important;
+  min-width: 200px !important;
+  vertical-align: middle;
 }
 
 .node.highlighted {
@@ -226,11 +180,12 @@ ol.nodes-args-tree li {
 }
 
 .node-expand-col {
-
+  min-width: 28px;
+  max-width: 28px;
+  width: 28px;
 }
 
-.node-expand-col-32 {
-  min-width: 32px;
+.node-expand-col-lg {
 }
 
 .node-expand {
@@ -268,7 +223,8 @@ ol.nodes-args-tree li {
 
 .node-parentIcons-col {
 //  background-color: #b0c4de;
-  padding-left: 4px;
+//  padding-left: 4px;
+//  padding-right: 4px;
   padding-right: 4px;
 }
 
@@ -285,43 +241,6 @@ ol.nodes-args-tree li {
   padding-right: 1px;
   font-size: x-small;
   vertical-align: middle;
-}
-
-.node-args-col {
-  vertical-align: middle;
-}
-
-.node.arg {
-  background: @alt-control-color;
-  height: @node-height - 6;
-  min-height: @node-height - 6;
-  min-width: 0;
-  box-shadow: none;
-  vertical-align: middle;
-}
-
-.node.arg .node-icon {
-  color: @light-icon-color;
-}
-
-.node.arg .node-label {
-  color: @light-text-color;
-  min-width: 0px;
-}
-
-.node.arg.highlighted {
-  background: @alt-control-highlight-color;
-  color: @text-highlight-color;
-}
-
-.node.arg.selected {
-  background: @alt-control-selection-color;
-  color: @text-selection-color;
-}
-
-.node.arg.highlighted.selected {
-  background: @alt-control-selection-color;
-  color: @text-highlight-color;
 }
 
 .node-button-menu {
@@ -384,10 +303,6 @@ ol.nodes-args-tree li {
   font-size: 14px;
 }
 
-.row#editor-content-toolbar {
-//  height: auto !important;
-}
-
 #editor-content-toolbar-menu.navbar.navbar-default {
 //  background-color: rgba(100, 100, 200, 0.25);
   height: 36px;
@@ -398,6 +313,17 @@ ol.nodes-args-tree li {
 
 #editor-content-toolbar-menu.navbar.navbar-default button {
   margin: 0px;
+}
+
+#editor-content-toolbar-menu .nav {
+  height: 36px !important;
+}
+
+#editor-content ul.nav.nav-tabs {
+  height: 42px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom: none;
 }
 
 #editor-content-main {
@@ -417,4 +343,191 @@ ol.nodes-args-tree li {
 #editor-toolbar > span > ul > li > a {
   margin: 0px !important;
   padding: 2px 2px !important;
+}
+
+.node-args-col {
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+.node-arg {
+//  display: inline-block;
+  background: @dark-gray-color;
+  height: @node-height - 6;
+  min-height: @node-height - 6;
+  min-width: 0;
+  padding: 0px;
+  margin-left: 2px;
+  margin-right: 2px;
+  box-shadow: none;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.node-arg-label-col {
+}
+
+.node-arg-label {
+  color: @light-text-color;
+  font-size: small;
+  padding: 0px 4px 0px 4px;
+  max-width: 200px;
+  min-width: 50px;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-arg-name-col {
+}
+
+.node-arg-name {
+  color: @text-color;
+  font-size: small;
+  font-style: oblique;
+  padding: 0px 0px 0px 4px;
+  vertical-align: middle;
+}
+
+.node-arg-input {
+  font-size: small;
+  vertical-align: middle;
+}
+
+.node-arg-input-enum {
+  padding: 0px;
+  min-width: 200px;
+}
+
+.node-arg-input .selectize-input {
+  min-height: 22px;
+  max-height: 22px;
+  padding-top: 2px !important;
+  padding-bottom: 0px !important;
+}
+
+.node-arg-input .selectize-dropdown, .node-arg-input-enum .selectize-control, .node-arg-input-enum .selectize-input {
+  line-height: 12px !important;
+}
+
+.node-arg-input .selectize-dropdown {
+  margin-top: 0px !important;
+  border-top-left-radius: 4px! important;
+  border-top-right-radius: 4px! important;
+}
+
+.node-arg-input-string {
+  height: 22px;
+  min-width: 200px;
+  padding: 2px;
+}
+
+.node-arg-input-number {
+  height: 22px;
+  max-width: 50px;
+  min-width: 50px;
+  padding: 2px;
+//  vertical-align: middle;
+}
+
+.node-arg-label-number-col .input-group {
+  height: 22px;
+  max-height: 22px;
+  max-width: 50px;
+  min-width: 50px;
+  line-height: 12px;
+  padding: 0px;
+  display: inline-table;
+  vertical-align: middle;
+}
+
+.node-arg-label-number-col .input-group-addon {
+  padding: 0px;
+}
+
+.node-arg-label-number-col .input-group-btn {
+  height: 22px;
+  max-height: 22px;
+}
+
+.node-arg-label-number-col .btn {
+  padding: 0px 8px 0px 8px;
+}
+
+.node-arg-input-date {
+  height: 22px;
+  min-width: 150px;
+  padding: 2px;
+}
+
+.node-arg-label-col > span {
+  display: inline-block;
+  width: 100% !important;
+  height: 22px !important;
+  max-height: 22px !important;
+}
+
+.node-arg-label-boolean-col {
+  width: 42px;
+  min-width: 42px;
+  max-width: 42px;
+}
+
+.node-arg-input .switch-button-background {
+  width: 42px !important;
+  height: 22px !important;
+}
+
+.node-arg-input .switch-button-button {
+  height: 22px !important;
+}
+
+.node-arg-input-color {
+}
+
+.node-arg-label-color-col {
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+}
+
+.node-arg-label-color {
+  font-size: xx-small;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.node-arg-input .sp-replacer {
+  height: 22px !important;
+  max-height: 22px !important;
+  width: 50px !important;
+//  border: none;
+  border-radius: 4px;
+  padding: 0px;
+}
+
+.node-arg-input .sp-preview {
+  height: 16px !important;
+  width: 34px !important;
+//  border: none;
+  border-radius: 2px;
+  margin: 2px 0px 0px 2px;
+  padding: 0px;
+}
+
+.node-arg.highlighted {
+//  background: @alt-control-highlight-color;
+//  color: @text-highlight-color;
+}
+
+.node-arg.selected {
+//  background: @alt-control-selection-color;
+//  color: @text-selection-color;
+}
+
+.node-arg.highlighted.selected {
+//  background: @alt-control-selection-color;
+//  color: @text-highlight-color;
 }

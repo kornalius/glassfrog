@@ -1,8 +1,8 @@
 div(ui-tree-handle)
 
-  div(id="component-popover_{{c._id}}", data-content="{{c.desc}}", data-container="body")
+  div(id="component-popover-id_{{c._id}}", name="component-popover_{{c._id}}", data-content="{{c.desc}}", data-container="body")
 
-    table.component(id="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)", render-component="c")
+    table.component(id="component-element-id_{{c._id}}", name="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)", render-component="c")
 
       include component-color-template
 

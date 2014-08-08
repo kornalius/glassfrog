@@ -1,14 +1,14 @@
 table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)", ng-model="n")
 
-  td.node-expand-col(ng-class="{ 'node-expand-col-32': !n.$data.isArg }")
+  td.node-expand-col.node-expand-col-lg
 
     a.btn.btn-xs.node-expand(type="button", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="toggle(n, $event.altKey); $event.stopPropagation();")
 
-      span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }", style="font-size: 21px;")
+      span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }")
 
   td.node-content-col
 
-    table.node(id="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n), 'arg': n.$data.isArg }", render-node="n")
+    table.node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n")
 
       include node-color-template
 
@@ -18,9 +18,7 @@ table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mousele
 
       include node-parenticons-template
 
-      td.node-args-col(ng-if="n.args.length")
-        ol.nodes-args-tree
-          li(ng-repeat="n in n.args", ng-include="'/partials/node-template.html'")
+      include node-args-template
 
       include node-modified-template
 

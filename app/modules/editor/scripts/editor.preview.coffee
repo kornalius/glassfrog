@@ -1,4 +1,4 @@
-angular.module('editor.preview', ['app.globals', 'dragdrop.service', 'editor.node'])
+angular.module('editor.preview', ['app.globals', 'editor.node'])
 
 .controller('EditorPreviewCtrl', [
   '$scope'
