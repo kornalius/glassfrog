@@ -343,55 +343,6 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
   ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope, $timeout) ->
 
-#    $scope.treeOptions =
-#      accept: (sourceNodeScope, destNodesScope, destIndex) ->
-#        s = sourceNodeScope.$modelValue
-#        t = destNodesScope.$nodeScope
-#        if t
-#          p = t.$modelValue
-#        else if Editor.module
-#          p = Editor.module.getRoot()
-#        else
-#          p = null
-#
-#        ok = false
-#        if p and p.$data and p.$data.isNode and s and s.$data
-#          if s.$data.isComponent
-#            ok = p.getComponent().doAccept(null, s)
-#          else
-#            ok = p.getComponent().doAccept(s, s.getComponent())
-#
-#        return Editor.module and ok
-#
-#      beforeDrag: (sourceNodeScope) ->
-#        return true
-#
-#      dropped: (event) ->
-#        n = event.source.nodeScope.$modelValue
-#        if n and n.$data and Editor.module
-#          d = event.dest.nodesScope.$nodeScope
-#          if d and d.$data and d.$data.isNode
-#            p = d.$modelValue
-#          else if !d
-#            p = Editor.module.getRoot()
-#          else
-#            p = null
-#
-#          if n.$data._parent != p
-#            if n.$data._parent and n.$data._parent.$data
-#              n.$data._parent.setModified(true)
-#            n.$data._parent = p
-#            n.setModified(true)
-#            EditorNode.setSelection(n)
-#
-#      dragStart: (event) ->
-#
-#      dragMove: (event) ->
-#
-#      dragStop: (event) ->
-#
-#      beforeDrop: (event) ->
-
     $scope.module = () ->
       EditorNode.module()
 
@@ -468,10 +419,6 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 #      console.log $(".nodes-tree")
       n.toggle(recursive)
 
-      $timeout(->
-        Editor.refreshDragTrees()
-      )
-
     #    $scope.save = (cb) ->
     #      require(['async'], (async) ->
     #        async.eachSeries(Node.rows, (row, callback) ->
@@ -529,6 +476,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
           @saveEdit(EditorNode.currentEdit)
         else if $event.keyCode == 27
           @cancelEdit()
+
 ])
 
 .directive('renderNode', [

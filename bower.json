@@ -57,11 +57,12 @@
     "angular-placeholders": "*",
     "restangular": "~1.4.0",
     "cross-console": "~0.3.1",
-    "jquery-sortable": "~0.9.12",
     "traverse": "~0.6.7",
     "angular-breadcrumb": "~0.2.3",
     "angular-spectrum-colorpicker": "~1.0.16",
-    "bootstrap-touchspin": "~3.0.1"
+    "bootstrap-touchspin": "~3.0.1",
+    "jquery-smooth-scroll": "~1.5.0",
+    "jquery-sortable": "~0.9.12"
   },
   "resolutions": {
     "angular": "~1.2.18"

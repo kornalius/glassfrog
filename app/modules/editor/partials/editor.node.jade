@@ -56,5 +56,5 @@
   #editor-nodes-root
 
     //ol.nodes-tree.nested(ng-model="rootNodes", ng-if="rootNodes && rootNodes.length")
-    ol.nodes-tree(ng-model="rootNodes")
+    ol.nodes-tree(ng-model="rootNodes", draggable)
       li.nodes-tree-line(ng-repeat="n in rootNodes", ng-include="'/partials/node-template.html'", ng-click="clearSelection()")

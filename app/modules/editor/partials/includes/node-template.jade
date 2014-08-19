@@ -1,4 +1,4 @@
-table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)", ng-model="n")
+table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
 
   td.node-expand-col.node-expand-col-lg
 
@@ -8,7 +8,7 @@ table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mousele
 
   td.node-content-col
 
-    table.node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n")
+    table.node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n", ng-model="n")
 
       include node-color-template
 
@@ -22,7 +22,7 @@ table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mousele
 
       include node-modified-template
 
-  //include node-menu-template
+    include node-menu-template
 
 ol(ng-if="n.isOpened() && n.hasChildren()")
   li(ng-repeat="n in n.children()", ng-include="'/partials/node-template.html'")
