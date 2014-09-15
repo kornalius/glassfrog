@@ -1,1 +1,1 @@
-select.node-arg-input.node-arg-input-enum.form-control(selectize="{openOnFocus: true}", id="node-arg-enum-id_{{a.getName()}}", name="node-arg-enum_{{a.getName()}}", ng-click="$event.stopPropagation()", ng-model="a.value", options="{{a.getEnum()}}")
+select.node-arg-input.node-arg-input-enum.form-control(selectize="{openOnFocus: true, allowEmptyOption: true}", id="{{a.domId('input-enum')}}", name="{{a.domName('input-enum')}}", ng-click="$event.stopPropagation()", ng-model="a.value", options="{{a.getEnum(true)}}")

@@ -1,0 +1,5 @@
+td.component-expand-col(ng-if="c.isCategory()", id="component-expand-col-id_{{c._id}}", name="component-expand-col_{{c._id}}")
+
+  a.component-expand(type="button", ng-mouseover="setExpandOver(c); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)")
+
+    span.component-expand-icon.cic(ng-class="{ 'cic-plus22': collapsed, 'cic-minus22': !collapsed, 'highlighted': isExpandOver(c) }")

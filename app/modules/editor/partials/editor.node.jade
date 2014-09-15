@@ -23,12 +23,12 @@
             span.text-muted.cic.cic-refresh
 
         li
-          button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
-            span.text-muted.cic.cic-preview
+          button.btn.btn-default.navbar-btn(type="button", ng-click="schema()")
+            span.text-muted.cic.cic-uniF002
 
         li
-          button.btn.btn-default.navbar-btn(type="button", ng-click="rebuild()")
-            span.text-muted.cic.cic-uniF002
+          button.btn.btn-default.navbar-btn(type="button", ng-click="preview()")
+            span.text-muted.cic.cic-preview
 
         li
           button.btn.btn-default.navbar-btn(type="button", ng-click="alert()")
@@ -55,6 +55,7 @@
 
   #editor-nodes-root
 
-    //ol.nodes-tree.nested(ng-model="rootNodes", ng-if="rootNodes && rootNodes.length")
-    ol.nodes-tree(ng-model="rootNodes", draggable)
-      li.nodes-tree-line(ng-repeat="n in rootNodes", ng-include="'/partials/node-template.html'", ng-click="clearSelection()")
+    .nodes-tree-root(ui-tree="treeOptions", data-drag-delay="300", ng-cloak)
+
+      ol.nodes-tree(ng-model="rootNodes", id="tree-nodes-root", ui-tree-nodes="")
+        li(ng-repeat="n in rootNodes", ui-tree-node, data-collapsed="true", ng-click="clearSelection()", ng-include="'/partials/node-template.html'")

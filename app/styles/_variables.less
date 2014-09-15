@@ -2,87 +2,102 @@
 
 @modal-inner-padding: 10px;
 
-
 @white-color: #f5f5f5;
-
-@light-gray-color: #d4d4d4;
-@gray-color: #999999;
-@dark-gray-color: #555555;
-@darker-gray-color: #333333;
-
-@light-blue-color: #dde5f1;
-@blue-color: #b0c4de;
-@dark-blue-color: #688ec0;
-@darker-blue-color: #4a5b71;
-
-@light-yellow-color: #fffee6;
+@gray-color: #666666;
+@blue-color: #688ec0;
 @yellow-color: #fffba6;
-@dark-yellow-color: #cbc884;
-@darker-yellow-color: #9e9c67;
-
-@light-orange-color: #fff0c2;
 @orange-color: #ffdd73;
-@dark-orange-color: #d8bb62;
-@darker-orange-color: #85733c;
-
-@light-red-color: #f3a7a7;
 @red-color: #e68079;
-@dark-red-color: #a53b32;
-@darker-red-color: #6a2621;
-
-@light-pink-color: #f7dfe6;
 @pink-color: #e8a6ba;
-@dark-pink-color: #ad7b8b;
-@darker-pink-color: #774b59;
-
-@light-purple-color: #e0d3ef;
 @purple-color: #ae8bd4;
-@dark-purple-color: #866ba3;
-@darker-purple-color: #604a78;
-
-@light-brown-color: #e4d2b4;
 @brown-color: #c09853;
-@dark-brown-color: #91733f;
-@darker-brown-color: #5c4928;
-
-@light-green-color: #cae9ca;
 @green-color: #86cb86;
-@dark-green-color: #529e52;
-@darker-green-color: #386b38;
 
+@lighter-pct: 35%;
+@light-pct: 15%;
+@dark-pct: 10%;
+@darker-pct: 35%;
+
+@lighter-gray-color: lighten(@gray-color, @lighter-pct);
+@light-gray-color: lighten(@gray-color, @light-pct);
+@dark-gray-color: darken(@gray-color, @dark-pct);
+@darker-gray-color: darken(@gray-color, @darker-pct);
+
+@lighter-blue-color: lighten(@blue-color, @lighter-pct);
+@light-blue-color: lighten(@blue-color, @light-pct);
+@dark-blue-color: darken(@blue-color, @dark-pct);
+@darker-blue-color: darken(@blue-color, @darker-pct);
+
+@lighter-yellow-color: lighten(@yellow-color, @lighter-pct);
+@light-yellow-color: lighten(@yellow-color, @light-pct);
+@dark-yellow-color: darken(@yellow-color, @dark-pct);
+@darker-yellow-color: darken(@yellow-color, @darker-pct);
+
+@lighter-orange-color: lighten(@orange-color, @lighter-pct);
+@light-orange-color: lighten(@orange-color, @light-pct);
+@dark-orange-color: darken(@orange-color, @dark-pct);
+@darker-orange-color: darken(@orange-color, @darker-pct);
+
+@lighter-red-color: lighten(@red-color, @lighter-pct);
+@light-red-color: lighten(@red-color, @light-pct);
+@dark-red-color: darken(@red-color, @dark-pct);
+@darker-red-color: darken(@red-color, @darker-pct);
+
+@lighter-pink-color: lighten(@pink-color, @lighter-pct);
+@light-pink-color: lighten(@pink-color, @light-pct);
+@dark-pink-color: darken(@pink-color, @dark-pct);
+@darker-pink-color: darken(@pink-color, @darker-pct);
+
+@lighter-purple-color: lighten(@purple-color, @lighter-pct);
+@light-purple-color: lighten(@purple-color, @light-pct);
+@dark-purple-color: darken(@purple-color, @dark-pct);
+@darker-purple-color: darken(@purple-color, @darker-pct);
+
+@lighter-brown-color: lighten(@brown-color, @lighter-pct);
+@light-brown-color: lighten(@brown-color, @light-pct);
+@dark-brown-color: darken(@brown-color, @dark-pct);
+@darker-brown-color: darken(@brown-color, @darker-pct);
+
+@lighter-green-color: lighten(@green-color, @lighter-pct);
+@light-green-color: lighten(@green-color, @light-pct);
+@dark-green-color: darken(@green-color, @dark-pct);
+@darker-green-color: darken(@green-color, @darker-pct);
+
+
+@text-color: @dark-gray-color;
+@selection-color: @light-blue-color;
+@highlight-color: @lighter-blue-color;
+
+@warning-color: @yellow-color;
+@error-color: @light-red-color;
+@success-color: @light-green-color;
+
+@shadow-color: @gray-color;
+
+@light-text-color: @white-color;
+@info-text-color: @gray-color;
+@text-highlight-color: @white-color;
+@text-selection-color: @text-color;
 
 @form-color: @white-color;
 @sub-form-color: @light-gray-color;
 
 @control-color: @white-color;
-@alt-control-color: @gray-color;
-
-@highlight-color: @light-blue-color;
-@text-highlight-color: @white-color;
 @control-highlight-color: @highlight-color;
-@alt-control-highlight-color: @light-gray-color;
-
-@selection-color: @blue-color;
-@text-selection-color: @text-color;
 @control-selection-color: @selection-color;
+
+@alt-control-color: @gray-color;
+@alt-control-highlight-color: @light-gray-color;
 @alt-control-selection-color: @selection-color;
 
-@light-icon-color: @white-color;
-@info-icon-color: @blue-color;
 @icon-color: @light-gray-color;
+@light-icon-color: @lighter-gray-color;
+@info-icon-color: @blue-color;
 @dark-icon-color: @gray-color;
 
-@light-text-color: @white-color;
-@info-text-color: @gray-color;
-@text-color: @darker-gray-color;
-@shadow-color: @gray-color;
-
 @background-color: @dark-gray-color;
-@desktop-color: @darker-blue-color;
+@desktop-color: @darker-gray-color;
 
-@warning-color: @yellow-color;
-@error-color: @light-red-color;
-@success-color: @light-green-color;
 
 @media (max-width: 768px) {
 

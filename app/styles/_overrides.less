@@ -5,11 +5,39 @@ html, body, #editor {
 }
 
 body.dragging, body.dragging * {
-  cursor: move !important;
+  cursor: default !important;
+}
+
+.angular-ui-tree-handle {
+  cursor: default;
 }
 
 .table {
   margin-bottom: 0px !important;
+}
+
+.table > tbody > tr > td {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.table-header-filter {
+//  padding-left: 21px !important;
+  padding-top: 2px !important;
+  padding-bottom: 2px !important;
+}
+
+.table-input-filter {
+  font-weight: normal;
+}
+
+.table-header-text {
+  cursor: default;
+  padding-left: 21px !important;
+}
+
+.table-footer-text {
+  padding-left: 21px !important;
 }
 
 .wrapper .row {
@@ -55,6 +83,10 @@ body.dragging, body.dragging * {
   right: 0px;
   top: 77px;
   background-color: @desktop-color;
+
+  &.index {
+    top: 50px;
+  }
 }
 
 .box #index-main {
@@ -67,7 +99,15 @@ body.dragging, body.dragging * {
 
 ul.nav-tabs li.active {
   font-weight: bold;
-//  font-size: large;
+}
+
+.dashboard-widget-area {
+  display: inline-block !important;
+  min-height: 200px !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin-top: 20px !important;
+  margin-bottom: 0px !important;
 }
 
 #main {
@@ -185,7 +225,7 @@ textarea.form-control {
 }
 
 .panel-subform > .panel > .panel-heading.accordion-toggle .panel-title:after {
-  font-family: 'Glyphicons Halflings';
+  font-family: 'cicons';
   font-size: 14px;
   content: "\e114";
   float: right;
@@ -241,7 +281,7 @@ textarea.form-control {
   height: 16px;
   margin: auto;
   font-size: 12px;
-  cursor: pointer;
+  cursor: default;
   z-index: 10000;
 //  color: #ccc;
 }
@@ -281,10 +321,23 @@ textarea.form-control {
   margin-top: -3px !important;
   border-top-left-radius: 0! important;
   border-top-right-radius: 0! important;
+  vertical-align: middle !important;
+
+  [data-selectable] {
+    height: auto;
+    line-height: 18px;
+    padding: 2px 2px;
+    vertical-align: middle !important;
+  }
+
 }
 
 .error-messages {
   margin: 0px !important;
+}
+
+.error-messages-container {
+  margin: 15px !important;
 }
 
 .display-icon {
@@ -302,7 +355,7 @@ a .display-icon {
 
 .required:before {
   font-family: 'cicons';
-  content: '\f19c';
+  content: '\e73d';
   color: @alert-danger-text;
   font-weight: normal;
   font-size: 10px;
@@ -332,4 +385,13 @@ a .display-icon {
 
 .label-table-error {
   margin-right: 8px;
+}
+
+.chart-container {
+//  width: 100% !important;
+//  height: 100% !important;
+}
+
+.iconpicker-popover.popover {
+  width: 532px !important;
 }

@@ -1,118 +1,175 @@
 module.exports = [
 
+  name: 'Literals'
+  desc: 'Literal value'
+  extra:
+    display: 'Literal'
+    options: 'c'
+    icon: 'cic-tag8'
+    color: 'gray'
+,
+
   name: 'Literal'
   desc: 'Literal value'
   extra:
+    category: 'Literals'
     options: 'h'
-    icon: 'tag8'
+    icon: 'cic-tag8'
+    color: 'gray'
     code:
-      generate: (arg, client) ->
-        return arg.getValue()
+      both: (arg, user) ->
+        Handlebars.compile('{{value}}')({value: arg.getValueOrDefault()})
 ,
 
-  name: 'String'
+  name: 'Literal.String'
   desc: 'String object'
   extra:
     inherit: 'Literal'
-    icon: 'quote-right'
+    icon: 'cic-quote-right'
+    default: ''
     code:
-      generate: (arg, client) ->
-        return '"{0}"'.format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('\'{{value}}\'')({value: arg.getValueOrDefault()})
 ,
 
-  name: 'Number'
+  name: 'Literal.Number'
   desc: 'Number object'
   extra:
     inherit: 'Literal'
-    icon: 'hash'
+    icon: 'cic-hash'
+    default: 0
     code:
-      generate: (arg, client) ->
-        return parseInt(arg.getValue(), 10).toString()
+      both: (arg, user) ->
+        v = arg.getValueOrDefault()
+        return (if type(v) is 'number' and Number.isNaN(v) then '0' else v.toString())
 ,
 
-  name: 'Boolean'
+  name: 'Literal.Boolean'
   desc: 'Boolean object'
   extra:
     inherit: 'Literal'
-    icon: 'switchon'
-    code:
-      argument: (arg, client) ->
-        v = arg.getValue().toLowerCase()
-        if v == 'true' or v = 't' or v == 'yes' or v = 'y' or v = 'ok'
-          return "true"
-        else
-          return "false"
+    icon: 'cic-switchon'
+    default: false
 ,
 
-  name: 'Date'
+  name: 'Literal.Date'
   desc: 'Date object'
   extra:
     inherit: 'Literal'
-    icon: 'calendar32'
+    icon: 'cic-calendar32'
     code:
-      generate: (arg, client) ->
-        console.log arg
-#        m = moment(arg.getValue())
-#        console.log m
-#        if m.isValid
-#          return d.format('L LT')
-#        else
-#          return moment().format('L LT')
+      both: (arg, user) ->
+        m = moment(arg.getValueOrDefault())
+        if !m.isValid()
+          m = moment()
+        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('L')})
 ,
 
-  name: 'Html'
+  name: 'Literal.DateTime'
+  desc: 'Date and time object'
+  extra:
+    inherit: 'Literal'
+    icon: 'cic-appointment'
+    options: 'h'
+    code:
+      both: (arg, user) ->
+        m = moment(arg.getValueOrDefault())
+        if !m.isValid()
+          m = moment()
+        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('L LT')})
+,
+
+  name: 'Literal.Time'
+  desc: 'Time object'
+  extra:
+    inherit: 'Literal'
+    icon: 'cic-clock23'
+    options: 'h'
+    code:
+      both: (arg, user) ->
+        m = moment(arg.getValueOrDefault())
+        if !m.isValid()
+          m = moment()
+        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('LT')})
+,
+
+  name: 'Literal.Color'
+  desc: 'Color'
+  extra:
+    inherit: 'Literal'
+    icon: 'cic-palette'
+    default: tinycolor('black').toHex8String()
+    code:
+      both: (arg, user) ->
+        tc = tinycolor(arg.getValueOrDefault().toLowerCase())
+        if !tc.isValid()
+          tc = tinycolor('black')
+        Handlebars.compile('tinycolor(\'{{value}}\')')({value: tc.toHex8String()})
+,
+
+  name: 'Literal.Html'
   desc: 'Html object'
   extra:
     inherit: 'Literal'
-    icon: 'chevrons'
+    icon: 'cic-chevrons'
     code:
-      generate: (arg, client) ->
-        if client
-          return "$('{0}')".format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('$(\'{{value}}\')')({value: arg.getValueOrDefault()})
 ,
 
-  name: 'JSON'
+  name: 'Literal.JSON'
   desc: 'JSON object'
   extra:
     inherit: 'Literal'
-    icon: 'braces'
+    icon: 'cic-braces'
+    default: {}
     code:
-      generate: (arg, client) ->
-        if client
-          return "\{{0}\}".format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('\{{{value}}\}')({value: arg.getValueOrDefault()})
 ,
 
-  name: 'Array'
+  name: 'Literal.Array'
   desc: 'Array object'
   extra:
     inherit: 'Literal'
-    icon: 'squarebrackets'
+    icon: 'cic-squarebrackets'
+    default: []
     code:
-      generate: (arg, client) ->
-        if client
-          return "\{{0}\}".format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('[{{value}}]')({value: arg.getValueOrDefault().join(', ')})
 ,
 
-  name: 'RegExp'
+  name: 'Literal.RegExp'
   desc: 'Regular Expression object'
   extra:
     inherit: 'Literal'
-    icon: 'asterisk'
+    icon: 'cic-asterisk'
+    default: /$.*^/ig
     code:
-      generate: (arg, client) ->
-        if client
-          return "/{0}/".format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('$(/{{value}}/')({value: arg.getValueOrDefault().toString()})
 ,
 
-  name: 'Expression'
+  name: 'Literal.Expression'
   desc: 'Expression'
   extra:
     inherit: 'Literal'
-    icon: 'sum'
+    icon: 'cic-sum'
+    default: ->
+
     code:
-      generate: (arg, client) ->
-        if client
-          return "({0})".format(arg.getValue())
+      both: (arg, user) ->
+        Handlebars.compile('(/{{value}}/')({value: arg.getValueOrDefault().toString()})
+,
+
+  name: 'Literal.Icon'
+  desc: 'Icon'
+  extra:
+    inherit: 'Literal'
+    icon: 'cic-uniF545'
+    code:
+      both: (arg, user) ->
+        Handlebars.compile('\'cic {{value}}\'')({value: arg.getValueOrDefault()})
 
 ]
 

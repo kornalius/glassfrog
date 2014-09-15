@@ -66,17 +66,6 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
 #            )
 #        )
 
-    save: (m, cb) ->
-      require(['vc_module'], (Module) ->
-        if m.isModified()
-          m.push(n, (result) ->
-            Module.make(m)
-            cb(true) if cb
-          )
-        else
-          cb(false) if cb
-      )
-
     saveAll: (cb) ->
       require(['async', 'vc_global'], (async, VCGlobal) ->
         async.eachSeries(VCGlobal.modules.rows, (r, callback) ->
@@ -142,7 +131,15 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
         cb() if cb
       )
 
-    edit: (m) ->
+    save: (m, cb) ->
+      m.save((ok) ->
+        cb(true) if cb
+      )
+
+    edit: (m, cb) ->
+      m.edit((ok) ->
+        cb(ok) if cb
+      )
 
     new: (cb) ->
 
@@ -219,7 +216,7 @@ angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node
       EditorModule.hidepopup(m)
 
     $scope.edit = (m) ->
-      EditorModule.edit(m)
+      EditorModule.edit(m, cb)
 
     $scope.new = (cb) ->
       EditorModule.edit(cb)

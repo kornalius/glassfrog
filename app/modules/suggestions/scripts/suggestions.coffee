@@ -10,12 +10,13 @@ angular.module('suggestions', ['app', 'dynamicForm'])
 
 ($scope, $rootScope, $injector, globals, dynForm, Rest) ->
   $scope.suggestion = new Rest('suggestion')
-  $scope.suggestion.createTemp({}, () ->
+  $scope.suggestion.createTemp({}, true, () ->
     form =
       label: "Suggestions"
       name: "suggestionsForm"
       layout: {type:'form', style:'horizontal'}
       container: true
+      blank: true
 
       fields: [
         label: "Name"
@@ -49,12 +50,12 @@ angular.module('suggestions', ['app', 'dynamicForm'])
         required: true
       ]
 
-      events:
-        save: (row) ->
-          $scope.suggestion.createTemp({})
-
-        cancel: (row) ->
-          $scope.suggestion.createTemp({})
+#      events:
+#        save: (row) ->
+#          $scope.suggestion.createTemp({}, true)
+#
+#        cancel: (row) ->
+#          $scope.suggestion.createTemp({}, true)
 
 
     dynForm.build($scope, form, $scope.suggestion, '#form')
@@ -71,6 +72,7 @@ angular.module('suggestions', ['app', 'dynamicForm'])
     .state('suggestions',
       url:'/suggestions'
       templateUrl: '/partials/suggestions.html'
+      sidebarHidden: true
       data:
         ncyBreadcrumbLabel: 'Suggestions'
 #          ncyBreadcrumbSkip: true

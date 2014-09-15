@@ -16,11 +16,11 @@ angular.module('user.info', ['dynamicForm'])
       name: "UserInfoForm"
       layout: {type:'display', style:'horizontal'}
       container: true
+      autolabel: false
 
       fields: [
-        fieldname: 'fullname'
+        fieldname: 'name.full'
         username: true
-        bold: true
         break: true
       ,
         fieldname: 'address'
@@ -58,6 +58,7 @@ angular.module('user.info', ['dynamicForm'])
         email: true
         break: true
       ]
+
     dynForm.build($scope, userInfoForm, $scope.usr, '#form')
   )
 

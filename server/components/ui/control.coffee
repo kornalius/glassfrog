@@ -1,26 +1,36 @@
 module.exports = [
 
+  name: 'Controls'
+  desc: 'Control to place on view'
+  extra:
+    display: 'Control'
+    category: 'UIs'
+    options: 'c'
+    icon: 'cic-pointer'
+    color: 'lightpurple'
+,
+
   name: 'Control'
   desc: 'Control to place on view'
   extra:
+    category: 'Controls'
     inherit: 'UI'
     options: 'hp'
-    icon: 'pointer'
-    accepts: ['Decorator']
-    color: 'lightorange'
+    icon: 'cic-pointer'
+    accepts: ['Decorator+']
 ,
 
   name: 'Label'
   desc: 'Label'
   extra:
-    icon: 'uniF4E8'
+    icon: 'cic-uniF4E8'
     inherit: 'Control'
 ,
 
   name: 'Icon'
   desc: 'Icon'
   extra:
-    icon: 'picture22'
+    icon: 'cic-picture22'
     inherit: 'Control'
 ,
 
@@ -29,14 +39,14 @@ module.exports = [
   extra:
     inherit: 'Control'
     options: 'hp'
-    icon: 'uniF5D5'
+    icon: 'cic-uniF5D5'
 ,
 
   name: 'Button'
   desc: 'Action button'
   extra:
-    icon: 'progress-0'
+    icon: 'cic-progress-0'
     inherit: 'Control'
-    accepts: ['Icon', 'Label']
+    accepts: ['Icon+', 'Label+']
 
 ]

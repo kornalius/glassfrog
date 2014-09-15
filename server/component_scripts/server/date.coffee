@@ -1,4 +1,4 @@
 return {
-  generate: (node) ->
+  generate: (node, client, user) ->
     return 'type: Date'
 }

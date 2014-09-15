@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/backdrop.html', 'template/modal/window.html', 'numberAttributes', 'dateAttributes', 'layoutAttributes', 'stringAttributes', 'restangular'])
+angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/backdrop.html', 'template/modal/window.html', 'numberAttributes', 'dateAttributes', 'layoutAttributes', 'stringAttributes', 'iconspickerAttributes', 'restangular'])
 
 .run( ->
   window.maskOptions =
@@ -97,13 +97,20 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
                 else
                   t = ""
-                  if field.autolabel
+                  if field.autolabel or layout.type == 'display'
                     t += l
                   t += f
                   fieldTmpl = if field.type then field.type else (if layout.type == 'display' then 'label' else 'input')
+
                   i = ""
-                  if dft[fieldTmpl]
-                    i += dft[fieldTmpl]
+
+                  if !field.inputHidden?
+                    if field.type == 'include'
+                      i = '<ng-include src="\'' + field.template + '\'">'
+
+                    else if dft[fieldTmpl]
+                      i += dft[fieldTmpl]
+
                   if i.length
                     t = t.replace(/\<\!-- \<input\>--\>/g, i + '\n')
 
@@ -155,18 +162,18 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       form.$errors = []
 
       navButtons1 = [
-        icon: 'double-angle-left'
+        icon: 'cic-double-angle-left'
         url: ''
       ,
-        icon: 'angle-left'
+        icon: 'cic-angle-left'
         url: ''
       ]
 
       navButtons2 = [
-        icon: 'angle-right'
+        icon: 'cic-angle-right'
         url: ''
       ,
-        icon: 'double-angle-right'
+        icon: 'cic-double-angle-right'
         url: ''
       ]
 
@@ -178,15 +185,15 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
             if b.toLowerCase() == 'nav'
               nav = true
             if b.toLowerCase() == 'edit'
-              fb.push({ icon: 'pencil', url: 'edit' })
+              fb.push({ icon: 'cic-pencil', url: 'edit' })
             else if b.toLowerCase() == 'save'
-              fb.push({ icon: 'disk3', url: 'save' })
+              fb.push({ icon: 'cic-disk3', url: 'save' })
             else if b.toLowerCase() == 'cancel'
-              fb.push({ icon: 'close', url: 'cancel' })
+              fb.push({ icon: 'cic-close', url: 'cancel' })
             else if b.toLowerCase() == 'add'
-              fb.push({ icon: 'plus32', url: 'add' })
+              fb.push({ icon: 'cic-plus32', url: 'add' })
             else if b.toLowerCase() == 'delete'
-              fb.push({ icon: 'trash3', url: 'delete' })
+              fb.push({ icon: 'cic-trash3', url: 'delete' })
           else
             fb.push(b)
       form.buttons = fb
@@ -219,6 +226,13 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       form.getClass = () ->
         c = []
         if @layout.type == 'form' or @layout.type == 'modal`'
+          if @layout.style == 'horizontal'
+            c.push('form-horizontal')
+          else if @layout.style == 'vertical'
+            c.push('form-vertical')
+          else if @layout.style == 'inline'
+            c.push('form-inline')
+        else if @layout.type == 'table'
           if @layout.style == 'horizontal'
             c.push('form-horizontal')
           else if @layout.style == 'vertical'
@@ -259,13 +273,16 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       if field.tab == undefined
         field.tab = 0
 
+      if field.autolabel and field.label == undefined
+        field.label = _.str.humanize(field.fieldname)
+
       field.form = form
 
       field.domName = (type, idx) ->
-        return @form.domName() + '_' + type + '_' + @fieldname + '_' + idx
+        return @form.domName() + '_' + type + '_' + (if @fieldname? then @fieldname.replace(/\./g, '_') else '') + '_' + idx
 
       field.domId = (type, idx) ->
-        return @form.domName() + '_' + type + '_' + @fieldname + '_' + idx + '_id'
+        return @form.domName() + '_' + type + '_' +(if @fieldname? then @fieldname.replace(/\./g, '_') else '') + '_' + idx + '_id'
 
       field.getLabelClass = () ->
         if @input?
@@ -406,24 +423,26 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       $scope.country_states = states
       $scope.current_states = ""
 
-      $scope._changeSelection = (field, idx) ->
+      $scope._changeSelection = (field, val) ->
         if field.type.toLowerCase() == 'country'
-          a = @country_states[idx]
-          if type(a) is 'string'
-            a = a.split('|')
-            elem = angular.element('#country_states')
-            if elem.length
-              selectize = elem.selectize()[0].selectize
-              values = a
+          idx = @countries.indexOf(val)
+          if idx != -1
+            a = @country_states[idx]
+            if type(a) is 'string'
+              a = a.split('|')
+              elem = angular.element('#country_states')
+              if elem.length
+                selectize = elem.selectize()[0].selectize
+                values = a
 
-              if values and values.length and !values[0].label and !values[0].value
-                for i in [0..values.length - 1]
-                  values[i] = { value: i.toString(), label: values[i] }
+                if values and values.length and !values[0].label and !values[0].value
+                  for i in [0..values.length - 1]
+                    values[i] = { value: values[i], label: values[i] }
 
-              selectize.clearOptions()
-              angular.forEach(values, (option) ->
-                selectize.addOption(option)
-              )
+                selectize.clearOptions()
+                angular.forEach(values, (option) ->
+                  selectize.addOption(option)
+                )
 
 #      if !$scope.rows.scope and $scope.$parent and $scope.fi
 #        p = $scope.$parent
@@ -514,7 +533,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         return src != tgt
 
       $scope.validRow = (idx) ->
-        return idx != null and idx in [0..@rows.length - 1]
+        return idx != null and @rows and idx in [0..@rows.length - 1]
 
       $scope.edit = (idx, forceInline) ->
         idx = if idx != null then idx else 0
@@ -539,17 +558,18 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
                 that.cancel(idx)
             )
 
-          $timeout(->
-            that.validateAllFields()
-          , 10)
+#          $timeout(->
+#            if that.validateAllFields?
+#              that.validateAllFields()
+#          , 10)
 
       $scope.insert = (idx) ->
         idx = if idx != null then idx else 0
         if @validRow(idx) and @form.canInsert
           if @form.model
             that = @
-            @form.model.create({}, (r) ->
-              if r
+            @form.model.create({}, that.form.blank, (r) ->
+              if r and that.form.model.rows.push?
                 that.form.model.rows.push(r)
                 idx = that.form.model.rows.length - 1
                 that.addState('i', idx)
@@ -561,8 +581,8 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         if @form.canAppend
           if @form.model
             that = @
-            @form.model.create({}, (r) ->
-              if r
+            @form.model.create({}, that.form.blank, (r) ->
+              if r and that.form.model.rows.push?
                 that.form.model.rows.push(r)
                 idx = that.form.model.rows.length - 1
                 that.addState('a', idx)
@@ -605,8 +625,14 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
                   that.orig = null
                   that.origIdx = -1
                   that.form.on('save', result)
-                  if that.rows and that.rows.length == 1 or that.form.editMode == 'always'
-                    that.edit(0)
+                  if (that.rows and that.rows.length == 1) or that.form.editMode == 'always'
+                    if that.form.blank
+                      that.form.model.createTemp({}, true, (d) ->
+                        that.rows = that.form.model.rows
+                        that.edit(0)
+                      )
+                    else
+                      that.edit(0)
                 )
 
       $scope._cancelled = (idx) ->
@@ -632,7 +658,14 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           @form.on('cancel')
 
           if @rows.length == 1 or @form.editMode == 'always'
-            @edit(0)
+            if @form.blank
+              that = @
+              @form.model.createTemp({}, true, (d) ->
+                that.rows = that.form.model.rows
+                that.edit(0)
+              )
+            else
+              @edit(0)
 
 #          that = @
 #          @rows[idx]._id = @orig._id
@@ -742,7 +775,8 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         c = @$$childHead
         if c != @
           while c
-            c.validateAllFields()
+            if c.validateAllFields?
+              c.validateAllFields()
             c = c.$$nextSibling
 
   #      for i in [Math.max(0, _start)..Math.min(_end, rows.length - 1)]
@@ -768,10 +802,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           , 10)
         else
           @removeErrors()
-          for i in [Math.max(0, _start)..Math.min(_end, that.rows.length - 1)]
-            err = that.validator.validate(that.rows, fields, i)
-            if err and err.length
-              that.addErrors(err)
+          if that.rows?.length?
+            for i in [Math.max(0, _start)..Math.min(_end, that.rows.length - 1)]
+              err = that.validator.validate(that.rows, fields, i)
+              if err and err.length
+                that.addErrors(err)
           $timeout( ->
             that.$apply(that.form.$errors)
           )
@@ -868,7 +903,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           return null
 
       $scope.sortQuery = () ->
-        return @sort.sortingOrder + ' ' + (if @sort.reverse then 'DESC' else 'ASC')
+        return (if @sort.reverse then '-' else '') + @sort.sortingOrder
 
       $scope.perPageQuery = () ->
         return (if @perPage? then @perPage else 10)
@@ -888,7 +923,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       $scope.sortChanged = () ->
         if @form.model
-          @form.model.order = @sortQuery()
+          @form.model.sort = @sortQuery()
         @cancel()
         @removeErrors()
         if @form.model
@@ -928,7 +963,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       return e
 
     modelSchema: (modelName, cb) ->
-      $http.get('/api/{0}/schema'.format(modelName))
+      $http.get('/api/{0}?action=schema'.format(modelName))
       .success((data, status) ->
         cb(data) if cb
       )
@@ -993,12 +1028,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           r = {type: "check", switch: true}
         else if t is 'date'
           r = {type: "input", date: true}
-        else if t is 'object'
-          if o
-            if o instanceof Array
-              r = {type: ""}
-            else if o instanceof Date
-              r = {type: "input", date: true}
+        else if t is 'object' and o?
+          if o instanceof Array
+            r = {type: ""}
+          else if o instanceof Date
+            r = {type: "input", date: true}
 
         n = typeFromFieldname(fn)
         if n
@@ -1082,8 +1116,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
             i = 0
             options = []
             for e in p.options.enum
-              if e.length
-                options.push({value:i, label:e})
+              if e and e.length
+                if !e.label and !e.value
+                  options.push({value:i, label:e})
+                else
+                  options.push(e)
 
           ref = null
           multi = false
@@ -1266,14 +1303,14 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         autolabel: false
 
         fields: [
-          col: 2
+          column: 2
           type: "icon"
-          value: "question22"
+          value: "cic-question22"
           fontsize: 40
           shadow: 2
           vcenter: true
         ,
-          col: 10
+          column: 10
           type: "caption"
           value: caption
           fontsize: 16
@@ -1291,19 +1328,19 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         name: "modalForm"
         size: 'sm'
         layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: 'check', class: 'success', label: 'OK', url: "ok" }]
+        buttons: [{ icon: 'cic-check', class: 'success', label: 'OK', url: "ok" }]
         autolabel: false
 
         fields: [
-          col: 2
+          column: 2
           rowSize: 'sm'
           type: "icon"
-          value: "exclamation2"
+          value: "cic-exclamation2"
           fontsize: 40
           vcenter: true
           shadow: 2
         ,
-          col: 10
+          column: 10
           rowSize: 'sm'
           type: "caption"
           value: caption
@@ -1324,18 +1361,18 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         name: "modalForm"
         size: 'sm'
         layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: 'check', class: 'success', label: 'OK', url: "ok" }]
+        buttons: [{ icon: 'cic-check', class: 'success', label: 'OK', url: "ok" }]
         autolabel: false
 
         fields: [
-          col: 2
+          column: 2
           rowSize: 'sm'
           type: "icon"
           value: "info6"
           fontsize: 40
           shadow: 2
         ,
-          col: 10
+          column: 10
           rowSize: 'sm'
           type: "caption"
           value: caption
@@ -1529,8 +1566,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
   'dateAttributes'
   'layoutAttributes'
   'stringAttributes'
+  'iconspickerAttributes'
 
-  ($compile, dynForm, numbers, dates, layouts, strings) ->
+  ($compile, dynForm, numbers, dates, layouts, strings, iconspicker) ->
     data =
       store:
 
@@ -1552,9 +1590,26 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           s.code(scope, element, field)
         return s
 
-    data.store = angular.extend(data.store, numbers, dates, layouts, strings)
+    data.store = angular.extend(data.store, numbers, dates, layouts, strings, iconspicker)
 
     return data
+])
+
+.directive('dynAttrs', [
+  '$parse'
+  '$compile'
+
+  ($parse, $compile) ->
+    restrict: 'A'
+    priority: 1
+
+    link: (scope, element, attrs) ->
+      fields = $parse(element.attr('dyn-attrs'))(scope)
+      if fields
+        for k in Object.keys(fields)
+          element.attr(k, fields[k])
+      element.removeAttr('dyn-attrs')
+      $compile(element)(scope)
 ])
 
 
@@ -1617,10 +1672,22 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       scope.selectedCls = (column) ->
         if column == scope.$parent.sort.sortingOrder
-          return 'fa fa-sort-' + (if scope.sort.reverse then 'desc' else 'asc')
+          return 'cic cic-sort-' + (if scope.sort.reverse then 'up' else 'down')
         else
-          return 'fa fa-sort'
+          return 'cic cic-sort'
 ])
+
+.directive('wtFieldWatch', [
+
+  () ->
+    restrict: 'A'
+    replace: true
+    template: '<div>Value<div class="alert alert-info">{{value}}</div></div>'
+    scope:
+      value: '='
+])
+
+
 
 countries = [
   "Afghanistan", "Albania", "Algeria", "American Samoa", "Angola", "Anguilla", "Antartica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Ashmore and Cartier Island", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "British Virgin Islands", "Brunei", "Bulgaria", "Burkina Faso", "Burma", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Clipperton Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo, Democratic Republic of the", "Congo, Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia", "Cuba", "Cyprus", "Czeck Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Europa Island", "Falkland Islands (Islas Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "French Guiana", "French Polynesia", "French Southern and Antarctic Lands", "Gabon", "Gambia, The", "Gaza Strip", "Georgia", "Germany", "Ghana", "Gibraltar", "Glorioso Islands", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guernsey", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard Island and McDonald Islands", "Holy See (Vatican City)", "Honduras", "Hong Kong", "Howland Island", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Ireland, Northern", "Israel", "Italy", "Jamaica", "Jan Mayen", "Japan", "Jarvis Island", "Jersey", "Johnston Atoll", "Jordan", "Juan de Nova Island", "Kazakhstan", "Kenya", "Kiribati", "Korea, North", "Korea, South", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Man, Isle of", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Midway Islands", "Moldova", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcaim Islands", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romainia", "Russia", "Rwanda", "Saint Helena", "Saint Kitts and Nevis", "Saint Lucia", "Saint Pierre and Miquelon", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Scotland", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and South Sandwich Islands", "Spain", "Spratly Islands", "Sri Lanka", "Sudan", "Suriname", "Svalbard", "Swaziland", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Tobago", "Toga", "Tokelau", "Tonga", "Trinidad", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "Uruguay", "USA", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands", "Wales", "Wallis and Futuna", "West Bank", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe"

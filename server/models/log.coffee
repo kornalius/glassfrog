@@ -46,7 +46,7 @@ LogSchema.plugin(timestamps)
 LogSchema.static(
   log: (user, action, schema, comment, ip, url) ->
     mongoose.model('Log').create(
-      user: user.id
+      user: user._id
       action: action
       schemaName: schema if schema?
       comment: comment if comment?

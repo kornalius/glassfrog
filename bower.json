@@ -52,7 +52,7 @@
     "angular-form-builder": "~0.1.0",
     "ng-contenteditable": "*",
     "tinycolor": "~1.0.0",
-    "selectize": "~0.10.1",
+    "selectize": "~0.11.0",
     "angular-sanitize": "~1.2.20",
     "angular-placeholders": "*",
     "restangular": "~1.4.0",
@@ -62,7 +62,16 @@
     "angular-spectrum-colorpicker": "~1.0.16",
     "bootstrap-touchspin": "~3.0.1",
     "jquery-smooth-scroll": "~1.5.0",
-    "jquery-sortable": "~0.9.12"
+    "angular-ui-tree": "~2.1.5",
+    "malhar-angular-dashboard": "~0.7.0",
+    "d3": "~3.4.11",
+    "nvd3": "~1.1.15-beta",
+    "angularjs-nvd3-directives": "~0.0.7",
+    "pines-notify": "~2.0.1",
+    "angular-pines-notify": "~1.0.0",
+    "malhar-angular-widgets": "git://github.com/DataTorrent/malhar-angular-widgets.git",
+    "fontawesome-iconpicker": "git://github.com/mjolnic/fontawesome-iconpicker.git#~1.1.0",
+    "angular-moment": "~0.8.2"
   },
   "resolutions": {
     "angular": "~1.2.18"

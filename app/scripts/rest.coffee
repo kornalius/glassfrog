@@ -25,8 +25,9 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
   (globals, $timeout, $resource, $http, Restangular) ->
 
     # Initialization
-    Rest = (modelName) ->
-      @modelName = modelName
+    Rest = (modelName, url) ->
+      @modelName = modelName.toLowerCase().singularize()
+      @url = url
       @perPage = 1000
       @page = 1
       @filter = null
@@ -45,6 +46,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       @lastPage = 1
       @prevPage = 1
       @nextPage = 1
+      @rest = null
 
       return @
 
@@ -85,8 +87,15 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         that.fetchTimeout = $timeout( ->
 
           if id?
-            that.rows = Restangular.one(that.modelName, id)
-            p = that.rows.get({select: that.select, populate: that.populate}).then((result) ->
+
+            if that.url?
+              that.rest = Restangular.oneUrl(that.modelName, that.url)
+              q = {}
+            else
+              that.rest = Restangular.one(that.modelName, id)
+              q = {select: that.select, populate: that.populate}
+
+            p = that.rest.get(q).then((result) ->
               that.total = 1
               that.display = 1
               that.pages = 1
@@ -102,138 +111,180 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
               console.log "Rest fetch end...", that
 
-              cb(result) if cb
+              cb(result, null) if cb
 
             , (err) ->
               console.log "Rest fetch end with error...", that, err
-
-              cb(null) if cb
+              cb(null, err) if cb
             )
 
           else
 
-            that.rows = Restangular.all(that.modelName)
-            p = that.rows.getList({sort:that.sort, perPage:that.perPage, page:that.page, filter:that.filter, select: that.select, populate: that.populate}).then((result) ->
+            if that.url?
+              that.rest = Restangular.allUrl(that.modelName, that.url)
+              q = {}
+            else
+              that.rest = Restangular.all(that.modelName)
+              q = {sortField:that.sort, perPage:that.perPage, page:that.page, filter:that.filter, select: that.select, populate: that.populate}
+
+            p = that.rest.getList(q).then((result) ->
               info = result[0]
-              that.total = info.total
-              that.display = info.displayCount
-              that.pages = info.pages
-              that.firstPage = info.firstPage
-              that.lastPage = info.lastPage
-              that.prevPage = info.prevPage
-              that.nextPage = info.nextPage
-              that.first = info.first
-              that.last = info.last
-              that.prev = info.prev
-              that.next = info.next
-              result.shift()
+              if info.total? and info.displayCount? and info.pages?
+                that.total = info.total
+                that.display = info.displayCount
+                that.pages = info.pages
+                that.firstPage = info.firstPage
+                that.lastPage = info.lastPage
+                that.prevPage = info.prevPage
+                that.nextPage = info.nextPage
+                that.first = info.first
+                that.last = info.last
+                that.prev = info.prev
+                that.next = info.next
+                result.shift()
+              else
+                that.total = result.length
+                that.display = result.length
+                that.pages = 1
+                that.firstPage = 1
+                that.lastPage = 1
+                that.prevPage = 1
+                that.nextPage = 1
+                that.first = 1
+                that.last = 1
+                that.prev = 1
+                that.next = 1
+
               that.rows = result
 
               console.log "Rest fetch end...", that
 
-              cb(result) if cb
+              cb(result, null) if cb
 
             , (err) ->
               console.log "Rest fetch end with error...", that, err
-
-              cb(null) if cb
+              cb(null, err) if cb
             )
 
-          globals.loadingTracker.addPromise(p)
+          if that.perPage? and that.perPage > 1
+            globals.loadingTracker.addPromise(p)
 
-        , 250)
+        , (if that.perPage? and that.perPage > 1 then 250 else 1))
 
       update: (row, cb) ->
         that = @
 
-        console.log "Rest update start...", that
+        console.log "Rest update start...", that, row._id
 
-        p = row.save().then((result) ->
-          x = that.getFromRows(result._id)
-          if x != -1
-            that.rows[x] = result
+        if row.save? and row._id?
+          p = row.save().then((result) ->
+            x = that.getFromRows(result._id)
+            if x != -1
+              that.rows[x] = result
 
-          console.log "Rest update end...", that, result
+            console.log "Rest update end...", that, result._id, result
 
-          cb(result) if cb
-        )
+            cb(result, null) if cb
+          , (err) ->
+            console.log "Rest update end with error...", that, row._id, err
+            cb(null, err) if cb
+          )
+        else
+          console.log "Rest delete end with error...", that, row._id, "no save() method"
+          cb(null, null) if cb
 
-        globals.loadingTracker.addPromise(p)
+#        globals.loadingTracker.addPromise(p)
 
       delete: (row, cb) ->
         that = @
 
-        console.log "Rest delete start...", that
+        console.log "Rest delete start...", that, row._id
 
-        p = row.remove().then((result) ->
-          x = that.getFromRows(row._id)
-          if x != -1
-            that.rows.splice(x)
+        if row.remove? and row._id?
+          p = row.remove().then((result) ->
+            x = that.getFromRows(row._id)
+            if x != -1
+              that.rows.splice(x)
 
-          console.log "Rest delete end...", that, result
+            console.log "Rest delete end...", that, result
 
-          cb(result) if cb
+            cb(result, null) if cb
 
-        , (err) ->
-          x = that.getFromRows(row._id)
-          if x != -1
-            that.rows.splice(x)
+          , (err) ->
+            x = that.getFromRows(row._id)
+            if x != -1
+              that.rows.splice(x)
 
-          console.log "Rest delete end with error...", that, err
+            console.log "Rest delete end with error...", that, row._id, err
 
-          cb(null) if cb
-        )
+            cb(null, null) if cb
+          )
+        else
+          console.log "Rest delete end with error...", that, row._id, "no remove() method"
+          cb(null, err) if cb
 
-        globals.loadingTracker.addPromise(p)
+#        globals.loadingTracker.addPromise(p)
 
-      create: (data, cb) ->
+      create: (data, onlyOneRow, cb) ->
         that = @
 
-        console.log "Rest create start...", that
+        console.log "Rest create start...", that, data
 
+        if !that.rest
+          if onlyOneRow
+            that.rest = Restangular.one(that.modelName)
+          else
+            that.rest = Restangular.all(that.modelName)
         if !that.rows
-          that.rows = Restangular.all(that.modelName)
+          that.rows = []
 
-        p = that.rows.post(data).then((result) ->
-          console.log "Rest create end...", that
-          cb(result) if cb
-        , (err) ->
-          console.log "Rest create end with error...", that, err
-          cb(null) if cb
-        )
+        if that.rest.post?
+          p = that.rest.post(data).then((result) ->
+            console.log "Rest create end...", that, result._id, result
+            cb(result, null) if cb
+          , (err) ->
+            console.log "Rest create end with error...", that, err
+            cb(null, err) if cb
+          )
+        else
+          console.log "Rest create end with error...", that, "no post() method"
+          cb(null, null) if cb
 
-        globals.loadingTracker.addPromise(p)
+#        globals.loadingTracker.addPromise(p)
 
 
-      createTemp: (data, cb) ->
+      createTemp: (data, onlyOneRow, cb) ->
         that = @
 
         console.log "Rest createTemp start...", that
 
-        p = $http.get('/api/{0}/defaults'.format(that.modelName))
-
+        p = $http.get('/api/{0}?action=defaults'.format(that.modelName))
         p.success((defaults, status) ->
-
           data = angular.extend(data, defaults)
           delete data._id
 
+          if !that.rest
+            if onlyOneRow
+              that.rest = Restangular.one(that.modelName)
+            else
+              that.rest = Restangular.all(that.modelName)
           if !that.rows
-            that.rows = Restangular.all(that.modelName)
+            that.rows = []
 
           d = Restangular.one(that.modelName, data._id)
           d = angular.extend(d, data)
           console.log "restangularized", d
           that.rows.push(d)
-          console.log "Rest create end...", that, d
-          cb(d) if cb
+          console.log "Rest createTemp end...", that, d._id, d
+          cb(d, null) if cb
         )
 
         p.error((err) ->
-          console.log "Rest create end with error...", that, err
-          cb(null) if cb
+          console.log "Rest createTemp end with error...", that, err
+          cb(null, ) if cb
         )
 
-        globals.loadingTracker.addPromise(p)
+#        globals.loadingTracker.addPromise(p)
 
 
       getFromRows: (id) ->

@@ -64,19 +64,6 @@ angular.module('user.profile', ['dynamicForm'])
         fieldname: 'name.last'
         required: true
       ,
-        fieldname: 'name'
-        fields: [
-          label: "First Name"
-          type: "input"
-          fieldname: 'first'
-          required: true
-        ,
-          label: "Last Name"
-          type: "input"
-          fieldname: 'last'
-          required: true
-        ]
-      ,
         label: "Address"
         type: "input"
         fieldname: 'address'

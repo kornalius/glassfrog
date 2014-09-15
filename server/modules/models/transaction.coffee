@@ -64,7 +64,7 @@ TransactionSchema = mongoose.Schema(
     label: 'Transaction Lines'
 
   sub_total:
-    type: Currency
+    type: mongooseCurrency
     label: 'Sub-Total'
 
   taxes:
@@ -72,7 +72,7 @@ TransactionSchema = mongoose.Schema(
     label: 'Taxes'
 
   total:
-    type: Currency
+    type: mongooseCurrency
     label: 'Total'
 
 ,
@@ -150,52 +150,87 @@ TransactionSchema.static(
 
   newProject: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('Project')
-        that.model.create({ u_no: nx, type: 'Project' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('Project')
+            that.model.create({ u_no: nx, type: 'Project' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 
   newQuote: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('Quote')
-        that.model.create({ u_no: nx, type: 'Quote' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('Quote')
+            that.model.create({ u_no: nx, type: 'Quote' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 
   newInvoice: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('Invoice')
-        that.model.create({ u_no: nx, type: 'Invoice' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('Invoice')
+            that.model.create({ u_no: nx, type: 'Invoice' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 
   newPurchase: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('Purchase')
-        that.model.create({ u_no: nx, type: 'Purchase' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('Purchase')
+            that.model.create({ u_no: nx, type: 'Purchase' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 
   newPayment: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('Payment')
-        that.model.create({ u_no: nx, type: 'Payment' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('Payment')
+            that.model.create({ u_no: nx, type: 'Payment' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 )
 

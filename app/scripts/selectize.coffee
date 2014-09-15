@@ -19,15 +19,15 @@ angular.module('ui.selectize', [])
         diacritics: true
         highlight: true
         openOnFocus: false
-        create: true
+        create: false
         persist: true
 #        maxOptions: 1000
         hideSelected: false
         selectOnTab: false
 #        maxItems: null
-        valueField: 'label'
+        valueField: 'value'
         labelField: 'label'
-        searchField: ['value', 'label']
+        searchField: ['label']
         sortField: 'label'
 #        searchConjunction: 'and'
         preload: "focus"
@@ -88,6 +88,15 @@ angular.module('ui.selectize', [])
       selectize.on('change', ->
         $timeout(->
           v = getValues()
+
+#          oo = []
+#          for s in v
+#            o = selectize.options[s]
+#            console.log s, o
+#            if o
+#              oo.push(o)
+#          console.log "change", oo, v, selectize.options
+
           ngModel.$setViewValue(v.join(options.delimiter))
           if v.length and scope._changeSelection
             scope._changeSelection(scope.$eval(attrs.field), v[0])
@@ -115,13 +124,13 @@ angular.module('ui.selectize', [])
 
         if values
           for i in [0..values.length - 1]
-            if values[i] and !values[i].label and !values[i].value
-              values[i] = { value: i.toString(), label: values[i] }
+            if values[i]? and !values[i].label and !values[i].value
+              values[i] = { value: values[i], label: values[i] }
 
         selectize.clearOptions()
-        angular.forEach(values, (option) ->
+        for option in values
           selectize.addOption(option)
-        )
+
         selectize.setValue(getValues())
 
       if attrs.disabled

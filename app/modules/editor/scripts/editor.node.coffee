@@ -122,26 +122,29 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       n.element()
 
     labelElement: (n) ->
-      if n and n.$data and n.$data.isNode
-        angular.element('#node-label-id_' + n.id())
-      else if n and n.$data and n.$data.isArg
-        angular.element('#node-arg-label-id_' + n.getName())
+      if n and n.$data
+        return n.element('label')
+      return null
 
     iconElement: (n) ->
-      angular.element('#node-icon-id_' + n.id())
+      if n and n.$data
+        return n.element('icon')
+      return null
 
     attributesElement: (n) ->
-      angular.element('#node-attributes-id_' + n.id())
+      if n and n.$data
+        return n.element('attributes')
+      return null
 
     inputElement: (n) ->
       if n and n.$data
         if n.$data.isNode
           if n.hasEnum()
-            return angular.element('#node-select-id_' + n.id())
+            return n.element('select')
           else
-            return angular.element('#node-input-id_' + n.id())
+            return n.element('input')
         else if n.$data.isArg
-          return angular.element('#node-arg-' + n.getInputType() + '-id_' + n.getName())
+          return n.element('input-' + n.getInputType())
       return null
 
     canEdit: (n) ->
@@ -169,41 +172,44 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     edit: (n, $event) ->
       if @canEdit(n)
-        if @currentEdit
-          @saveEdit()
-        @currentEdit = n
-        if n.$data and n.$data.isNode
-          @oldEditValue = n.name
-        else if n.$data and n.$data.isArg
-          @oldEditValue = n.value
-#        console.trace "edit()", @currentEdit, @oldEditValue
-        that = @
-        $timeout(->
-          i = that.inputElement(n)
-          if i and i.length
-            if i[0].selectize
-              i[0].selectize.focus()
-            else
-              i[0].focus()
-            if i[0].select
-              i[0].select()
-        , 100)
-        if $event
-          $event.stopPropagation()
+        if @currentEdit != n
+          if @currentEdit
+            @saveEdit()
+          @currentEdit = n
+          if n.$data and n.$data.isNode
+            @oldEditValue = n.name
+          else if n.$data and n.$data.isArg
+            @oldEditValue = n.value
+  #        console.trace "edit()", @currentEdit, @oldEditValue
+          that = @
+          $timeout(->
+            i = that.inputElement(n)
+            if i and i.length
+              if i[0].selectize
+                i[0].selectize.focus()
+              else
+                i[0].focus()
+              if i[0].select
+                i[0].select()
+          , 100)
+          if $event
+            $event.stopPropagation()
 
     saveEdit: () ->
       n = @currentEdit
 #      console.trace "saveEdit()", @currentEdit, @oldEditValue
       if n
         if n.$data and n.$data.isNode and @oldEditValue and @oldEditValue != n.name
-          if n.hasEnum() and typeof n.name != 'string'
-            id = n.name.id
-            n.name = null
-            require(['vc_global'], (VCGlobal) ->
-              n.setLink(id)
-            )
-          else
-            n.setName(n.name)
+#          if n.hasEnum() and typeof n.name != 'string'
+#            id = n.name.id
+#            n.name = null
+#            require(['vc_global'], (VCGlobal) ->
+#              n.setLink(id)
+#            )
+#          else
+          newName = n.name
+          n.name = ''
+          n.setName(newName)
         else if n.$data and n.$data.isArg and @oldEditValue and @oldEditValue != n.value
           n.setValue(n.value)
 
@@ -245,15 +251,15 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     paste: (n) ->
 
-    doRender: (n) ->
+    render: (n) ->
       cc = n.getComponent()
-      if cc
-        cc.doRender(n)
+      if cc and cc.hasRenderCode()
+        cc.render(n)
 
       for nn in n.children()
         cc = nn.getComponent()
-        if cc
-          cc.doRender(n)
+        if cc and cc.hasRenderCode()
+          cc.render(n)
 
 #    save: (n, cb) ->
 #
@@ -343,6 +349,68 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
   ($scope, Rest, Editor, EditorNode, globals, dynForm, dynModal, $rootScope, $timeout) ->
 
+    $scope.treeOptions =
+      accept: (sourceNodeScope, destNodesScope, destIndex) ->
+        ok = false
+        sn = sourceNodeScope.$modelValue
+        dn = destNodesScope.$modelValue
+        if destNodesScope.$nodeScope
+          dn = destNodesScope.$nodeScope.$modelValue
+        else if Editor.module
+          dn = Editor.module.getRoot()
+        else
+          dn = null
+        if sn and dn
+          if sn.$data and sn.$data.isComponent
+            ok = dn.canAdd(sn, true)
+          else if sn.$data and sn.$data.isNode
+            ok = sn.canMove(dn, true)
+#        console.log sourceNodeScope, sn, destNodesScope, dn, destIndex, ok
+        return ok
+
+      dropped: (e) ->
+        sourceIndex = e.source.index
+        destIndex = e.dest.index
+        n = e.source.nodeScope.$modelValue
+        if e.source.nodesScope.$nodeScope
+          psn = e.source.nodesScope.$nodeScope.$modelValue
+        else
+          psn = Editor.module.getRoot()
+        if e.dest.nodesScope.$nodeScope
+          pdn = e.dest.nodesScope.$nodeScope.$modelValue
+        else
+          pdn = Editor.module.getRoot()
+        if psn != pdn or sourceIndex != destIndex
+          psn.setModified(true)
+          n.setModified(true)
+        Editor.dragging = null
+
+      dragStart: (e) ->
+        sourceNodeScope = e.source.nodeScope
+        Editor.dragging = sourceNodeScope.$modelValue
+
+      dragStop: (e) ->
+        Editor.dragging = null
+
+#      dragMove: (e) ->
+#        sourceNodeScope = e.source.nodeScope
+#        destNodesScope = e.dest.nodesScope
+#        destIndex = e.dest.index
+#        sn = sourceNodeScope.$modelValue
+#        dn = destNodesScope.$modelValue
+#        n = if dn then dn[destIndex] else null
+#        if sn != n and n != $scope.prevDragOver
+#          console.log n
+#          $scope.prevDragOverTime = Date.now()
+#          $scope.prevDragOver = n
+#        if n and n.$data and n.$data.isNode and n.isClosed()
+#          t = Date.now()
+#          console.log t - $scope.prevDragOverTime
+#          if n == $scope.prevDragOver and t >= $scope.prevDragOverTime + 1000
+#            n.open()
+
+    $scope.tinycolor = window.tinycolor
+
     $scope.module = () ->
       EditorNode.module()
 
@@ -378,6 +446,9 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.attributesElement = (n) ->
       EditorNode.attributesElement(n)
+
+    $scope.inputElement = (n) ->
+      EditorNode.inputElement(n)
 
     $scope.canEdit = (n) ->
       EditorNode.canEdit(n)
@@ -415,20 +486,36 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.refresh = (selected) ->
       EditorNode.refresh(selected)
 
+    $scope.schema = (cb) ->
+      planes = new Rest('Planes')
+      planes.create({'FlightNo': '1'}, false, (p, err) ->
+        console.log p, err
+        planes.create({'FlightNo': '2'}, false, (p, err) ->
+          console.log p, err
+          planes.create({'FlightNo': '3'}, false, (p, err) ->
+            console.log p, err
+            planes.fetch({perPage: 10}, (result, err) ->
+              console.log result, err
+              for p in planes.rows
+                console.log p
+            )
+          )
+        )
+      )
+
     $scope.toggle = (n, recursive) ->
-#      console.log $(".nodes-tree")
       n.toggle(recursive)
 
-    #    $scope.save = (cb) ->
-    #      require(['async'], (async) ->
-    #        async.eachSeries(Node.rows, (row, callback) ->
-    #          EditorNode.save(row, (ok) ->
-    #            callback()
-    #          )
-    #        , (err) ->
-    #          cb(err) if cb
-    #        )
-    #      )
+    $scope.save = (cb) ->
+      Editor.module.saveLocally((ok) ->
+        if ok
+          require(['vc_global', 'vc_module'], (VCGlobal, VCModule) ->
+            VCGlobal.modules.update(Editor.module, (result, err) ->
+              if !err
+                VCModule.make(result)
+            )
+          )
+      )
 
     $scope.alert = (cb) ->
       dynModal.alert("This is an alert!", () ->
@@ -479,14 +566,41 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
 ])
 
+.controller('EditorNodeEditCtrl', [
+  '$scope'
+
+  ($scope) ->
+
+    $scope.$watch('n.name', (newValue, oldValue) ->
+      if newValue != oldValue
+        $scope.n.setName(newValue)
+    )
+
+])
+
+.controller('EditorNodeArgEditCtrl', [
+  '$scope'
+
+  ($scope) ->
+
+    $scope.$watch('a.value', (newValue, oldValue) ->
+      if newValue != oldValue
+        if type(newValue) is 'array' and newValue.length == 1
+          newValue = newValue[0]
+        if type(newValue) is 'array'
+          newValue = null
+        $scope.a.setValue(newValue)
+    )
+
+])
+
 .directive('renderNode', [
   '$parse'
 
   ($parse) ->
     restrict: 'A'
-
     link: (scope, element, attrs) ->
       n = $parse(attrs.renderNode)(scope)
-      if n
-        n.doRender()
+      if n and n.hasRenderCode()
+        n.render()
 ])

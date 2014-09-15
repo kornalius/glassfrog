@@ -42,16 +42,21 @@ NodeClass =
     n.getName = () ->
       if @isLink()
         n = @getLink()
-        if n and n.name
-          return n.name.toLowerCase()
+        if n
+          return n.getName()
       return (if @name then @name.toLowerCase() else "")
 
     n.setName = (name) ->
-      if name and @kindOf('Object')
-        name = _.str.classify(name)
-      if !@isLink() and (@name != name or !name)
-        @name = name
-        @setModified(true)
+      if name and name.$data?
+        @setLink(name)
+      else if name and type(name) is 'string' and name.match(/^[0-9a-fA-F]{24}$/)
+        @setLink(name)
+      else
+        if @name != name
+          if @isLink()
+            @setLink(null)
+          @name = name
+          @setModified(true)
 
     n.isObject = () ->
       cc = @getComponent()
@@ -84,8 +89,8 @@ NodeClass =
     n.getDesc = () ->
       if @isLink()
         n = @getLink()
-        if n and n.desc
-          return n.desc
+        if n
+          return n.getDesc()
       return (if @desc then @desc else "")
 
     n.order = () ->
@@ -165,19 +170,31 @@ NodeClass =
         @$data._component = c
         @component = c.name
         @setModified(true)
-        if c.hasDefaults()?
-          l = []
-          for d in c.getDefaults()
-            l.push(NodeClass.VCGlobal.findComponent(d))
-          @addComponents(l)
+        c.setDefaults(@)
 
     n.hasData = () ->
       return @hasOwnProperty('$data')
-  
+
     n.clearData = () ->
       if @hasData()
         delete @$data
-  
+
+    n.plainObject = () ->
+      o = {}
+
+      for k of @
+        if type(@[k]) != 'function' and k != 'nodes' and k != '$data' and k != '$$hashKey'
+          o[k] = _.cloneDeep(@[k])
+
+      console.log "plainObject()", @, o
+
+      if @nodes
+        o.nodes = []
+        for n in @nodes
+          o.nodes.push(n.plainObject())
+
+      return o
+
     n.hasOption = (s) ->
       if @options?
         @options.indexOf(s) > -1
@@ -189,11 +206,14 @@ NodeClass =
       if s
         setTimeout(->
           s.$apply()
-        , 1)
+        )
 
     n.addOption = (s) ->
       if !@hasOption(s)
-        @options += s
+        if !@options?
+          @options = s
+        else
+          @options += s
         @setModified(true)
         @refreshScope()
 
@@ -237,8 +257,18 @@ NodeClass =
     n.canModify = () ->
       !@isSystem() and !@isShared()
 
-    n.element = () ->
-      e = angular.element('#node-element-id_' + @id())
+    n.domName = (type) ->
+      if !type?
+        type = 'element'
+      'node-' + type + '_' + @getName()
+
+    n.domId = (type) ->
+      if !type?
+        type = 'element'
+      'node-' + type + '-id_' + @id()
+
+    n.element = (type) ->
+      e = angular.element('#' + @domId(type))
       if e and e.length
         return e
       else
@@ -259,13 +289,21 @@ NodeClass =
 
     n.open = (recursive) ->
       @addState('o')
+      s = @scope()
+      if s
+        s.expand()
       if recursive
-        @foreachChild((n) -> n.open(true))
+        @foreachChild((n) ->
+          n.open(true))
 
     n.close = (recursive) ->
       @delState('o')
+      s = @scope()
+      if s
+        s.collapse()
       if recursive
-        @foreachChild((n) -> n.close(true))
+        @foreachChild((n) ->
+          n.close(true))
 
     n.toggle = (recursive) ->
       if @isOpened()
@@ -279,14 +317,15 @@ NodeClass =
     n.setModified = (b) ->
       if b
         @addState('m')
-        @$data._module.doGenerate(true)
-        @$data._module.doGenerate(false)
+        for n in @ancestors()
+          n.addState('m')
+        @module().setModified(true)
       else
         @delState('m')
 
     n.isNew = () ->
       @hasState('n')
-  
+
     n.setNew = (b) ->
       if b
         @addState('n')
@@ -297,7 +336,7 @@ NodeClass =
 
     n.isDeleted = () ->
       @hasState('d')
-  
+
     n.setDeleted = (b) ->
       if b
         @addState('d')
@@ -306,17 +345,18 @@ NodeClass =
         @delState('d')
         @setModified(true)
 
+    n.className = () ->
+      return @varName().camelize(true)
+
     n.varName = () ->
-      if @$data and @$data._varName
-        return @$data._varName
-      else
-        vn = @name
-        if @isLink()
-          n = @getLink()
-          if n
-            vn = n.varName()
-        @$data._varName = _.str.classify(vn)
-        return vn
+      vn = @name
+      if @isLink()
+        n = @getLink()
+        if n
+          vn = n.varName()
+      if !vn
+        vn = n.displayName()
+      return vn.camelize()
 
     n.displayName = () ->
       if @name
@@ -334,10 +374,10 @@ NodeClass =
           return cc.displayName()
         else
           return "Untitled"
-  
+
     n.isLink = () ->
       @hasOption('l')
-  
+
     n.getLink = () ->
       if @isLink()
         if @$data and !@$data._link and @name
@@ -365,7 +405,7 @@ NodeClass =
           return true
         else
           return false
-  
+
     n.isRoot = () ->
       @getRoot() == @
 
@@ -382,7 +422,7 @@ NodeClass =
             break
           p = p.getParent()
       return p
-  
+
     n.hasChildren = (onlyStatement) ->
       if onlyStatement?
         return @children(false, true).length
@@ -398,30 +438,57 @@ NodeClass =
           if recursive
             l = l.concat(nn.children(true, onlyStatement))
       return l
-  
+
     n.setChildren = (nodes) ->
       @nodes = []
 
       if nodes
         if typeof nodes is 'string'
-          @nodes = JSON.parse(nodes)
+          try
+            @nodes = JSON.parse(nodes)
+          catch e
+            console.log "Error parsing JSON data", e
           @setModified(true)
           p = @getParent()
           NodeClass.make(@, p, p.module())
         else
-          @nodes = JSON.stringify(nodes)
+          try
+            @nodes = JSON.stringify(nodes)
+          catch e
+            console.log "Error stringifying JSON data", e
           @setModified(true)
           p = @getParent()
           NodeClass.make(@, p, p.module())
 
     n.childrenOfKind = (name, recursive) ->
       c = []
-      l = @children(recursive)
-      for n in l
+      for n in @children(recursive)
         if name == '*' or n.kindOf(name)
           c.push(n)
       return c
-  
+
+    n.childrenAsLinks = (recursive) ->
+      c = []
+      for n in @children(recursive)
+        args = n.getArgs()
+        for k of args
+          if args[k].isLink()
+            c.push(args[k])
+        if n.isLink()
+          c.push(n)
+      return c
+
+    n.linkedModules = (recursive) ->
+      m = []
+      for n in @childrenAsLinks(recursive)
+        if n.$data? and n.$data.isArg
+          nn = n.getNode()
+        else
+          nn = n
+        if nn and m.indexOf(nn.module()) == -1
+          m.push(nn.module())
+      return m
+
     n.ancestors = (hideRoot) ->
       r = @$data._module.getRoot()
       a = []
@@ -431,7 +498,7 @@ NodeClass =
           a.unshift(p)
         p = p.getParent()
       return a
-  
+
     n.siblings = () ->
       if @hasParent()
         return @getParent().nodes
@@ -457,13 +524,15 @@ NodeClass =
         l = []
         if !@$data._module.isEditing()
           l = [@$data._module.displayName()]
-        return l.concat(@ancestors(true).map((nn) -> nn.displayName())).join('.')
+        return l.concat(@ancestors(true).map((nn) ->
+          nn.displayName())).join('.')
       else
-        return [@$data._module.id()].concat(@ancestors().map((nn) -> nn.id())).join('#')
-  
+        return [@$data._module.id()].concat(@ancestors().map((nn) ->
+          nn.id())).join('#')
+
     n.level = () ->
       @ancestors().length
-  
+
     n.getIcon = () ->
       if @isLink()
         n = @getLink()
@@ -477,7 +546,7 @@ NodeClass =
           return cc.getIcon()
         else
           return null
-  
+
     n.getColor = () ->
       if @isLink()
         n = @getLink()
@@ -494,45 +563,68 @@ NodeClass =
 
     n.kindOf = (name) ->
       cc = @getComponent()
-      return cc and cc.kindOf(name)
-  
+      if cc then cc.kindOf(name) else false
+
     n.code = (name) ->
       cc = @getComponent()
       if cc
         return cc.code(name)
       else
         return null
-  
+
     n.hasCode = (name) ->
-      @code(name) != null
+      cc = @getComponent()
+      if cc
+        return cc.hasCode(name)
+      else
+        return false
 
-    n.string = () ->
-      @code("string")
+    n.hasClientCode = () ->
+      cc = @getComponent()
+      if cc
+        return cc.hasClientCode()
+      else
+        return false
 
-    n.hasString = () ->
-      @string() != null
+    n.clientCode = () ->
+      cc = @getComponent()
+      if cc
+        return cc.clientCode()
+      else
+        return null
 
-    n.render = () ->
+    n.hasServerCode = () ->
+      cc = @getComponent()
+      if cc
+        return cc.hasServerCode()
+      else
+        return false
+
+    n.serverCode = () ->
+      cc = @getComponent()
+      if cc
+        return cc.serverCode()
+      else
+        return null
+
+    n.renderCode = () ->
       @code("render")
 
-    n.hasRender = () ->
-      @render() != null
+    n.hasRenderCode = () ->
+      @renderCode() != null
 
-    n.doRender = () ->
+    n.render = () ->
       cc = @getComponent()
       if cc
-        cc.doRender(@)
+        cc.render(@)
+      p = @getParent()
+      if p
+        p.render()
 
-    n.generate = () ->
-      @code("generate")
-
-    n.hasGenerate = () ->
-      @generate() != null
-
-    n.doGenerate = (client) ->
+    n.generateCode = (client, user) ->
       cc = @getComponent()
       if cc
-        return cc.doGenerate(@, client)
+        return cc.generateCode(@, client, user)
       else
         return ""
 
@@ -541,6 +633,20 @@ NodeClass =
 
     n.getArg = (name) ->
       return @getArgs()[name]
+
+    n.getArgValue = (name) ->
+      a = @getArg(name)
+      if a
+        return a.getValue()
+      else
+        return null
+
+    n.getArgValueOrDefault = (name) ->
+      a = @getArg(name)
+      if a
+        return a.getValueOrDefault()
+      else
+        return null
 
     n.setArg = (name, value) ->
       a = @getArg(name)
@@ -552,7 +658,6 @@ NodeClass =
           a = { name: name, component: d.getComponent().getName() }
           NodeClass.VCArg.setData(name, a, @)
           a.setValue(value)
-          @setModified(true)
 
     n.getArgDef = (name) ->
       cc = @getComponent()
@@ -571,49 +676,46 @@ NodeClass =
           cargs = c.getArgs()
           for k of cargs
             ca = cargs[k]
-            if @args and @args[k]
+            if @args and @args[k]?
               v = @args[k]
             else
               v = ca.getDefault()
             a = {}
             NodeClass.VCArg.setData(k, a, @)
-            a.value = v
+            if v?
+              a.value = v
             na[k] = a
         if @$data
           @$data._args = na
         return na
 
-    n.argToString = (a) ->
+    n.argToString = (a, client, user) ->
       if type(a) is 'string'
         a = @getArg(a)
       if a
-        return a.codeValue()
+        v = a.codeValue(client, user)
+        if !v?
+          v = a.getValueOrDefault()
+        if !v?
+          v = ''
+        return v
       else
-        return ""
+        return ''
 
-    n.argsToString = () ->
+    n.argsToString = (user) ->
       d = []
       for a in @argsToArray()
-        d.push(@argToString(a))
+        s = @argToString(a, user)
+        if s?
+          d.push(s)
       return d.join(', ')
 
     n.argsToArray = () ->
       d = []
-      for k of @getArgs()
-        d.push(@getArgs()[k])
+      aa = @getArgs()
+      for k of aa
+        d.push(aa[k])
       return d
-
-    n.hasRun = () ->
-      @run() != null
-
-    n.doRun = (client, args, cb) ->
-      cc = @getComponent()
-      if cc
-        cc.doRun(@, client, args, (r) ->
-          cb(r)
-        )
-      else
-        cb(null)
 
     n.flatOrder = () ->
       if @hasParent()
@@ -626,14 +728,14 @@ NodeClass =
         c = '0'
       s = p + c
       return s
-  
+
     n.canAdd = (c, child) ->
       if !child and @getParent()
         n = @getParent()
       else
         n = @
       nc = n.getComponent()
-      return nc and nc.doAccept(n, c)
+      if nc then nc.doAccept(n, c) else false
 
     n.add = (name, c, child, args) ->
       c = NodeClass.VCGlobal.findComponent(c)
@@ -642,7 +744,7 @@ NodeClass =
           p = @getParent()
         else
           p = @
-        return c.add(name, n.module(), p, args)
+        return c.add(name, p, n.module(), args)
 
     n.remove = () ->
       if @canModify()
@@ -680,7 +782,7 @@ NodeClass =
 
     n.canMoveUp = () ->
       !@prev()
-  
+
     n.moveUp = () ->
       p = @prev()
       if p
@@ -690,7 +792,7 @@ NodeClass =
 
     n.canMoveDown = () ->
       !@next()
-  
+
     n.moveDown = () ->
       p = @next()
       if p
@@ -698,14 +800,17 @@ NodeClass =
         p.setOrder(o.order())
         @setOrder(po)
 
-    n.canMove = (d, child) ->
-      if !child and @getParent()
-        n = @getParent()
+    n.canMove = (dst, child) ->
+      if child
+        d = dst
       else
-        n = @
-      cc = n.getComponent()
-      return cc and cc.doAccept(n, d.getComponent())
-  
+        d = dst.getParent()
+      if d != @getParent()
+        cc = n.getComponent()
+        return (if cc then cc.doAccept(@, dst.getComponent(), true) else false)
+      else
+        return true
+
     n.move = (dst, order) ->
       @setParent(dst)
       @setOrder(order)
@@ -715,7 +820,7 @@ NodeClass =
         c = NodeClass.VCGlobal.findComponent(c)
         if c
           @add(c.name, c)
-  
+
     n.hasParentIcons = () ->
       for cn in @children()
         cc = cn.getComponent()
@@ -794,3 +899,4 @@ else
   NodeClass.VCGlobal = require("./vc_global")
   NodeClass.VCArg = require("./vc_arg")
   module.exports = NodeClass
+  return NodeClass

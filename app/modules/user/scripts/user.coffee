@@ -1,4 +1,4 @@
-angular.module('user', ['user.profile', 'user.info'])
+angular.module('user', ['user.profile', 'user.invoices', 'user.info'])
 
 .config([
   '$stateProvider'
@@ -18,7 +18,8 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user',
       url: '/user'
       parent: 'user_root'
-      hidden: true
+      navbarHidden: true
+      sidebarHidden: true
       data:
         root: 'user'
         ncyBreadcrumbLabel: 'User'
@@ -32,7 +33,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.profile',
       url: '/profile'
       parent: 'user_root'
-      icon: 'user32'
+      icon: 'cic-user32'
       data:
         root: 'user'
         ncyBreadcrumbLabel: 'Profile'
@@ -47,7 +48,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.invoices',
       url: '/invoices'
       parent: 'user_root'
-      icon: 'cash'
+      icon: 'cic-cash'
       data:
         root: 'user'
         ncyBreadcrumbLabel: 'Invoices'
@@ -62,7 +63,7 @@ angular.module('user', ['user.profile', 'user.info'])
     .state('user.shares',
       url: '/shares'
       parent: 'user_root'
-      icon: 'share52'
+      icon: 'cic-share52'
       data:
         root: 'user'
         ncyBreadcrumbLabel: 'Shares'

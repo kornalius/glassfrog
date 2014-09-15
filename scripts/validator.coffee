@@ -144,19 +144,25 @@ vd =
     if assurance
       for r in rows
         for f in fields
-          assure = assurance.restart(r)
-          if assure
-            e = _validateField(assure, f)
-            if e
-              for ee in e
-                errors.push(
-                  idx: i
-                  field: f.fieldname
-                  value: r[f.fieldname]
-                  message: ee.message
-                  type: ee.type
-                )
-            assure.end()
+          if f.fieldname?
+            l = f.fieldname.split('.')
+            rr = r
+            for ff in l
+              assure = assurance.restart(rr)
+              if assure
+                nf =  _.extend({}, f, {fieldname: ff})
+                e = _validateField(assure, nf)
+                if e
+                  for ee in e
+                    errors.push(
+                      idx: i
+                      field: f.fieldname
+                      value: rr[ff]
+                      message: ee.message
+                      type: ee.type
+                    )
+                assure.end()
+              rr = rr[ff]
       i++
 
     return if errors.length then errors else null

@@ -156,8 +156,8 @@ app.get("/logout", (req, res) ->
 #  if l?
 #    l.log(l.LOG_LOGOUT, null, req.method, req)
   req.logout()
-  req.flash("info", "You have successfully logged out!")
   res.redirect("/")
+  req.flash("info", "You have successfully logged out!")
 )
 
 app.get("/forgot", (req, res) ->
@@ -176,30 +176,55 @@ app.get("/loggedin", (req, res) ->
 app.get('/api/user/can', (req, res) ->
   if _app.validUser(req) and req.params.action? and req.params.subject?
     req.user.can(req.params.action, req.params.subject, null, (ok) ->
-      res.send(200, if ok then "1" else "0")
+      res.send(if ok then [1] else [0])
     )
   else
-    res.send("0")
+    res.send(new Error(403))
 )
 
 app.get('/api/user/isadmin', (req, res) ->
-  res.send(if _app.validUser(req) and req.user.isAdmin() then [1] else [0])
+  if _app.validUser(req)
+    req.user.isAdmin((ok) ->
+      res.send(if ok then [1] else [0])
+    )
+  else
+    res.send(new Error(403))
 )
 
 app.get('/api/user/isactive', (req, res) ->
-  res.send(if _app.validUser(req) and req.user.isActive() then [1] else [0])
+  if _app.validUser(req)
+    req.user.isActive((ok) ->
+      res.send(if ok then [1] else [0])
+    )
+  else
+    res.send(new Error(403))
 )
 
 app.get('/api/user/isDisabled', (req, res) ->
-  res.send(if _app.validUser(req) and req.user.isDisabled() then [1] else [0])
+  if _app.validUser(req)
+    req.user.isDisabled((ok) ->
+      res.send(if ok then [1] else [0])
+    )
+  else
+    res.send(new Error(403))
 )
 
 app.get('/api/user/islockedout', (req, res) ->
-  res.send(if _app.validUser(req) and req.user.isLockedOut() then [1] else [0])
+  if _app.validUser(req)
+    req.user.isLockedOut((ok) ->
+      res.send(if ok then [1] else [0])
+    )
+  else
+    res.send(new Error(403))
 )
 
 app.get('/api/user/ispaidplan', (req, res) ->
-  res.send(if _app.validUser(req) and req.user.isPaidPlan() then [1] else [0])
+  if _app.validUser(req)
+    req.user.isPaidPlan((ok) ->
+      res.send(if ok then [1] else [0])
+    )
+  else
+    res.send(new Error(403))
 )
 
 app.get('/api/user/getdata', (req, res) ->
@@ -211,7 +236,7 @@ app.get('/api/user/getdata', (req, res) ->
         res.send([req.user.getData(req.params.key)])
     )
   else
-    res.send([0])
+    res.send(new Error(403))
 )
 
 app.get('/api/user/setdata', (req, res) ->
@@ -224,7 +249,7 @@ app.get('/api/user/setdata', (req, res) ->
         res.send([1])
     )
   else
-    res.send([0])
+    res.send(new Error(403))
 )
 
 secure.secureMethods(exports, {configurable: false})

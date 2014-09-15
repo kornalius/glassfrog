@@ -1,4 +1,4 @@
 // caption.html
 
 div(attributes="fields[{%fieldIndex%}]")
-  span(name="{{fields[{%fieldIndex%}].domName('label', $index)}}") {{fields[{%fieldIndex%}].fieldname ? row[fn] : fields[{%fieldIndex%}].value}}
+  span(name="{{fields[{%fieldIndex%}].domName('label', $index)}}") {{fields[{%fieldIndex%}].fieldname ? row.{%fieldName%} : fields[{%fieldIndex%}].value}}

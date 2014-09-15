@@ -1,0 +1,117 @@
+@import "/bower_components/bootstrap/less/variables.less";
+@import "/bower_components/bootstrap/less/mixins.less";
+
+@repository-color: @control-color;
+@repository-width: 400px;
+@repository-height: 100px;
+
+.repository-card-container {
+}
+
+.repository-card {
+  width: @repository-width;
+  min-width: @repository-width;
+  max-width: @repository-width;
+  min-height: @repository-height;
+  height: @repository-height;
+  min-height: @repository-height;
+  max-height: @repository-height;
+  background: @repository-color;
+  cursor: default !important;
+  border-radius: @border-radius-base;
+  box-shadow: 2px 2px 5px rgba(80, 80, 80, 0.25);
+  margin: 8px;
+}
+
+.repository-color {
+  border-radius: @border-radius-base 0px 0px @border-radius-base;
+  width: 10px;
+  min-width: 10px;
+  max-width: 10px;
+}
+
+.repository-icon-col {
+  text-align: center;
+  width: 40px;
+  max-width: 40px;
+  padding: 8px 4px 4px 8px;
+}
+
+.repository-icon {
+  vertical-align: middle;
+  color: @icon-color;
+  font-size: x-large;
+}
+
+.repository-label-col {
+  vertical-align: middle;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 8px 8px 4px 4px;
+}
+
+.repository-label {
+  font-size: small;
+  font-weight: bold;
+  color: @text-color;
+}
+
+.repository-version-col {
+  vertical-align: middle;
+  padding: 4px 8px 4px 8px;
+}
+
+.repository-version {
+  font-size: small;
+  color: @info-text-color;
+}
+
+.repository-date-col {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  padding: 4px 8px 4px 8px;
+  text-align: right;
+}
+
+.repository-date {
+  font-size: x-small;
+  color: @info-text-color;
+}
+
+.repository-desc-col {
+  vertical-align: middle;
+  padding: 4px 8px 4px 8px;
+}
+
+.repository-desc {
+  font-size: small;
+  font-style: italic;
+  color: @blue-color;
+}
+
+.repository-creator-col {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 170px;
+  min-width: 170px;
+  width: 170px;
+  vertical-align: middle;
+  padding: 4px 8px 8px 8px;
+}
+
+.repository-creator {
+  font-size: small;
+  color: @icon-color;
+}
+
+.repository-button-col {
+  vertical-align: middle;
+  padding: 4px 8px 8px 8px;
+}
+
+.repository-button {
+}

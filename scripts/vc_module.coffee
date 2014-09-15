@@ -1,3 +1,23 @@
+Handlebars.registerHelper('generate_nodes', (o, client, user, componentType, delimiter) ->
+  if !delimiter?
+    delimiter = '\n'
+  if o.$data?.isModule
+    r = o.getRoot()
+  else
+    r = o
+  if componentType == '*'
+    nodes = r.children()
+  else
+    nodes = r.childrenOfKind(componentType.split(','))
+  d = []
+  for n in nodes
+    s = n.generateCode(client, user)
+    if s and s.length
+      d.push(s)
+  return new Handlebars.SafeString(d.join(delimiter))
+)
+
+
 ModuleClass =
 
 #  @name
@@ -13,6 +33,7 @@ ModuleClass =
   VCGlobal: null
   VCNode: null
   VersionClass: null
+  async: null
 
   setData: (m) ->
     if m.clearData
@@ -23,10 +44,14 @@ ModuleClass =
     m.$data._json = {}
     m.$data.isModule = true
     m.$data._syntax = null
+    m.prevGenerate = null
 
     if m.extra
       if typeof m.extra is 'string'
-        m.$data._json = JSON.parse(m.extra)
+        try
+          m.$data._json = JSON.parse(m.extra)
+        catch e
+          console.log "Error parsing JSON data", e
       else
         m.$data._json = _.cloneDeep(m.extra)
 
@@ -77,7 +102,18 @@ ModuleClass =
       if typeof e is 'string'
         @extra = e
       else
-        @extra = JSON.stringify(e)
+        ne = {}
+        if e.options?
+          ne.options = e.options
+        if e.root?
+          if e.root.plainObject?
+            ne.root = e.root.plainObject()
+          else
+            ne.root = e.root
+        try
+          @extra = JSON.stringify(ne)
+        catch e
+          console.log "Error stringifying JSON data", e
 
     m.hasShare = () ->
       @share
@@ -131,27 +167,67 @@ ModuleClass =
       @hasState('e')
 
     m.isModified = () ->
-      for n in @getNodes(true)
-        if n.isModified()
-          return true
-      return false
+      @hasState('m')
 
     m.setModified = (b) ->
       if b
-        @getRoot().setModified(true)
+        @addState('m')
+
+#        if window?
+#          if @$data.prevGenerate
+#            window.clearTimeout(@$data.prevGenerate)
+#            delete @$data.prevGenerate
+#            @$data.prevGenerate = null
+#
+#          that = @
+#          @$data.prevGenerate = window.setTimeout(->
+#            that.generateCode(true)
+#            delete that.$data.prevGenerate
+#            that.$data.prevGenerate = null
+#          , 1000)
+
       else
-        @getRoot().setModified(false)
+        @delState('m')
         @getRoot().foreachChild((n) ->
-          n.setModified(false)
+          n.delState('m')
         , true)
+
+    m.setConfigNode = (cb) ->
       if @$data
-        @extra = JSON.stringify(@$data._json)
+        c = @getRoot().childrenOfKind(['Module.Config'])
+        if c and c.length
+          c = c[0]
+          that = @
+          require(['VersionClass'], (VersionClass) ->
+#            console.log "setConfigNode()", mod, c, c.name
+            c.name = that.name
+            c.getArg('icon').value = that.icon
+            c.getArg('desc').value = that.desc
+            c.getArg('version').value = (new VersionClass(that.version)).versionString()
+            cb() if cb
+          )
+        else
+          cb() if cb
+
+    m.setConfig = () ->
+      if @$data
+        c = @getRoot().childrenOfKind(['Module.Config'])
+        if c and c.length
+          c = c[0]
+          that = @
+          require(['VersionClass'], (VersionClass) ->
+#            console.log "setConfig()", c, c.name
+            that.name = c.name
+            that.icon = c.getArg('icon').getValueOrDefault()
+            that.desc = c.getArg('desc').getValueOrDefault()
+            that.version = new VersionClass(c.getArg('version').getValueOrDefault())
+          )
 
     m.getIcon = () ->
       if @icon
         return @icon
       else
-        return 'ruler3'
+        return 'cic-ruler3'
 
     m.getColor = () ->
       if @color
@@ -162,12 +238,28 @@ ModuleClass =
     m.versionString = () ->
       new ModuleClass.VersionClass(@version).versionString()
 
+    m.setVersion = (str) ->
+      that = @
+      require(['VersionClass'], (VersionClass) ->
+        that.version = new VersionClass(str)
+      )
+
     m.foreachNode = (f, recursive) ->
       for c in @getNodes(recursive)
         f(c)
 
-    m.element = () ->
-      e = angular.element('#module-element-id_' + @id())
+    m.domName = (type) ->
+      if !type?
+        type = 'element'
+      'module-' + type + '_' + @getName()
+
+    m.domId = (type) ->
+      if !type?
+        type = 'element'
+      'module-' + type + '-id_' + @id()
+
+    m.element = (type) ->
+      e = angular.element('#' + @domId(type))
       if e and e.length
         return e
       else
@@ -180,39 +272,74 @@ ModuleClass =
         return scope
       return null
 
-    m.doGenerate = (client) ->
-      syntax = null
+    m.schemas = () ->
+      @getRoot().childrenOfKind('Schema')
+
+    m.routes = () ->
+      @getRoot().childrenOfKind('Route')
+
+    m.resolveModules = () ->
+      l = []
       r = @getRoot()
       if r
-        s = ""
-        for n in r.children()
-          ss = n.doGenerate(client)
-          if !ss.endsWith('\n')
-            ss += '\n'
-          s += ss
-        syntax = ModuleClass.VCGlobal.checkSyntax(s)
-        if !@$data._syntax
-          @$data._syntax = { client: null, server: null }
-        if client
-          @$data._syntax.client = syntax
+        links = r.childrenAsLinks()
+        for n in links
+          m = n.module()
+          if m and l.indexOf(m) == -1
+            l.push(m)
+      return l
+
+    m.generateCode = (client, user) ->
+      s = "'use strict';\n\n"
+
+      r = @getRoot()
+      if r
+        ss = r.generateCode(client, user)
+        if !ss.endsWith('\n')
+          ss += '\n'
+        s += ss
+
+      return ModuleClass.handleSyntax(s)
+
+    m.edit = (cb) ->
+      that = @
+      ModuleClass.async.eachSeries(ModuleClass.VCGlobal.modules.rows, (mm, callback) ->
+        mm.saveLocally((ok) ->
+          callback((if ok then null else true))
+        )
+      , (err) ->
+        if !err
+          mod = that.isModified()
+          that.addState('e')
+          if window?
+            window.setTimeout( ->
+              that.setConfigNode(->
+                that.setModified(mod)
+                cb(true) if cb
+              )
+            , 100)
         else
-          @$data._syntax.server = syntax
-#      console.log "module generate", syntax
+          cb(false) if cb
+      )
 
-      lines = syntax.code.split('\n')
-      for i in [0..lines.length - 1]
-        console.log i + 1, lines[i]
+    m.plainObject = () ->
+      o = {}
+      for k of @
+        if type(@[k]) is not 'function' and k != '$data'
+          o[k] = _.cloneDeep(@[k])
+      return o
 
-      if syntax.error
-        console.log "ERROR:", syntax.error
-        if syntax.error.loc
-          console.log lines[syntax.error.loc.line - 1]
-          ss = ""
-          for i in [0..syntax.error.loc.column - 1]
-            ss += ' '
-          console.log ss + '^'
+    m.saveLocally = (cb) ->
+      if @isEditing() and @isModified()
+        @delState('e')
+        @setConfig()
+        @setModified(false)
+        @setExtra(
+          root: (if @getRoot() then @getRoot().plainObject() else {})
+          options: (if @$data and @$data._json.options? then @$data._json.options else '')
+        )
+      cb(true) if cb
 
-      return syntax
 
   make: (m) ->
     @setData(m)
@@ -251,17 +378,78 @@ ModuleClass =
       return scope
     return null
 
+  handleSyntax: (s) ->
+    syntax = null
+
+    codeStr = js_beautify(s, {indent_size: 2})
+    syntax = @VCGlobal.checkSyntax(codeStr)
+#    if !@$data._syntax
+#      @$data._syntax = { client: null, server: null }
+#    if client
+#      @$data._syntax.client = syntax
+#    else
+#      @$data._syntax.server = syntax
+
+    lines = syntax.code.split('\n')
+    for i in [0..lines.length - 1]
+      console.log i + 1, lines[i]
+
+    if syntax.error
+
+      ll = []
+      if syntax.error.loc
+        min = Math.max(0, syntax.error.loc.line - 5)
+        for l in [min..syntax.error.loc.line - 1]
+          ll.push(_.str.lpad('{0}'.format(l), 4) + '. ' + lines[l])
+        ss = _.str.pad("", syntax.error.loc.column + 6) + '^'
+      else
+        ss = null
+
+      console.log ''
+      console.log "SYNTAX ERROR:", syntax.error
+      console.log ll.join('\n')
+      if ss
+        console.log ss
+      console.log ''
+
+      if window? and PNotify
+        notice = new PNotify(
+          title: 'Syntax Error'
+          text: '<pre style="background: none; border: none">' + ll.join('\n') + '\n' + ss + '\n<span class="label-danger", style="color: white;">' + syntax.error + '</span></pre>'
+          icon: 'cic cic-spam3'
+          type: 'error'
+          hide: false
+          width: "500px"
+          buttons:
+            sticker: false
+        )
+#            notice.get().click(->
+#              notice.remove()
+#            )
+    return syntax
+
+#  evalCode: (code) ->
+#    r = null
+#    try
+#      r = eval(code)
+#    catch e
+#      console.log "Eval error", e
+#    return r
+
 
 if define?
-  define('vc_module', ['vc_global', 'vc_node', 'VersionClass'], (gd, nd, vd) ->
+  define('vc_module', ['vc_global', 'vc_node', 'VersionClass', 'async'], (gd, nd, vd, ad) ->
 #    require(['vc_global', 'vc_node', 'VersionClass'], (gd, nd, vd) ->
     ModuleClass.VCGlobal = gd
     ModuleClass.VCNode = nd
     ModuleClass.VersionClass = vd
+    ModuleClass.async = ad
     return ModuleClass
   )
 else
   ModuleClass.VCGlobal = require('./vc_global')
   ModuleClass.VCNode = require("./vc_node")
   ModuleClass.VersionClass = require("./version")
+  ModuleClass.async = require("async")
   module.exports = ModuleClass
+  return ModuleClass

@@ -11,8 +11,9 @@ angular.module('app.controllers', ['app.globals', 'webStorageModule'])
   '$rootScope'
   'Globals'
   'webStorage'
+  'amMoment'
 
-($scope, $location, $resource, $rootScope, Globals, webStorage) ->
+($scope, $location, $resource, $rootScope, Globals, webStorage, amMoment) ->
 
   if webStorage.isSupported
     webStorage.prefix('gf_')
@@ -21,6 +22,7 @@ angular.module('app.controllers', ['app.globals', 'webStorageModule'])
     webStorage.add('user', $scope.user, true)
 
   Globals.user = _.cloneDeep($scope.user)
+  amMoment.changeLocale($scope.user.locale)
 
   # Uses the url to determine if the selected
   # menu item should have the class active.

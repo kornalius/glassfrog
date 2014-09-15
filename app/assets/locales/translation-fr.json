@@ -8,6 +8,18 @@
     "view1": "page un",
     "view2": "page deux",
     "test": "teste",
-    "suggestions": "suggestions"
+    "suggestions": "suggestions",
+    "editor": "editeur",
+    "dashboard": "table de bord",
+    "module": "module",
+    "repository": {
+      "main": "dépôts",
+      "available": "modules disponibles",
+      "installed": "modules installés"
+    },
+    "user": {
+      "profile": "profile",
+      "invoices": "factures"
+    }
   }
 }

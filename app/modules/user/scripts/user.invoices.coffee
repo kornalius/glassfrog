@@ -1,6 +1,6 @@
-angular.module('user.shares', ['dynamicForm'])
+angular.module('user.invoices', ['dynamicForm'])
 
-.controller('UserSharesCtrl', [
+.controller('UserInvoicesCtrl', [
   '$scope'
   '$rootScope'
   'dynForm'
@@ -62,7 +62,7 @@ angular.module('user.shares', ['dynamicForm'])
         currency: true
       ]
 
-    dynForm.build($scope, userInvoicesForm, $scope.invoices, '#invoices')
+    dynForm.build($scope, invoicesTable, $scope.invoices, '#invoices')
   )
 
 ])

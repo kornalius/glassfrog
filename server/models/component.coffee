@@ -1,16 +1,14 @@
 app = require("../app")
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-Currency = require('mongoose-currency')
-Version = require('../mongoose_plugins/mongoose-version')()
 fs = require('fs');
 async = require('async')
 safejson = require('safejson')
 
-VCGlobal = require("../vc_global")
-Component = require("../vc_component")
-Node = require("../vc_node")
-Module = require("../vc_module")
+#VCGlobal = require("../vc_global")
+#Component = require("../vc_component")
+#Node = require("../vc_node")
+#Module = require("../vc_module")
 
 ComponentSchema = mongoose.Schema(
   name:
@@ -32,7 +30,7 @@ ComponentSchema = mongoose.Schema(
     readOnly: true
 
   version:
-    type: Version
+    type: mongooseVersion
     default: '0.1.0a'
     label: 'Version'
     readOnly: true
@@ -51,16 +49,16 @@ ComponentSchema.static(
       cb(c) if cb
     )
 
-  components: (cb) ->
-    console.log "Loading components..."
-    VCGlobal.components = {rows:[]}
-    mongoose.model('Component').find({}, (err, components) ->
-      VCGlobal.components.rows = components
-      for c in components
-        Component.make(c)
-      console.log "Loaded {0} components ({1})".format(components.length, VCGlobal.components.rows.length)
-      cb() if cb
-    )
+#  components: (cb) ->
+#    console.log "Loading components..."
+#    VCGlobal.components = {rows:[]}
+#    mongoose.model('Component').find({}, (err, components) ->
+#      VCGlobal.components.rows = components
+#      for c in components
+#        Component.make(c)
+#      console.log "Loaded {0} components ({1})".format(components.length, VCGlobal.components.rows.length)
+#      cb() if cb
+#    )
 
 #  components: (cb) ->
 #    if _components
@@ -83,15 +81,22 @@ setTimeout( ->
 
   data = data.concat(require('../components/root'))
   data = data.concat(require('../components/literal'))
-
-  data = data.concat(require('../components/schema'))
   data = data.concat(require('../components/statement'))
+
+  data = data.concat(require('../components/database'))
+  data = data.concat(require('../components/schema'))
+  data = data.concat(require('../components/field'))
   data = data.concat(require('../components/query'))
+
+  data = data.concat(require('../components/server'))
 
   data = data.concat(require('../components/ui/ui'))
   data = data.concat(require('../components/ui/control'))
   data = data.concat(require('../components/ui/menu'))
   data = data.concat(require('../components/ui/table'))
+  data = data.concat(require('../components/ui/dashboard'))
+  data = data.concat(require('../components/ui/chart'))
+
   data = data.concat(require('../components/ui/decorators/decorator'))
   data = data.concat(require('../components/ui/decorators/color'))
   data = data.concat(require('../components/ui/decorators/font'))
@@ -103,13 +108,29 @@ setTimeout( ->
       if f.extra.accepts
         naccepts = []
         for n in f.extra.accepts
-          ca = { parent: [], component: null}
-          ac = n.split(':')
-          if ac.length > 1
-            for i in [0..ac.length - 2]
-              if ac[i]
-                ca.parent.push(ac[i])
-            n = ac[ac.length - 1]
+          ca = { component: null, multi: false, unique: false, reject: false, strict: false, inherited: false }
+
+          if n.startsWith('!')
+            ca.reject = true
+            n = n.substr(1)
+
+          if n.startsWith('=')
+            ca.strict = true
+            n = n.substr(1)
+
+          if n.endsWith('+')
+            ca.multi = true
+            ca.unique = true
+            n = n.substr(0, n.length - 1)
+
+          if n.endsWith('+')
+            ca.unique = false
+            n = n.substr(0, n.length - 1)
+
+          if n == '@'
+            ca.inherited = true
+            n = ''
+
           ca.component = n
           naccepts.push(ca)
         f.extra.accepts = naccepts
@@ -143,6 +164,10 @@ setTimeout( ->
     )
 
     C.create(dd, (err) ->
+      if err
+        console.log err
+      VCGlobal = require('../vc_global')
+      VCGlobal.loadComponents()
     )
   )
 , 500)

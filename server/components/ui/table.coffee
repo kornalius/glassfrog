@@ -1,26 +1,37 @@
 module.exports = [
 
+  name: 'Tables'
+  desc: 'Table display'
+  extra:
+    category: 'Views'
+    options: 'c'
+    icon: 'cic-layout7'
+    color: 'lightpurple'
+,
+
   name: 'Table'
   desc: 'Table display'
   extra:
-    icon: 'table2'
+    category: 'Tables'
     inherit: 'Control'
-    accepts: ['Table.Column', 'Table.Header']
-,
-
-  name: 'Table.Header'
-  desc: 'Table header'
-  icon: 'tag8'
-  extra:
-    inherit: 'Control'
-    accepts: ['Icon', 'Label']
+    accepts: ['Table.Column+', 'Table.Row+', 'Table.Header']
+    icon: 'cic-layout7'
 ,
 
   name: 'Table.Column'
   desc: 'Table column'
   extra:
-    icon: 'columns'
+    category: 'Tables'
     inherit: 'Control'
-    accepts: ['Table.Column', 'FieldRef']
+    accepts: ['Table', 'Table.Column', 'Table.Row', 'Control+', 'ObjectRef+']
+    icon: 'cic-layout4'
+,
 
+  name: 'Table.Row'
+  desc: 'Table row'
+  extra:
+    category: 'Tables'
+    inherit: 'Control'
+    accepts: ['Table', 'Table.Column+']
+    icon: 'cic-layout5'
 ]

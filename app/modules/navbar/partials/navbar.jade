@@ -62,7 +62,7 @@
 
     ul.nav.navbar-nav.navbar-right(ng-cloak)
       li(ng-repeat="m in navs()", ui-sref-active="active")
-        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.hidden") {{"nav." + m.name | i18next}}
+        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.navbarHidden") {{"nav." + (m.altname ? m.altname : m.name) | i18next}}
 
 //form.navbar-form.navbar-right(role='search')
 //  .form-group

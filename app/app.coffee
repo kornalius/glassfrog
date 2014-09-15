@@ -16,6 +16,8 @@ moduleNames = [
   'suggestions'
   'user'
   'editor'
+  'dashboard'
+  'repository'
 ]
 
 modules = []
@@ -41,6 +43,7 @@ app = angular.module('app', [
   'ngResource'
   'ngAnimate'
   'ngSanitize'
+  'angularMoment'
 
   'webStorageModule'
 
@@ -49,6 +52,8 @@ app = angular.module('app', [
   'ui.filters'
 
   'ui.selectize'
+  'nvd3ChartDirectives'
+  'ui.dashboard'
 
   'pagination.services'
   'ncy-angular-breadcrumb'
@@ -63,6 +68,8 @@ app = angular.module('app', [
 
   'Datetimepicker'
   'angularSpectrumColorpicker'
+
+  'ui.tree'
 
 #  'ngDatatables'
 #  'ngBaseDataTables'
@@ -79,6 +86,8 @@ app = angular.module('app', [
 
   'switch.services'
   'twolist.services'
+  'checklistbox.services'
+  'iconpicker.services'
 
   'sidebar'
   'navbar'
@@ -112,6 +121,8 @@ app = angular.module('app', [
   ($rootScope, globals) ->
     globals.modules = modules
     $rootScope.globals = globals
+
+    Swag.registerHelpers(Handlebars)
 
 #    $rootScope.$on('$locationChangeSuccess', () ->
 #      console.log "$locationChangeSuccess"
@@ -161,4 +172,5 @@ app = angular.module('app', [
 #      template: 'bootstrap3'
       templateUrl: 'partials/breadcrumb.html'
     )
+
 ])

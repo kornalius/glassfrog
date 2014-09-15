@@ -1,7 +1,6 @@
 app = require("../app")
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-Version = require('../mongoose_plugins/mongoose-version')()
 ownable = require('mongoose-ownable')
 async = require('async')
 safejson = require('safejson')
@@ -40,7 +39,7 @@ ModuleSchema = mongoose.Schema(
     label: 'Extra Info'
 
   version:
-    type: Version
+    type: mongooseVersion
     default: '0.1.0a'
     label: 'Version'
 ,
@@ -51,6 +50,32 @@ ModuleSchema.plugin(timestamps)
 ModuleSchema.plugin(ownable)
 
 ModuleSchema.method(
+  sanitizedId: () ->
+    require('sanitize-filename')(@_id.toString())
+
+  modulePath: (user) ->
+    user.modulesPath() + '/' + @sanitizedId() + '.js'
+
+  isBuilt: (user) ->
+    require('fs').existsSync(@modulePath(user))
+
+  build: (syntax, user) ->
+    fs = require('fs')
+
+    mpath = app.modulesPath
+    if !fs.existsSync(mpath)
+      fs.mkdirSync(mpath)
+
+    upath = user.modulesPath()
+    if !fs.existsSync(upath)
+      fs.mkdirSync(upath)
+
+    path = @modulePath(user)
+    if fs.existsSync(path)
+      fs.unlinkSync(path)
+
+    if !syntax.error
+      fs.writeFileSync(path, syntax.code)
 )
 
 ModuleSchema.static(
@@ -61,51 +86,89 @@ ModuleSchema.static(
 
   modules: (user_id, cb) ->
     mongoose.model('User').findById(user_id, (err, user) ->
-      user.modules((modules) ->
-        VCGlobal.modules.rows = modules
-        for m in modules
-          Module.make(m)
-        cb(modules) if cb
-      )
+      if user
+        user.modules((modules) ->
+          cb(modules) if cb
+        )
     )
 
   allModules: (cb) ->
     mongoose.model('Module').find({}, (err, modules) ->
-      VCGlobal.modules.rows = modules
-      for m in modules
-        Module.make(m)
-      cb(modules) if cb
+      r = []
+      if modules
+        for m in modules
+          mm = m.toObject()
+          Module.make(mm)
+          r.push(mm)
+      VCGlobal.modules.rows = r
+      cb(r) if cb
     )
 )
 
 module.exports = mongoose.model('Module', ModuleSchema)
 
+module.exports.deleteBuiltModules = (user) ->
+  fs = require('fs')
+  path = user.modulesPath()
+  if fs.existsSync(path)
+    fs.readdirSync(path).forEach((file) ->
+      fs.unlinkSync(path + '/' + file)
+    )
+
+module.exports.rebuildModules = (user, cb) ->
+  VCModule = require("../vc_module")
+  @deleteBuiltModules(user)
+  user.modules(true, (modules) ->
+    done = []
+    for m in modules
+      mm = m.toObject()
+      VCModule.make(mm)
+      syntax = mm.generateCode(false, user)
+      m.build(syntax, user)
+      if !syntax.error
+        done.push(m)
+    cb(done) if cb
+  )
+
 setTimeout( ->
   data = [
     name: 'Travel Reservation'
     desc: 'Make flight reservations a breeze with this amazing module'
-    icon: 'airplane'
+    icon: 'cic-airplane'
     color: 'lightblue'
     extra:
       root:
         name: 'Root'
         component: 'root'
         nodes: [
+          name: 'Config'
+          component: 'Module.Config'
+        ,
           name: 'Plane'
           component: 'Schema'
           nodes: [
             name: 'FlightNo'
             component: 'Field'
             nodes: [
-              component: 'Text'
+              component: 'Field.Text'
             ,
-              component: 'Bold'
+              component: 'Font.Bold'
             ,
               component: 'LightBlue'
             ]
           ,
+            name: 'SeatNo'
+            component: 'Field'
+            nodes: [
+              component: 'Field.Percent'
+            ,
+              component: 'Field.Round'
+              args:
+                'round': 2
+            ]
+          ,
             name: 'myMethod'
-            component: 'Method'
+            component: 'Schema.Method'
             nodes: [
               name: 'alert'
               component: 'alert'
@@ -117,7 +180,7 @@ setTimeout( ->
   ,
     name: 'Briefcases organizer'
     desc: 'Organizes all your briefcases to fit the most heroin possible ;)'
-    icon: 'suitcase6'
+    icon: 'cic-suitcase6'
     color: 'darkorange'
     extra:
       root:
@@ -151,7 +214,7 @@ setTimeout( ->
 
     mongoose.model('User').find({}, (err, users) ->
       if users
-        owner = users[0]._id
+        owner = users[0]._id.toString()
 
         dd = data.map((d) ->
           f = _.clone(d)
@@ -171,6 +234,8 @@ setTimeout( ->
         )
 
         M.create(dd, (err) ->
+          if err
+            console.log err
         )
     )
   )

@@ -82,6 +82,8 @@ module.exports = ((schema, options) ->
   if options && options.index.mobile
     schema.path('mobile').index(options.index.mobile)
 
+  schema.set('toObject', {virtuals: true})
+
   schema.virtual('name.full')
     .get(->
       @name.first + ' ' + @name.last

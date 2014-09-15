@@ -2,21 +2,21 @@
   .container-fluid
     .row-fluid.row-toolbar-offcanvas.row-toolbar-offcanvas-left#editor-main
 
-      .col-sm-2.col-xs-1.components-offcanvas.pull-left#editor-components(ui-view="components")
+      .col-lg-2.col-md-3.col-sm-3.col-xs-3.pull-left#editor-components(ui-view="components")
 
-      .col-sm-8.col-xs-8#editor-content(ui-view="nodes")
+      .col-lg-8.col-md-6.col-sm-6.col-xs-6#editor-content(ui-view="nodes")
 
-      .col-sm-2.col-xs-3.pull-right#editor-modules(ui-view="modules")
+      .col-lg-2.col-md-3.col-sm-3.col-xs-3.pull-right#editor-modules(ui-view="modules")
 
 
 script.
   function resize_now() {
     var h = $(window).height();
-    var hh = h - 200;
+    var hh = h - 224;
     if ($('#editor-content-main').height() != hh) {
       $('#editor-content-main').height(hh);
     }
-    hh = h - 128;
+    hh = h - 152;
     if ($('#editor-components-list').height() != hh) {
       $('#editor-components-list').height(hh);
     }

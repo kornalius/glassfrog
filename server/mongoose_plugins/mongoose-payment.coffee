@@ -1,6 +1,5 @@
 validations = require('composed-validations')
 ccValidator = require('cv-credit-card')(validations)
-Currency = require('mongoose-currency')
 
 module.exports = ((schema, options) ->
   schema.add(
@@ -38,13 +37,15 @@ module.exports = ((schema, options) ->
           readOnly: true
 
         amount:
-          type: Currency
+          type: mongooseCurrency
           label: 'Transaction Amount'
           readOnly: true
   )
 
   if options && options.index
     schema.path('payment').index(options.index)
+
+  schema.set('toObject', {virtuals: true})
 
   schema.virtual('amount').get( ->
     return (if @isTransaction then @payment.transaction.amount else 0.00)

@@ -1,2 +1,33 @@
-.error-messages(app-messages)
+script.
 
+  $(document).ready(function() {
+    stack = {"dir1": "down", "dir2": "left", "push": "bottom", "spacing1": 0, "spacing2": 0, "context": $("body")}
+
+    var errors = "#{errors}".split('\n');
+    for (var i = 0; i < errors.length; i++) {
+      if (errors[i] !== '') {
+        var s = errors[i]
+        notice = new PNotify({text: s, icon: 'cic cic-spam3', type: 'error', mouse_reset: false, stack: stack, buttons: {'sticker': false}});
+        notice.get().click(function() { notice.remove(); });
+      }
+    }
+
+    var warnings = "#{warnings}".split('\n');
+    for (var i = 0; i < warnings.length; i++) {
+      if (warnings[i] !== '') {
+        var s = warnings[i]
+        notice = new PNotify({text: s, icon: 'cic cic-warning3', type: 'notice', mouse_reset: false, stack: stack, buttons: {'sticker': false}});
+        notice.get().click(function() { notice.remove(); });
+      }
+    }
+
+    var infos = "#{infos}".split('\n');
+    for (var i = 0; i < infos.length; i++) {
+      if (infos[i] !== '') {
+        var s = infos[i]
+        notice = new PNotify({text: s, icon: 'cic cic-info6', type: 'info', mouse_reset: false, stack: stack, buttons: {'sticker': false}});
+        notice.get().click(function() { notice.remove(); });
+      }
+    }
+
+  });

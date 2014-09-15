@@ -1,13 +1,14 @@
 extends layout
 
+block stylesheets
+  link(rel='stylesheet', href='/css/index.css')
+
 block head
 
 block head_javascripts
 
-block stylesheets
-  link(rel='stylesheet', href='/css/vendor.css')
-
 block content
+
   .main-content#index-page
 
     .banner#banner
@@ -267,9 +268,10 @@ block content
 
 block javascripts
   script(src="/js/index.js")
-  script(src="/js/jquery.smooth-scroll.min.js")
 
   script(src="//localhost:35729/livereload.js")
 
   script.
-    $(".smooth-link").smoothScroll();
+    $(document).ready(function() {
+      $(".smooth-link").smoothScroll({offset: -50, speed: 750});
+    });

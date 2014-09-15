@@ -1,13 +1,12 @@
-td.node-button-menu.node-tool-menu-col(id="node-tool-menu-col-id_{{n.id()}}", name="node-tool-menu-col_{{n.id()}}", style="padding-left: 8px;")
+td.node-button-menu.node-tool-menu-col(id="node-tool-menu-col-id_{{n.id()}}", name="node-tool-menu-col_{{n.id()}}", style="padding-left: 8px;", data-nodrag="true")
 
-  .btn-group(ng-show="isOver(n)")
+  span.btn-group(ng-show="isOver(n)")
 
     button.btn.btn-sm.node-button-item(type="button", ng-click="n.$data.remove()", ng-hide="n._system")
       span.node-button-icon.cic.cic-trashcan2
 
     button.btn.btn-sm.node-button-item.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}")
       span.node-button-icon.cic.cic-menu23
-
 
     ul.dropdown-menu.node-menu(id="node-menu", role="menu")
 

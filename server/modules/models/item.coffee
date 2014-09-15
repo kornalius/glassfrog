@@ -55,13 +55,13 @@ ItemSchema = mongoose.Schema(
     label: 'Qty'
 
   price:
-    type: Currency
+    type: mongooseCurrency
     default: 0
     required: true
     label: 'Price'
 
   cost:
-    type: Currency
+    type: mongooseCurrency
     default: 0
     required: true
     label: 'Cost'
@@ -134,19 +134,24 @@ ItemSchema.method(
     )
 
   reserved_lines: (cb) ->
-    app.model('Transaction').find(
-      type: 'Quote'
-      status:
-        $not:
-          $in: ['Invoiced', 'Cancelled', 'Rejected']
-    , (err, sales) ->
-      pl = []
-      if sales
-        for s in sales
-          for l in s.lines
-            if l.qty
-              pl.push(l)
-      cb(pl) if cb
+    app.model('Transaction', (m) ->
+      if m
+        m.find(
+          type: 'Quote'
+          status:
+            $not:
+              $in: ['Invoiced', 'Cancelled', 'Rejected']
+        , (err, sales) ->
+          pl = []
+          if sales
+            for s in sales
+              for l in s.lines
+                if l.qty
+                  pl.push(l)
+          cb(pl) if cb
+        )
+      else
+        cb(null) if cb
     )
 
   qty_sold: (cb) ->
@@ -159,19 +164,24 @@ ItemSchema.method(
     )
 
   sold_lines: (cb) ->
-    app.model('Transaction').find(
-      type: 'Invoice'
-      status:
-        $not:
-          $in: ['Cancelled']
-    , (err, sales) ->
-      pl = []
-      if sales
-        for s in sales
-          for l in s.lines
-            if l.qty
-              pl.push(l)
-      cb(pl) if cb
+    app.model('Transaction', (m) ->
+      if m
+        m.find(
+          type: 'Invoice'
+          status:
+            $not:
+              $in: ['Cancelled']
+        , (err, sales) ->
+          pl = []
+          if sales
+            for s in sales
+              for l in s.lines
+                if l.qty
+                  pl.push(l)
+          cb(pl) if cb
+        )
+      else
+        cb(null) if cb
     )
 
   qty_shipped: (cb) ->
@@ -184,19 +194,24 @@ ItemSchema.method(
     )
 
   shipped_lines: (cb) ->
-    app.model('Transaction').find(
-      type: 'Invoice'
-      status:
-        $not:
-          $in: ['Cancelled']
-    , (err, sales) ->
-      pl = []
-      if sales
-        for s in sales
-          for l in s.lines
-            if l.qty
-              pl.push(l)
-      cb(pl) if cb
+    app.model('Transaction', (m) ->
+      if m
+        m.find(
+          type: 'Invoice'
+          status:
+            $not:
+              $in: ['Cancelled']
+        , (err, sales) ->
+          pl = []
+          if sales
+            for s in sales
+              for l in s.lines
+                if l.qty
+                  pl.push(l)
+          cb(pl) if cb
+        )
+      else
+        cb(null) if cb
     )
 
   qty_ordered: (cb) ->
@@ -209,20 +224,25 @@ ItemSchema.method(
     )
 
   ordered_lines: (cb) ->
-    app.model('Transaction').find(
-      item: @id
-      type: 'Purchase'
-      status:
-        $not:
-          $in: ['Cancelled']
-    , (err, purchases) ->
-      pl = []
-      if purchases
-        for s in purchases
-          for l in s.lines
-            if l.received_full
-              pl.push(l)
-      cb(pl) if cb
+    app.model('Transaction', (m) ->
+      if m
+        m.find(
+          item: @id
+          type: 'Purchase'
+          status:
+            $not:
+              $in: ['Cancelled']
+        , (err, purchases) ->
+          pl = []
+          if purchases
+            for s in purchases
+              for l in s.lines
+                if l.received_full
+                  pl.push(l)
+          cb(pl) if cb
+        )
+      else
+        cb(null) if cb
     )
 
   qty_on_order: (cb) ->
@@ -235,20 +255,25 @@ ItemSchema.method(
     )
 
   on_order_lines: (cb) ->
-    app.model('Transaction').find(
-      item: @id
-      type: 'Purchase'
-      status:
-        $not:
-          $in: ['Cancelled']
-    , (err, purchases) ->
-      pl = []
-      if purchases
-        for s in purchases
-          for l in s.lines
-            if !l.received_full
-              pl.push(l)
-      cb(pl) if cb
+    app.model('Transaction', (m) ->
+      if m
+        m.find(
+          item: @id
+          type: 'Purchase'
+          status:
+            $not:
+              $in: ['Cancelled']
+        , (err, purchases) ->
+          pl = []
+          if purchases
+            for s in purchases
+              for l in s.lines
+                if !l.received_full
+                  pl.push(l)
+          cb(pl) if cb
+        )
+      else
+        cb(pl) if cb
     )
 )
 

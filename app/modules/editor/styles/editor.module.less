@@ -13,7 +13,7 @@
   background: @module-color;
   font-size: small;
   line-height: 16px;
-  cursor: pointer;
+  cursor: default !important;
 }
 
 .module-highlighted {
@@ -27,7 +27,7 @@
 
 .module-selected-highlighted {
   background: @control-highlight-color;
-  color: @text-highlight-color;
+//  color: @text-highlight-color;
 }
 
 .module-color {
@@ -38,58 +38,92 @@
 
 .module-icon-col {
   padding-top: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  width: 24px !important;
-  min-width: 24px !important;
+  max-width: 28px;
+  min-width: 28px;
+  width: 28px;
+  vertical-align: middle;
   text-align: center;
 }
 
 .module-icon {
   font-size: medium;
-  vertical-align: middle;
-  color: @dark-icon-color;
+  color: @icon-color;
 }
 
 .module-label-col {
-//  padding: 2px;
-//  min-width: 75px;
+  padding-top: 2px;
   display: block;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
+  line-height: 16px;
 }
 
 .module-label {
   color: @text-color;
-  font-size: small;
-  padding-right: 4px;
-  vertical-align: middle;
+  font-size: x-small;
+  font-weight: bold;
+}
+
+.module-desc-col {
+  padding-bottom: 2px;
+  padding-left: 28px;
+  padding-right: 8px;
+  line-height: 8px;
+}
+
+.module-desc {
+  font-size: xx-small;
+  font-style: italic;
+  color: @blue-color;
 }
 
 .module-shared-icon-col {
-  width: 24px !important;
-  min-width: 24px !important;
-  text-align: center;
+  max-width: 28px;
+  min-width: 28px;
+  width: 28px;
   color: @info-icon-color;
+  vertical-align: middle;
+  line-height: 10px;
+  padding-bottom: 2px;
 }
 
 .module-shared-icon {
   color: @icon-color;
   font-size: x-small;
+  text-align: center;
+}
+
+.module-creator-col {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 170px;
+  min-width: 170px;
+  width: 170px;
   vertical-align: middle;
+  line-height: 10px;
+  padding-bottom: 2px;
+}
+
+.module-creator {
+  font-size: xx-small;
+  font-style: italic;
+  color: @icon-color;
 }
 
 .module-version-col {
-  width: 100% !important;
-  text-align: right;
+  vertical-align: middle;
+  line-height: 10px;
+  padding-bottom: 2px;
 }
 
 .module-version {
   font-size: xx-small;
   color: @info-text-color;
-  vertical-align: middle;
   padding-right: 2px;
+  text-align: right;
 }
 
 .module-modified-color {
@@ -104,87 +138,12 @@
   min-width: 6px;
 }
 
-.module-xs {
-  min-height: @module-height;
-  height: @module-height;
-  background: @module-color;
-  font-size: x-small;
-  line-height: 10px;
-  cursor: pointer;
-}
-
-.module-xs-highlighted {
-//  background: lightsteelblue;
-}
-
-.module-xs-selected {
-  background: @control-selection-color;
-  color: @text-selection-color;
-}
-
-.module-xs-selected-highlighted {
-  background: @control-highlight-color;
-  color: @text-highlight-color;
-}
-
-.module-xs-color {
-//  border-radius: @border-radius-base 0px 0px @border-radius-base;
-  width: 8px;
-  min-width: 8px;
-}
-
-.module-xs-icon-col {
-  align-content: center;
-  text-align: center;
-}
-
-.module-xs-icon {
-  font-size: small;
-  vertical-align: middle;
-  color: @icon-color;
-}
-
-.module-xs-shared-icon-col {
-}
-
-.module-xs-shared-icon {
-  color: @info-icon-color;
-  font-size: small;
-  vertical-align: middle;
-}
-
-.module-xs-label-col {
-//  width: 50%;
-  padding-left: 4px;
-}
-
-.module-xs-label {
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: x-small;
-}
-
-.module-xs-version-col {
-  padding: 0px;
-  width: 100% !important;
-  text-align: right;
-}
-
-.module-xs-version {
-  font-size: xx-small;
-  color: @info-text-color;
-  text-align: right;
-}
-
-.module-xs-modified-color {
-  background-color: @light-red-color;
-//  border-radius: 0px @border-radius-base @border-radius-base 0px;
-  width: 6px;
-  min-width: 6px;
-}
-
 #editor-modules-root {
   background-color: @module-color;
+}
+
+#editor-modules-root a:hover {
+  text-decoration: none;
 }
 
 #editor-modules {
@@ -206,11 +165,46 @@
   margin-bottom: 8px;
 }
 
-#editor-modules-xs-list {
-//  overflow-x: hidden;
-  overflow-y: auto;
+#editor-modules-root .angular-ui-tree {
+
 }
 
-#editor-modules-xs {
+#editor-modules-root .angular-ui-tree-empty {
+  background: none !important;
+  border: none !important;
+}
 
+#editor-modules-root .angular-ui-tree-nodes {
+//  display: block;
+//  position: relative;
+//  margin: 0px;
+//  padding: 0px;
+//  list-style: none;
+}
+
+#editor-modules-root .angular-ui-tree-nodes .angular-ui-tree-nodes {
+//  padding-left: 20px;
+}
+
+#editor-modules-root .angular-ui-tree-node {
+
+}
+
+#editor-modules-root .angular-ui-tree-placeholder {
+  min-height: @component-height;
+  height: @component-height;
+  line-height: @component-height;
+  margin: 0px;
+}
+
+#editor-modules-root .angular-ui-tree-handle {
+//  cursor: move;
+//  text-decoration: none;
+//  -webkit-box-sizing: border-box;
+//  -moz-box-sizing: border-box;
+//  box-sizing: border-box;
+//  font-weight: normal !important;
+//  min-height: @component-height !important;
+//  height: @component-height !important;
+//  line-height: @component-height !important;
 }

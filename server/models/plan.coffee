@@ -1,6 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-Currency = require('mongoose-currency')
 User = require('./user')
 
 PlanSchema = mongoose.Schema(
@@ -19,6 +18,11 @@ PlanSchema = mongoose.Schema(
       type: Number
       required: true
       label: 'Max. number of records per database'
+
+    fieldSize:
+      type: Number
+      required: true
+      label: 'Max. size for a field\'s value'
 
     projects:
       type: Number
@@ -41,7 +45,7 @@ PlanSchema = mongoose.Schema(
       label: 'Various options related to the plan'
 
   price:
-    type: Currency
+    type: mongooseCurrency
     label: 'Price'
 
   frequency:
@@ -102,7 +106,6 @@ PlanSchema.method(
         else
           cb(false) if cb
       )
-
 )
 
 module.exports = mongoose.model('Plan', PlanSchema)
@@ -114,6 +117,7 @@ setTimeout( ->
     price: 0.00
     limits:
       records: 100
+      fieldSize: 1024
       projects: 1
       schemas: 2
       fields: 10
@@ -123,6 +127,7 @@ setTimeout( ->
     price: 9.99
     limits:
       records: 10000
+      fieldSize: -1
       projects: 5
       schemas: 5
       fields: 25
@@ -132,6 +137,7 @@ setTimeout( ->
     price: 19.99
     limits:
       records: 100000
+      fieldSize: -1
       projects: 10
       schemas: 10
       fields: 100
@@ -142,6 +148,7 @@ setTimeout( ->
     price: 49.99
     limits:
       records: 100000
+      fieldSize: -1
       projects: 10
       schemas: 10
       fields: 100
@@ -152,6 +159,7 @@ setTimeout( ->
     price: 99.99
     limits:
       records: 1000000
+      fieldSize: -1
       projects: -1
       schemas: 25
       fields: -1
@@ -171,6 +179,8 @@ setTimeout( ->
   N = mongoose.model('Plan')
 
   N.remove({}, (err) ->
+    if err
+      console.log err
     for p in data
       N.create({name: p.name, desc: p.desc, price: p.price, limits: p.limits, frequency: (if p.frequency? then p.frequency else 'monthly')}, (err) ->
       )

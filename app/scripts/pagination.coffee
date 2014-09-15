@@ -27,6 +27,8 @@ angular.module('pagination.services', ['app'])
           end = $scope.Math.min($scope.pageCount(), start + $scope.maxButtons - 1)
         else if end == $scope.pageCount()
           start = $scope.Math.max(1 ,end - $scope.maxButtons + 1)
+      if end < start
+        end = start
       for i in [start..end]
         ret.push(i)
       return ret
@@ -79,7 +81,7 @@ angular.module('pagination.services', ['app'])
 
 ])
 
-.directive('pagination', [
+.directive('uiPagination', [
   '$parse'
   '$compile'
   '$http'
@@ -87,16 +89,13 @@ angular.module('pagination.services', ['app'])
 
   ($parse, $compile, $http, $templateCache) ->
     restrict: 'A'
-
     controller: 'paginationCtrl'
-
     template: '<div></div>'
-
 #    templateUrl: '/partials/pagination.html'
 
     link: (scope, element) ->
       e = element
-      r = $parse(element.attr('pagination'))(scope)
+      r = $parse(element.attr('ui-pagination'))(scope)
       scope.init(r)
 
       scope.$watch('rest', ->

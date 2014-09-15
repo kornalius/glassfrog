@@ -2,7 +2,7 @@ table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mousele
 
   td.node-expand-col.node-expand-col-lg
 
-    a.btn.btn-xs.node-expand(type="button", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="toggle(n, $event.altKey); $event.stopPropagation();")
+    a.node-expand(type="button", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="n.toggle($event.altKey); $event.stopPropagation();")
 
       span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }")
 
@@ -10,21 +10,25 @@ table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mousele
 
     table.node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n", ng-model="n")
 
-      include node-color-template
+      td.node-handle-col(ui-tree-handle)
+        table
 
-      include node-icon-template
+          include node-color-template
 
-      include node-label-template
+          include node-icon-template
 
-      include node-parenticons-template
+          include node-label-template
 
-      include node-args-template
+          td.node-filler
 
-      include node-modified-template
+          include node-parenticons-template
+
+          include node-args-template
+
+          include node-modified-template
 
     include node-menu-template
 
-ol(ng-if="n.isOpened() && n.hasChildren()")
-  li(ng-repeat="n in n.children()", ng-include="'/partials/node-template.html'")
+ol.nodes-tree(ng-if="n.isOpened()", ng-model="n.nodes", ui-tree-nodes="")
 
-ol(ng-if="!n.isOpened() || !n.hasChildren()")
+  li(ng-repeat="n in n.nodes", data-collapsed="true", ui-tree-node, ng-include="'/partials/node-template.html'")

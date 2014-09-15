@@ -9,7 +9,7 @@
       span.btn-group.btn-group-xs.pull-right.toolbar-group
         a.btn.btn-default(ng-repeat="b in form.buttons", href="{{b.url}}")
           | &nbsp;
-          i.cic(class="cic-{{b.icon}}", style="vertical-align: middle;")
+          i.cic(class="{{b.icon}}", style="vertical-align: middle;")
           span(style="vertical-align: middle;") &nbsp; {{b.name}}
 
     .panel-body

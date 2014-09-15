@@ -1,32 +1,19 @@
 #editor-components-root
 
-  ul.nav.visible-xs
-    li
-      a.visible-xs.text-center(data-toggle="components-offcanvas")
-        span.cic.cic-chevron-right2
-
-  .hidden-xs#editor-components
+  #editor-components
     form#editor-components-search(role='search')
       .input-group.input-group-sm
         input.form-control(type='text', placeholder='Search', ng-model="search", clearable)
         span.searchclear &times;
-        span.input-group-btn
+        span.input-group-btn.hidden-xs.hidden-sm
           button.btn.btn-default(type="button")
             span.cic.cic-search
 
     .components
 
       #editor-components-list
+
         .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
-          ol.components-tree(ng-model="componentNodes", id="tree-components-root")
-            li(ng-repeat="c in componentNodes | filter: search", ng-include="'/partials/component-template.html'")
 
-  .visible-xs#editor-components-xs
-
-    .components-xs
-
-      #editor-components-xs-list
-        .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
-          ol(ui-tree-nodes="", ng-model="componentNodes", id="tree-components-root", data-nodrop)
-            li(ng-repeat="c in componentNodes | filter: search", ui-tree-node)
-              span(ng-include="'/partials/component-xs-template.html'")
+          ol(ng-model="componentCategories", id="tree-components-root", ui-tree-nodes="", data-nodrop)
+            li(ng-repeat="c in componentCategories", data-collapsed="true", ui-tree-node, data-nodrop, ng-include="'/partials/component-template.html'")

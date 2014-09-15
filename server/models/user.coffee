@@ -6,6 +6,8 @@ async = require('async')
 bcrypt = require('bcrypt')
 endpoints = require('../endpoints')
 safejson = require('safejson')
+RestEndpoints = require('mongoose-rest-endpoints')
+VCModule = require('../vc_module')
 
 person = require('../mongoose_plugins/mongoose-person')
 password = require('../mongoose_plugins/mongoose-password')
@@ -70,6 +72,8 @@ UserSchema = mongoose.Schema(
       ref: 'Role'
     ]
     label: 'Roles'
+    private: true
+    readOnly: true
 
   connection:
     type:
@@ -97,6 +101,7 @@ UserSchema = mongoose.Schema(
       username:
         type: String
         label: 'Connection username'
+        private: true
         readOnly: true
 
       password:
@@ -106,7 +111,7 @@ UserSchema = mongoose.Schema(
         private: true
 
     label: 'MongoDB connection'
-    private: true
+    populate: true
     readOnly: true
 ,
   label: 'Users'
@@ -117,6 +122,8 @@ UserSchema.plugin(password)
 UserSchema.plugin(address)
 UserSchema.plugin(picture)
 UserSchema.plugin(payment)
+
+UserSchema.set('toObject', {virtuals: true})
 
 UserSchema.plugin(timestamps)
 UserSchema.plugin(locking,
@@ -138,7 +145,7 @@ UserSchema.pre('save', (next) ->
 )
 
 UserSchema.virtual('isVerified').get( ->
-  @isActive()
+  @status == 'active'
 )
 
 UserSchema.method(
@@ -164,7 +171,7 @@ UserSchema.method(
 
   canCreateRecord: (model, cb) ->
     that = @
-    @can(['write'], model, null, (ok) ->
+    @can(['create'], model, null, (ok) ->
       if ok
         mongoose.model('Plan').findById(that.plan, (err, plan) ->
           if !err and plan?
@@ -198,10 +205,11 @@ UserSchema.method(
       if roles
         for role in roles
           if role.name == name
-            console.log that.username, "has role", name
+            RestEndpoints.log that.username, "has role", name
             cb(role) if cb
             return
-      console.log that.username, "does not have role", name
+
+      RestEndpoints.log that.username, "does not have role", name
       cb(null) if cb
     )
 
@@ -213,7 +221,6 @@ UserSchema.method(
           that.roles.push(role._id)
           that.save()
           cb(role) if cb
-          return
         )
       cb(null) if cb
     )
@@ -253,13 +260,16 @@ UserSchema.method(
       cb(rules != null) if cb
     )
 
+  hasAdmin: (roles) ->
+    for role in roles
+      if role.name == 'admin'
+        return true
+    return false
+
   can: (actions, subject, row, cb) ->
     that = @
 
-    if row?
-      console.log "can", that.username, actions, "from/to model", subject, "with data", row, "?"
-    else
-      console.log "can", that.username, actions, "from/to model", subject, "?"
+#    RestEndpoints.log "can", that.username, actions, "from/to model", subject, (if row then "with data" else ""), (if row then row else ""), "?"
 
     if type(actions) is 'string'
       actions = [actions]
@@ -273,44 +283,40 @@ UserSchema.method(
         action_names.push(action)
     action_names = action_names.join(' or ')
 
-    @isAdmin((adminRole) ->
-      if adminRole
-        console.log that.username, "can", action_names, "from/to model", subject
-        cb('admin') if cb
-      else
-        that.allRoles((roles) ->
-          if roles
-            r = null
-            async.eachSeries(roles, (role, callback) ->
-              if !r and role
-                role.can(that, actions, subject, row, (rule) ->
-                  if rule
-                    r = rule
-                  callback()
-                )
-              else
-                callback()
-            , (err) ->
-              console.log that.username, "cannot", action_names, "from/to model", subject
-              cb(r) if cb
-            )
-          else
-            console.log that.username, "cannot", action_names, "from/to model", subject
-            cb(null) if cb
+    that.allRoles((roles) ->
+      if roles
+
+        # check if admin
+        if that.hasAdmin(roles)
+          RestEndpoints.log that.username, "can", action_names, "from/to model", subject, 'admin'
+          cb('admin') if cb
+          return
+
+        async.eachSeries(roles, (role, callback) ->
+          role.can(that, actions, subject, row, (rule) ->
+            callback(rule)
+          )
+        , (rule) ->
+          RestEndpoints.log that.username, (if !rule then "cannot" else "can"), action_names, "from/to model", subject, (if rule then rule else "")
+          cb(rule) if cb
         )
+
+      else
+        RestEndpoints.log that.username, "cannot", action_names, "from/to model", subject, "no roles assigned"
+        cb(null) if cb
     )
 
   isAdmin: (cb) ->
-    @hasRole('admin', cb)
+    @hasRole('admin', cb) if cb
 
   isActive: (cb) ->
-    @status == 'active'
+    cb(@status == 'active') if cb
 
   isDisabled: (cb) ->
-    @status == 'disabled' or @status == 'locked'
+    cb(@status == 'disabled' or @status == 'locked') if cb
 
   isLockedOut: (cb) ->
-    @status == 'locked'
+    cb(@status == 'locked') if cb
 
   isPaidPlan: (cb) ->
     @populate('plan', (err, plan) ->
@@ -336,53 +342,152 @@ UserSchema.method(
         throw err
     )
 
-  modules: (cb) ->
-    that = @
-    r = []
-    mongoose.model('Module').find({owner_id: that.id}, (err, modules) ->
-      if modules
-        for m in modules
-          r.push(m)
+  modules: (plain, cb) ->
+    if type(plain) is 'function'
+      cb = plain
+      plain = false
 
-      mongoose.model('Share').find({ $and: [{'users.user': that.id}, {'users.state': 'active'}] }).populate('module').exec((err, shares) ->
-        if shares
-          for s in shares
-            r.push(s.module)
+    if @$cachedModules and @$cachedModules.length
+      cb(@$cachedModules) if cb
+    else
+      that = @
+      r = []
+      mongoose.model('Module').find({owner_id: that.id}, (err, modules) ->
+        if modules
+          for m in modules
+            if plain
+              r.push(m)
+            else
+              mm = m.toObject()
+              VCModule.make(mm)
+              r.push(mm)
 
-        cb(r) if cb
+        mongoose.model('Share').find({ $and: [{'users.user': that.id}, {'users.state': 'active'}] }).populate('module').exec((err, shares) ->
+          if shares
+            for s in shares
+              if plain
+                r.push(s.module)
+              else
+                mm = s.module.toObject()
+                VCModule.make(mm)
+                r.push(mm)
+
+          that.$cachedModules = (if r.length then r else null)
+
+          cb(r) if cb
+        )
       )
-    )
 
   getConnection: (cb) ->
+    that = @
     @populate('plan', (plan) ->
       prefix = ''
+      c = mongoose.connection
 
-      if plan.canCreateConnection() and @connection.name?
-        cn = @connection.name
-        c = mongoose.connections[cn]
-        if !c
-          if plan.canHaveOwnDatabase()
-            uri = app.mongoUri
-            if plan.canUseExternalConnection() and @connection.uri?
-              uri = @connection.uri
-          c = mongoose.createConnection(uri + cn)
-
-      else
-        c = mongoose.connection
-        if plan.canUseOwnCollection() and @connection.prefix?
-          prefix = @connection.prefix + '_'
+      if plan
+        if plan.canCreateConnection() and that.connection.name?
+          cn = that.connection.name
+          c = mongoose.connections[cn]
+          if !c
+            if plan.canHaveOwnDatabase()
+              uri = app.mongoUri
+              if plan.canUseExternalConnection() and that.connection.uri?
+                uri = that.connection.uri
+            c = mongoose.createConnection(uri + cn)
+        else
+          if plan.canUseOwnCollection() and that.connection.prefix?
+            prefix = that.connection.prefix + '_'
 
       cb(plan, c, prefix) if cb
     )
 
-  model: (name, cb) ->
+  getModel: (name, cb) ->
+    console.log "user.getModel()", name
     @getConnection((plan, c, prefix) ->
       if c
-        m = c.model(prefix + name)
-      else
         m = null
-      cb(m) if cb
+
+        if mongoose.modelNames().indexOf(prefix + name) != -1
+          m = mongoose.model(prefix + name)
+
+        if !m and c.modelNames().indexOf(prefix + name) != -1
+          m = c.model(prefix + name)
+
+        cb(m, plan, c, prefix) if cb
+
+      else
+        cb(null, plan, c, prefix) if cb
     )
+
+  loadModel: (name, schema, cb) ->
+    console.log "user.loadModel()", name
+    @getModel(name, (m, plan, c, prefix) ->
+      if !m or !_.isEqual(m.schema, schema)
+        delete c.models[prefix + name]
+        m = c.model(prefix + name, schema)
+      cb(m, plan, c, prefix) if cb
+    )
+
+  unloadModel: (name, cb) ->
+    console.log "user.unloadModel()", name
+    @getModel(name, (m, plan, c, prefix) ->
+      if m
+        delete c.models[prefix + name]
+      cb(m != null) if cb
+    )
+
+  unloadAllModels: (cb) ->
+    that = @
+    console.log "user.unloadAllModels()"
+    @getConnection((plan, c, prefix) ->
+      that.modules((modules) ->
+        for m in modules
+          for s in m.schemas()
+            delete c.models[prefix + s.varName()]
+        cb() if cb
+      )
+    )
+
+  sanitizedId: () ->
+    require('sanitize-filename')(@_id.toString())
+
+  modulesPath: () ->
+    app.modulesPath + '/' + @sanitizedId()
+
+  model: (name, cb) ->
+    that = @
+    console.log "user.model()", name
+    @getModel(name, (m, plan, c, prefix) ->
+      if !m
+        dire = require('dire')
+
+        try
+          generatedModules = dire(that.modulesPath() + '/', false, '.js')
+        catch e
+          console.log "dire error", e
+
+        that.modules((modules) ->
+          for mm in modules
+            for s in mm.schemas()
+
+              schema = generatedModules[mm.sanitizedId()][prefix + s.varName()]
+              if schema
+                m = mm
+                break
+            if schema
+              break
+
+          if m
+            that.loadModel(name, schema, (m, plan, c, prefix) ->
+              cb(m) if cb
+            )
+          else
+            cb(null) if cb
+        )
+      else
+        cb(m) if cb
+    )
+
 )
 
 module.exports = mongoose.model('User', UserSchema)
@@ -396,11 +501,16 @@ setTimeout( ->
       first: 'Alain'
       last: 'Deschenes'
     status: 'active'
+    connection:
+      name: 'admin'
+
 
   mongoose.model('User').findOne({ username: adminUser.username }, (err, user) ->
     if !user
       mongoose.model('User').create(adminUser, (err, user) ->
-#        console.log "Created default admin user", err, user
+        if err
+          console.log err
+#        RestEndpoints.log "Created default admin user", err, user
       )
   )
 , 100)

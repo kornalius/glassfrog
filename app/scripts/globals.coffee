@@ -4,90 +4,65 @@ angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
 
 .factory('Globals', [
   'promiseTracker'
+  '$timeout'
 
-  (promiseTracker) ->
+  (promiseTracker, $timeout) ->
+    stack = {"dir1": "down", "dir2": "left", "push": "bottom", "spacing1": 0, "spacing2": 0, "context": $("body")}
+
     user: null
     modules: []
     loadingTracker: promiseTracker()
-    messagesDOM: $()
 
-    showMessage: (content, cl, time) ->
-      $('<div class="alert ' + cl + ' alert-dismissable"> <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>' + content + '</div>').hide().fadeIn("fast").delay(time).fadeOut("fast", ->
-        $(@).remove()
-      ).appendTo(@messagesDOM)
-      console.log @messagesDOM
+    showMessage: (text, type) ->
 
-#    registerTabs: ($stateProvider, tabs) ->
-#      t = []
-#
-#      for m in tabs
-#        sf = m.replace('.', '_')
-#        t.push(
-#          name: sf
-#          expandedName: 'glassfrog.' + m
-#          href: '#/' + sf
-#          url: '/' + sf
-#          templateUrl: '/partials/' + sf + '.html'
-#          label: 'tab.' + m
-#        )
-#
-##      for m in t
-##        sp.state(m.name,
-##          url: m.url
-##          views:
-##            "main-content":
-##              templateUrl: m.templateUrl
-##        )
-#
-#      console.log "registerTabs", @, t
-#
-#      return t
+      icon = 'exclamation2'
+      if type == 'error'
+        icon = 'spam3'
+      else if type == 'warning' or type == 'notice'
+        type = 'notice'
+        icon = 'warning3'
+      else if type == 'info'
+        icon = 'info6'
+
+      $timeout(->
+        notice = new PNotify({text: text, icon: 'cic cic-' + icon, type: type, mouse_reset: false, stack: stack, buttons: {'sticker': false}})
+        notice.get().click(-> notice.remove())
+      , 100)
+
 ])
 
 .config ($provide, $httpProvider) ->
 
   $httpProvider.responseInterceptors.push(($q, Globals) ->
     (promise) ->
+
       promise.then((successResponse) ->
-#        console.log("successMessage", "alert-success", 5000)  unless successResponse.config.method.toUpperCase() is "GET"
         successResponse
+
       , (errorResponse) ->
-        console.log "ERROR", errorResponse.status, errorResponse.data
+
+#        console.log "ERROR", errorResponse.status, errorResponse.data
+
         switch errorResponse.status
           when 401
-            Globals.showMessage("Wrong usename or password", "alert-danger", 10000)
+            Globals.showMessage("Wrong usename or password", 'error')
+
           when 403
-            Globals.showMessage("Unauthorized! You don't have the necessary permissions", "alert-danger", 10000)
+            Globals.showMessage("Unauthorized! You don't have the necessary permissions", 'error')
+
+          when 404
+            Globals.showMessage("Not found error " + errorResponse.data, 'error')
+
           when 500
-            Globals.showMessage("Server internal error: " + errorResponse.data, "alert-danger", 10000)
+            Globals.showMessage("Server internal error: " + errorResponse.data, 'error')
+
           else
             if errorResponse.status
               if errorResponse.data
-                Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, "alert-danger", 10000)
+                Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, 'error')
               else
-                Globals.showMessage("Error " + errorResponse.status, "alert-danger", 10000)
+                Globals.showMessage("Error " + errorResponse.status, 'error')
+
         $q.reject(errorResponse)
       )
   )
-
-.directive("appMessages", [
-  'Globals'
-
-  (Globals) ->
-    link: (scope, element, attrs) ->
-      Globals.messagesDOM.push($(element))
-
-])
-
-#.config([
-#  '$stateProvider'
-#
-#  ($stateProvider) ->
-#    $stateProvider.state('n', {})
-#])
-
-#.controller('globalsCtrl', [
-#
-#  (globals) ->
-#    globals.sayHello()
-#])

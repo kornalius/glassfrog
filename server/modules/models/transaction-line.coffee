@@ -49,19 +49,19 @@ TransactionLineSchema = mongoose.Schema(
     default: 0
 
   price:
-    type: Currency
+    type: mongooseCurrency
     default: 0
     required: true
     label: 'Price'
 
   cost:
-    type: Currency
+    type: mongooseCurrency
     default: 0
     required: true
     label: 'Cost'
 
   sub_total:
-    type: Currency
+    type: mongooseCurrency
     label: 'Sub-Total'
 
   taxes:
@@ -69,7 +69,7 @@ TransactionLineSchema = mongoose.Schema(
     label: 'Taxes'
 
   total:
-    type: Currency
+    type: mongooseCurrency
     label: 'Total'
 ,
   label: 'Transaction Lines'
@@ -136,12 +136,19 @@ TransactionLineSchema.static(
 
   newLine: (cb) ->
     that = @
-    app.model('Company').findOne({}, (err, comp) ->
-      if comp
-        nx = comp.next_number('')
-        that.model.create({ u_no: nx, type: 'Project' }, (err, result) ->
-          cb(result) if cb
+    app.model('Company', (m) ->
+      if m
+        m.findOne({}, (err, comp) ->
+          if comp
+            nx = comp.next_number('')
+            that.model.create({ u_no: nx, type: 'Project' }, (err, result) ->
+              cb(result) if cb
+            )
+          else
+            cb(null) if cb
         )
+      else
+        cb(null) if cb
     )
 
 )

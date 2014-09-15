@@ -1,98 +1,127 @@
 module.exports = [
 
+  name: 'Colors'
+  desc: 'Colors'
+  extra:
+    category: 'Decorators'
+    display: 'Color'
+    options: 'c'
+    icon: 'cic-palette'
+    color: 'lightred'
+,
+
   name: 'Color'
   desc: 'Color'
   extra:
-    inherit: ['Literal']
-    icon: 'palette'
+    category: 'Colors'
+    options: '!'
+    inherit: 'Decorator'
+    icon: 'cic-palette'
     code:
+      getColor: () ->
+        tc = tinycolor(@getName().toLowerCase())
+        if !tc.isValid()
+          tc = tinycolor(@getColor().toLowerCase())
+        if tc.isValid()
+          c = tc.toHex8String()
+        else
+          c = '#000000'
+        return c
+
       render: (node) ->
-        color = @getColor()
-        if !color
-          color = @name
-        if color
-          color = color.toLowerCase()
-          if node
-            e = angular.element('#node-label-id_' + node.id())
-          else
-            e = angular.element('#component-icon-id_' + @id())
-          e.addClass(tinycolor(color).toName())
+        color = tinycolor(@code("getColor").call(@)).toName()
+        if node
+          c = null
+          l = node.element('label')
+          i = null
+        else
+          c = @element('color')
+          l = null
+          i = @element('icon')
+        if c and c.length
+          c.css('background-color', color)
+        if i and i.length
+          i.addClass(color)
+        if l and l.length
+          l.addClass(color)
+
+      client: (node) ->
+        return @code("getColor").call(@)
+
+      server: (node, user) ->
+        color = @code("getColor").call(@).toName()
+        p = node.getParent()
+        if p? and !client
+          if p.kindOf('Field')
+            return Handlebars.compile('color: "{{value}}"')({value: color})
+        return c
 ,
 
   name: 'Color.RGB'
   desc: 'Color'
   extra:
+    category: 'Colors'
     inherit: 'MethodRef'
-    icon: 'color'
+    icon: 'cic-color'
 ,
 
   name: 'Red'
   desc: 'Red colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'red'
 ,
 
   name: 'Blue'
   desc: 'Blue colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'blue'
 ,
 
   name: 'LightBlue'
   desc: 'Light-blue colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'lightblue'
 ,
 
   name: 'Orange'
   desc: 'Orange colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'orange'
 ,
 
   name: 'Purple'
   desc: 'Purple colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'purple'
 ,
 
   name: 'Pink'
   desc: 'Pink colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'pink'
 ,
 
   name: 'Yellow'
   desc: 'Yellow colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'yellow'
 ,
 
   name: 'DarkGrey'
   desc: 'Dark-grey colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'darkgray'
 ,
 
   name: 'Grey'
   desc: 'Grey colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'gray'
 ,
 
   name: 'LightGrey'
   desc: 'Light-grey colored text appearance'
   extra:
     inherit: 'Color'
-#    color: 'lightgray'
 
 ]

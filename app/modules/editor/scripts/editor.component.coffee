@@ -7,7 +7,9 @@ angular.module('editor.component', ['app.globals', 'editor.node'])
   ($timeout, Editor) ->
 
     componentNodes: []
-    origComponentNodes: null
+    componentCategories: []
+#    origComponentNodes: null
+    expandOver: null
     popup: null
 
     nodeElement: (m) ->
@@ -29,13 +31,45 @@ angular.module('editor.component', ['app.globals', 'editor.node'])
 
     refresh: (selected, cb) ->
       that = @
-      require(['vc_component'], (Component) ->
-        that.componentNodes = Component.list(selected, Editor.module)
-        that.origComponentNodes = _.cloneDeep(that.componentNodes)
-        if Component.scope()
-          Component.scope().$apply()
+      require(['vc_global', 'vc_component'], (VCGlobal, VCComponent) ->
+        that.componentNodes = VCComponent.list(selected, Editor.module)
+
+#        console.log "refresh()"
+#        for c in that.componentNodes
+#          console.log c.getName()
+
+        #        that.origComponentNodes = _.cloneDeep(that.componentNodes)
+
+#        _findComponent = (c) ->
+#          for cc in that.componentNodes
+#            if cc.name and cc.name.toLowerCase() == c
+#              return cc
+#          return VCGlobal.findComponent(c)
+
+        l = []
+        for c in that.componentNodes
+          categories = c.getCategories().reverse()
+          if categories.length
+            cc = categories.shift()
+            if l.indexOf(cc) == -1
+              l.push(cc)
+
+        for c in l
+          c.$data._components = c.getComponents(that.componentNodes)
+
+        that.componentCategories = l
+
+#        console.log "refresh()", l
+#        if VCComponent.scope()
+#          VCComponent.scope().$apply()
         cb() if cb
       )
+
+    isExpandOver: (n) ->
+      @expandOver == n
+
+    setExpandOver: (n) ->
+      @expandOver = n
 
 ])
 
@@ -53,64 +87,52 @@ angular.module('editor.component', ['app.globals', 'editor.node'])
   ($scope, Rest, Editor, EditorNode, EditorComponent, $parse, $document, globals, $timeout) ->
 
     $scope.componentNodes = []
+    $scope.componentCategories = []
     $scope.service = EditorComponent
 
     $scope.$watchCollection('service.componentNodes', (newVal) ->
       $scope.componentNodes = newVal
+#      console.log "$watchCollection.componentNodes", $scope.componentNodes
+    )
+
+    $scope.$watchCollection('service.componentCategories', (newVal) ->
+      $scope.componentCategories = newVal
+#      console.log "$watchCollection.componentCategories", $scope.componentCategories
     )
 
     $scope.treeOptions =
 
-      accept: (sourceNodeScope, destNodesScope, destIndex) ->
-        return false
-
       beforeDrag: (sourceNodeScope) ->
-        return true
+        return !sourceNodeScope.$modelValue.isCategory()
 
-      dropped: (event) ->
-        c = event.source.nodeScope.$modelValue
-        t = event.dest
-        if c and t and !t.nodesScope.nodrop and Editor.module
-          nodes = event.dest.nodesScope.$modelValue
-          parentNodeScope = event.dest.nodesScope.$nodeScope
-          idx = event.dest.index
-          d = event.dest.nodesScope.$nodeScope
-          require(['vc_global', 'vc_node', 'vc_component'], (VCGlobal, Node, Component) ->
-            event.dest.nodesScope.$apply(->
-              if parentNodeScope
-                p = parentNodeScope.$modelValue
-              else if !d
-                p = VCGlobal.module().getRoot()
-              else
-                p = null
-              n = c.add(c.name, VCGlobal.module(), p)
-              nodes.splice(idx, 1)
-              n.setOrder(idx)
-              EditorNode.setSelection(n)
-            )
-          )
+      dropped: (e) ->
+        el = e?.dest?.nodesScope?.$element
+        if el and el.length and $(el).is('.nodes-tree')
+          c = angular.copy(e.source.nodeScope.$modelValue)
+          idx = e.source.index
+          if idx == -1
+            e.source.nodesScope.$modelValue.push(c)
+          else
+            e.source.nodesScope.$modelValue.splice(idx, 0, c)
 
-      dragStart: (event) ->
-#        console.log "dragStart()", event.source.nodeScope.$treeScope.$parent
-        event.source.nodeScope.$treeScope.$parent.hidepopup(event.source.nodeScope.$modelValue)
+          idx = e.dest.index
+          if idx != -1
+            nodes = e.dest.nodesScope.$modelValue
+            if e.dest.nodesScope.$nodeScope
+              parent = e.dest.nodesScope.$nodeScope.$modelValue
+            else
+              parent = Editor.module.getRoot()
+            n = c.newNode(null, parent, parent.module())
+            nodes.splice(idx, 1, n)
 
-        if !$scope.origComponentNodes
-          $scope.origComponentNodes = _.cloneDeep($scope.componentNodes)
+        Editor.dragging = null
 
-        $timeout(->
-          event.elements.placeholder.replaceWith(event.elements.dragging.clone().find('li'))
-        )
+      dragStart: (e) ->
+        sourceNodeScope = e.source.nodeScope
+        Editor.dragging = sourceNodeScope.$modelValue
 
-      dragMove: (event) ->
-#        console.log event.source.nodeScope.c, event.source.index, event.dest.nodesScope, event.dest.index
-
-      dragStop: (event) ->
-        if $scope.origComponentNodes
-          for i in [0..$scope.origComponentNodes.length - 1]
-            if i < $scope.componentNodes.length and $scope.componentNodes[i].getName() != $scope.origComponentNodes[i].getName()
-              $scope.componentNodes.splice(i, 0, _.cloneDeep($scope.origComponentNodes[i]))
-
-      beforeDrop: (event) ->
+      dragStop: (e) ->
+        Editor.dragging = null
 
 
     $($document).ready(() ->
@@ -142,16 +164,23 @@ angular.module('editor.component', ['app.globals', 'editor.node'])
     $scope.refresh = (selected, cb) ->
       EditorComponent.refresh(selected, cb)
 
+    $scope.isExpandOver = (n) ->
+      EditorComponent.isExpandOver(n)
+
+    $scope.setExpandOver = (n) ->
+      EditorComponent.setExpandOver(n)
+
 ])
 
 .directive('renderComponent', [
   '$parse'
+  '$timeout'
 
-  ($parse) ->
+  ($parse, $timeout) ->
     restrict: 'A'
 
     link: (scope, element, attrs) ->
       c = $parse(attrs.renderComponent)(scope)
-      if c
-        c.doRender()
+      if c and c.hasRenderCode()
+        c.render()
 ])

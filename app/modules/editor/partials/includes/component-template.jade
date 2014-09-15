@@ -1,11 +1,14 @@
-div(ui-tree-handle)
+div(id="component-popover-id_{{c._id}}", name="component-popover_{{c._id}}", data-content="{{c.getDesc()}}", data-container="body", ng-click="toggle(); $event.stopPropagation();")
 
-  div(id="component-popover-id_{{c._id}}", name="component-popover_{{c._id}}", data-content="{{c.desc}}", data-container="body")
+  table.component(id="component-element-id_{{c._id}}", name="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)", render-component="c", ng-class="{'component-category': c.isCategory()}")
 
-    table.component(id="component-element-id_{{c._id}}", name="component-element_{{c._id}}", width="100%", ng-model="c", ng-mouseenter="showpopup(c)", ng-mouseleave="hidepopup(c)", render-component="c")
+    include component-color-template
 
-      include component-color-template
+    include component-icon-template
 
-      include component-icon-template
+    include component-label-template
 
-      include component-label-template
+    include component-expand-template
+
+ol(ng-if="c.isCategory() && (!collapsed || search.length)", ng-model="c.$data._components", ui-tree-nodes="", data-nodrop)
+  li(ng-repeat="c in c.$data._components | filter: search", ui-tree-node, data-collapsed="true", data-nodrop, ng-include="'/partials/component-template.html'")

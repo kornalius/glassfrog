@@ -47,6 +47,8 @@ module.exports = ((schema, options) ->
   if options && options.index.locale
     schema.path('locale').index(options.index.locale)
 
+  schema.set('toObject', {virtuals: true})
+
   schema.virtual('name.full').get(->
     @name.first + ' ' + @name.last
   ).set((name) ->

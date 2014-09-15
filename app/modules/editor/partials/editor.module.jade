@@ -4,23 +4,18 @@
     .input-group.input-group-sm
       input.form-control(type='text', placeholder='Search', ng-model="search", clearable)
       span.searchclear &times;
-      span.input-group-btn.hidden-xs
+      span.input-group-btn.hidden-xs.hidden-sm
         button.btn.btn-default(type="button")
           span.cic.cic-search
 
-  .hidden-xs#editor-modules
+  #editor-modules
 
     .modules
+
       #editor-modules-list
+
         .modules-tree(ui-tree="treeOptions", data-drag-enabled="false", data-empty-place-holder-enabled="false", data-max-depth="1", data-drag-delay="250", ng-cloak)
-          ol#tree-modules-root(ng-model="moduleNodes")
-            li(ng-repeat="m in moduleNodes | filter: search", ng-include="'/partials/module-template.html'")
 
+          ol#tree-modules-root(ng-model="moduleNodes", ui-tree-nodes="")
+            li(ng-repeat="m in moduleNodes | filter: search", ui-tree-node, ng-include="'/partials/module-template.html'")
 
-  .visible-xs#editor-modules-xs
-
-    .modules-xs
-      #editor-modules-xs-list
-        .modules-tree(ui-tree="treeOptions", data-drag-enabled="false", data-empty-place-holder-enabled="false", data-max-depth="1", data-drag-delay="250", ng-cloak)
-          ol#tree-modules-root(ng-model="moduleNodes")
-            li(ng-repeat="m in moduleNodes | filter: search", ng-include="'/partials/module-xs-template.html'")

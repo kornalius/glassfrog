@@ -1,10 +1,21 @@
 module.exports = [
 
+  name: 'Queries'
+  desc: 'Query'
+  extra:
+    display: 'Query'
+    category: 'Databases'
+    options: 'c'
+    icon: 'cic-filter'
+    color: 'lightgreen'
+,
+
   name: 'Query'
   desc: 'Query'
   extra:
+    category: 'Queries'
     inherit: 'Object'
-    icon: 'filter'
+    icon: 'cic-filter'
     defaults: [
       'Query.Select'
     ,
@@ -16,60 +27,59 @@ module.exports = [
       value: 10
     ]
     accepts: ['Query.Action']
-    color: 'lightgray'
+    color: 'lightgreen'
 ,
 
   name: 'Query.Action'
   desc: 'Query action'
   extra:
-    options: 'hp'
-    icon: 'filter'
-    color: 'darkgray'
+    category: 'Queries'
+    options: 'hp!'
+    icon: 'cic-filter'
+    color: 'lightgreen'
 ,
 
   name: 'Query.Select'
   desc: 'Selected fields'
   extra:
-    icon: 'selectionadd'
-    accepts: ['FieldRef']
-    inherit: 'QueryAction'
+    icon: 'cic-selectionadd'
+    accepts: ['FieldRef+']
+    inherit: 'Query.Action'
 ,
 
   name: 'Query.Where'
   desc: 'Query conditions'
   extra:
-    icon: 'search5'
-    accepts: []
+    icon: 'cic-search5'
+    accepts: ['Condition+']
     inherit: 'Query.Action'
 ,
 
-  name: 'Query.OrderBy.Sort'
-  desc: 'Ascending or descending sort order'
+  name: 'Query.Sort'
+  desc: 'Sort rows'
   extra:
-    icon: 'sort-by-attributes'
-    enum: ['Ascending', 'Descending']
-    defaultValue: 'Ascending'
-,
-
-  name: 'Query.OrderBy'
-  desc: 'Order fields'
-  extra:
-    icon: 'sort-by-attributes'
-    accepts: ['FieldRef', 'Query.Sort']
+    icon: 'cic-sort-by-attributes'
+    options: '!'
+    args:
+      'Reverse':
+        component: 'Boolean'
+      'Field':
+        enum: ['@Fields']
+        component: 'String'
     inherit: 'Query.Action'
 ,
 
   name: 'Query.Page'
-  desc: 'Page to retrieve'
+  desc: 'Page # to retrieve'
   extra:
-    icon: 'pagebreak'
+    icon: 'cic-pagebreak'
     inherit: 'Query.Action'
 ,
 
   name: 'Query.Limit'
   desc: 'Maximum number of rows to fetch'
   extra:
-    icon: 'stop23'
+    icon: 'cic-stop23'
     inherit: 'Query.Action'
 
 ]

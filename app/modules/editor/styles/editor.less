@@ -7,37 +7,21 @@
 }
 
 #editor-main {
-//  background-color: rgba(200, 200, 50, 0.25);
 }
 
-[ng-drag] {
-  -moz-user-select: -moz-none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  background-color: none;
+.angular-ui-tree-handle {
+  font-weight: normal !important;
+  min-height: inherit !important;
+  height: inherit !important;
+  line-height: inherit !important;
 }
 
-[ng-drag].drag-over {
-
+.angular-ui-tree-drag {
+  z-index: 999;
+  .opacity(.75);
 }
 
-[ng-drag].dragging {
-  opacity: 0.75;
-  margin-left: 0px;
-  z-index: 2000;
-  -webkit-transform: rotate(2.5deg);
-  -moz-transform: rotate(2.5deg);
-  -o-transform: rotate(2.5deg);
-  -ms-transform: rotate(2.5deg);
-  transform: rotate(2.5deg);
-}
-
-[ng-drop] {
-
-}
-
-[ng-drop].drag-enter table.node {
-  background-color: orangered;
+#editor-main ul.nav-tabs li {
+  font-size: smaller;
+  color: @text-color;
 }

@@ -175,15 +175,22 @@ RoleSchema.method(
     return false
 
   can: (user, actions, subject, row, cb) ->
+    that = @
     @allRules(subject, actions, (rules) ->
       if rules
-        id = user._id.toString()
-        for rule in rules
-          if (!row or !user) or (rule.owned and row.owner_id.toString() == id)
-            cb(rule) if cb
-            return
-      cb(null) if cb
+        rule = that.canWithRules(user, rules, actions, subject, row)
+        cb(rule) if cb
+      else
+        cb(null) if cb
     )
+
+  canWithRules: (user, rules, actions, subject, row) ->
+    id = user._id.toString()
+    for rule in rules
+      if (!row or !user) or ((rule.owned and row.owner_id? and row.owner_id.toString() == id) or rule == 'admin')
+        return rule
+    return null
+
 )
 
 RoleSchema.static(

@@ -7,7 +7,7 @@ div(ng-controller="dynTableCtrl")
 
     .panel-body
       .row.hidden-xs
-        .pagination.pull-right(pagination="form.model")
+        .pagination.pull-right(ui-pagination="form.model")
 
       .row
         .table-responsive
@@ -17,18 +17,18 @@ div(ng-controller="dynTableCtrl")
                 th(width="1%")
                   a(ng-click="filtersVisible = !filtersVisible")
                     i.cic.cic-search4
-                th(ng-repeat="f in fields", width="{{f.width}}", custom-sort, order="f.fieldname", sort="sort") {{f.label}}
-                th(ng-show="hasAction()", width="10%") Actions
+                th.table-header-text(ng-repeat="f in fields", width="{{f.width}}", custom-sort, order="f.fieldname", sort="sort", ng-show="f.label") {{f.label}}
+                th.table-header-text(ng-show="hasAction()", width="10%") Actions
 
               tr(ng-show="filtersVisible")
                 th
-                th(ng-repeat="f in fields")
-                  input.form-control(placeholder="ex: >10, >#20140101", ng-model="filters[f.fieldname]", ng-change="filtersChanged()")
+                th.table-header-filter(ng-repeat="f in fields", ng-show="f.label")
+                  input.form-control.input-small.table-input-filter(placeholder="ex: >10, >#20140101", ng-model="filters[f.fieldname]", ng-change="filtersChanged()")
 
             tfoot
               tr
                 td
-                td(ng-repeat="f in fields") {{f.sum ? $eval(f.sum) : ""}}
+                td.table-footer-text(ng-repeat="f in fields", ng-show="f.label") {{f.sum ? $eval(f.sum) : ""}}
                 td
 
             tbody
@@ -73,4 +73,4 @@ div(ng-controller="dynTableCtrl")
             option 100
 
         .col.col-md-10
-          .pagination.pull-right(pagination="form.model")
+          .pagination.pull-right(ui-pagination="form.model")

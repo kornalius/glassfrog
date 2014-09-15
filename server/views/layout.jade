@@ -9,12 +9,11 @@ html(lang='en', ng-app='app')
 
     title Glassfrog
 
+    block stylesheets
+
     link(rel='stylesheet', href='/css/app.css')
     link(rel='stylesheet', href='/css/colors.css')
-    //link(rel='stylesheet', href='/css/font-awesome.css')
     link(rel='stylesheet', href='/css/cicons.css')
-
-    block stylesheets
 
     link(rel="shortcut icon", href="/favicon.ico", type="image/x-icon")
     link(rel="shortcut icon", href="/bootstrap/img/favicon.ico")
@@ -23,6 +22,11 @@ html(lang='en', ng-app='app')
     link(rel="apple-touch-icon", sizes="114x114", href="/bootstrap/img/apple-touch-icon-114x114.png")
 
     block head_javascripts
+
+      if !user || !user.isVerified
+        script(src="/js/index.js")
+
+        script(src="//localhost:35729/livereload.js")
 
     block head
 
@@ -37,16 +41,16 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
             .progress-bar(style="width: 100%")
 
   .wrapper(ng-controller='AppCtrl')
-    .box
-      if user && user.isVerified
+    if user && user.isVerified
+      .box
         .row.row-offcanvas.row-offcanvas-left
 
           .breadcrumb(ncy-breadcrumb)
 
-          .column.col-sm-2.col-xs-1.sidebar-offcanvas#sidebar
+          .column.col-sm-1.col-xs-1.sidebar-offcanvas#sidebar
             div(ng-include="'/partials/sidebar.html'")
 
-          .column.col-sm-10.col-xs-11#main
+          .column.col-sm-11.col-xs-11#main
             div(ng-include="'/partials/navbar.html'")
 
             //div(ng-include="'/partials/tabbar.html'")
@@ -59,14 +63,13 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
 
                   block intro
 
-                  include errors
-
                 .row
 
                   div(ui-view, ng-cloak)
                     block content
 
-      else
+    else
+      .box.index
         .row
 
           .column-index.col-sm-12.col-xs-12#index-main
@@ -79,8 +82,6 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
                 .row
 
                   block intro
-
-                  include errors
 
                 .row
 
@@ -97,4 +98,6 @@ body#body(ng-init="user=#{JSON.stringify(user)};")
           | &nbsp;ArianeSoft Inc.
 
 
-  block javascripts
+block javascripts
+
+  include errors

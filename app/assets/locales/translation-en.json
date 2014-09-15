@@ -8,9 +8,23 @@
     "view1": "page one",
     "view2": "page two",
     "test": "test",
-    "suggestions": "suggestions"
+    "suggestions": "suggestions",
+    "editor": "editor",
+    "dashboard": "dashboard",
+    "module": "module",
+    "repository": {
+      "main": "repositories",
+      "available": "available modules",
+      "installed": "installed modules"
+    },
+    "user": {
+      "profile": "profile",
+      "invoices": "invoices"
+    }
    },
    "tab": {
-     "test.po": "purchase orders"
+     "test": {
+       "po": "purchase orders"
+     }
    }
 }

@@ -1,5 +1,5 @@
-div.node-arg-input.switch-wrapper
-  input.node-arg-input.node-arg-input-boolean(type="checkbox", id="node-arg-boolean-id_{{a.getName()}}", name="node-arg-boolean_{{a.getName()}}", switch, ng-model="a.value")
+.node-arg-input.node-arg-input-boolean.switch-wrapper
+  input(type="checkbox", id="{{a.domId('input-boolean')}}", name="{{a.domName('input-boolean')}}", switch, ng-model="a.value")
 
 //label(for="{{fields[{%fieldIndex%}].domId('input', $index)}}")
 //  | {{fields[{%fieldIndex%}].caption ? fields[{%fieldIndex%}].caption : fields[{%fieldIndex%}].label}}

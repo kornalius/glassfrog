@@ -11,7 +11,7 @@ module.exports = ((schema, options) ->
         label: 'Discount/Fee Description'
 
       amount:
-        type: Currency
+        type: mongooseCurrency
         label: 'Discount/Fee Amount'
 
       percent:
@@ -20,6 +20,8 @@ module.exports = ((schema, options) ->
     ]
 
   )
+
+  schema.set('toObject', {virtuals: true})
 
   schema.virtual('discounts_fees.isDiscount').get(->
     return (@amount? and @amount < 0) or (@percent? and @percent < 0)

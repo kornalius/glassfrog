@@ -1,6 +1,6 @@
 // field_table.html
 
-td(ng-controller="dynFormObjectCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';", ng-click="$parent.edit($index, true)")
+td(ng-controller="dynFormObjectCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';", ng-click="$parent.edit($index, true)", ng-show="fields[{%fieldIndex%}].label")
 
   div(ng-class="{'has-error' : fields[{%fieldIndex%}].hasErrors($index)}")
     // <input>

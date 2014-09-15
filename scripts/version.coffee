@@ -23,18 +23,19 @@ class VersionClass
 
   _fromString: (s) ->
     m = s.match(/^v?(?:([0-9]+)(?:\.([0-9]+)(?:\.([0-9]+))([abr]|rc)?))$/)
-    if m.length >= 2
-      @major = m[1]
-    if m.length >= 3
-      @minor = m[2]
-    if m.length >= 4
-      @build = m[3]
-    if m.length >= 5
-      @maintenance = m[4]
+    if m
+      if m.length >= 2
+        @major = m[1]
+      if m.length >= 3
+        @minor = m[2]
+      if m.length >= 4
+        @build = m[3]
+      if m.length >= 5
+        @maintenance = m[4]
     return @
 
   _toString: () ->
-    return "{0}.{1}.{2}{3}".format(@major, @minor, @build, @maintenance)
+    return "{0}.{1}.{2}{3}".format(@major, @minor, @build, (if @maintenance then @maintenance else ''))
 
   versionString: () ->
     return @_toString()

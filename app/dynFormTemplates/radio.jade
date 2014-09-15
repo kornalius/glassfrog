@@ -2,5 +2,5 @@
 
 div.radio(name="{{field.domName('input', $index)}}", ng-disabled="!isEditing($index) || fields[{%fieldIndex%}].disabled", attributes="fields[{%fieldIndex%}]", ng-repeat="item in fields[{%fieldIndex%}].options")
   label
-    input(type="radio", name="{{fields[{%fieldIndex%}].domName('input', $index)}}", ng-model="row[fn]", ng-value="{{item.value}}")
+    input(type="radio", name="{{fields[{%fieldIndex%}].domName('input', $index)}}", ng-model="row.{%fieldName%}", ng-value="{{item.value}}")
     | {{item.label}}

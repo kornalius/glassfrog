@@ -1,7 +1,7 @@
 // check.html
 
 div.switch-wrapper
-  input(dyn-id="fields[{%fieldIndex%}].domId('input', $index)", name="{{fields[{%fieldIndex%}].domName('input', $index)}}", ng-model="row[fn]", ng-class="{'static': !isEditing($index)}", ng-disabled="!isEditing($index) || fields[{%fieldIndex%}].disabled", type="checkbox", attributes="fields[{%fieldIndex%}]", switch, field="fields[{%fieldIndex%}]")
+  input(dyn-id="fields[{%fieldIndex%}].domId('input', $index)", name="{{fields[{%fieldIndex%}].domName('input', $index)}}", ng-model="row.{%fieldName%}", ng-class="{'static': !isEditing($index)}", ng-disabled="!isEditing($index) || fields[{%fieldIndex%}].disabled", type="checkbox", attributes="fields[{%fieldIndex%}]", switch, field="fields[{%fieldIndex%}]")
 
 label(for="{{fields[{%fieldIndex%}].domId('input', $index)}}")
   | {{fields[{%fieldIndex%}].caption ? fields[{%fieldIndex%}].caption : fields[{%fieldIndex%}].label}}

@@ -1,3 +1,14 @@
+winston = require('winston')
+global.winston = winston
+logger = new winston.Logger()
+logger.add(winston.transports.Console, { colorize: true })
+#logger.extend(console)
+
+console.log "Loading Server's required modules..."
+
+modulesPath = 'client_modules'
+exports.modulesPath = modulesPath
+
 exts = require("./exts")
 express = require('express')
 http = require('http')
@@ -16,16 +27,35 @@ autoIncrement = require('mongoose-auto-increment')
 secure = require("node-secure")
 mongoose = require('mongoose')
 
+global.mongooseCurrency = require('mongoose-currency').loadType(mongoose)
+global.mongooseSetter = require('mongoose-setter')(mongoose)
+global.mongoosePercent = require('./mongoose_plugins/mongoose-percent')(mongoose)
+global.mongooseMoment = require('mongoose-moment')(mongoose)
+global.mongooseEncrypted = require("mongoose-encrypted").loadTypes(mongoose)
+global.mongooseVersion = require('./mongoose_plugins/mongoose-version')()
+
+require('sugar')
+
+global.moment = require('moment')
+
 global._ = require('lodash')
 _.mixin(require('lodash-deep'))
 require('underscore-query')(_)
 _.str = require("underscore.string")
-#require('lodash-prototype')
 
-require('mustache')
+global.acorn = require('acorn')
+
+global.Handlebars = require('handlebars')
+require('swag').registerHelpers(Handlebars)
+
+global.js_beautify = require('js-beautify')
 
 global.traverse = require('traverse')
+
 global.tinycolor = require('tinycolor2')
+
+console.log "Server modules required!"
+
 
 logErrors = (err, req, res, next) ->
   console.error(err.stack)
@@ -40,13 +70,13 @@ clientErrorHandler = (err, req, res, next) ->
 errorHandler = (err, req, res, next) ->
   res.status(500)
 
-  e = []
-
-  if req.flash? and req.flash('error')
-    e.concat(req.flash('error'))
-
-  if err
-    e.push(err)
+#  e = []
+#
+#  if req.flash? and req.flash('error')
+#    e.concat(req.flash('error'))
+#
+#  if err
+#    e.push(err)
 
 #  res.render('error',
 #    title: 'Error'
@@ -55,6 +85,54 @@ errorHandler = (err, req, res, next) ->
 #    warnings: req.flash('info')
 #  )
   next()
+
+validUser = (req) ->
+  req? and req.user? and req.user._id? and req.user.isVerified and req.isAuthenticated()
+exports.validUser = validUser
+
+model = (name, req, cb) ->
+  m = null
+  if mongoose.modelNames()[name]?
+    m = mongoose.model(name)
+  if !m and validUser(req)
+    req.user.model(name, null, req, (m) ->
+      cb(m) if cb
+    )
+  else
+    cb(m) if cb
+exports.model = model
+
+multiPathSet = (object, path, value) ->
+  nw = object
+  paths = path.split('.')
+  while paths.length > 1
+    n = paths.shift()
+    if !nw[n]
+      nw[n] = {}
+    nw = nw[n]
+  nw[paths.shift()] = value
+
+userInfo = (req) ->
+  u = {}
+  s = mongoose.model('User').schema
+  s.eachPath((name, field) ->
+    if !field.options.private
+      try
+        multiPathSet(u, name, eval('req.user.' + name))
+      catch error
+        console.log error
+  )
+  for k of s.virtuals
+    v = s.virtuals[k]
+    try
+      multiPathSet(u, v.path, eval('req.user.' + v.path))
+    catch error
+      console.log error
+  return u
+exports.userInfo = userInfo
+
+
+console.log "Creating Passport functions..."
 
 passport.serializeUser( (user, done) ->
   createAccessToken = () ->
@@ -93,37 +171,30 @@ passport.use(
     usr = username
     pwd = password
 
+    errormsg = 'Incorrect information or account is not verified yet'
+
     if mongoose.model('User')?
       mongoose.model('User').findOne({ username: usr }, (err, user) ->
         if !user
-          return done(null, false, { message: 'Incorrect username ' + usr })
+          return done(null, false, { message: errormsg })
         user.comparePassword(pwd, (err, isMatch) ->
           if err
             return done(err)
           if isMatch
             if !user.isVerified
-              done(null, false, { message: 'Account not verified yet' })
+              done(null, false, { message: errormsg })
             else
               done(null, user)
           else
-            done(null, false, { message: 'Incorrect password' })
+            done(null, false, { message: errormsg })
         )
       )
     )
 )
 
-csrfValue = (req) ->
-  if req.body?
-    token = req.body._csrf
-  if !token? and req.query?
-    token = req.query._csrf
-  if !token? and req.session?
-    token = req.session._csrf
-  if !token?
-    token = req.headers['x-csrf-token']
-  if !token?
-    token = req.headers['x-xsrf-token']
-  return token
+console.log "Initializing Express framework..."
+
+console.log "Initializing Redis server..."
 
 app = express()
 RedisStore = require('connect-redis')(express)
@@ -175,6 +246,19 @@ app.use(express.session(
   )
 )
 
+csrfValue = (req) ->
+  if req.body?
+    token = req.body._csrf
+  if !token? and req.query?
+    token = req.query._csrf
+  if !token? and req.session?
+    token = req.session._csrf
+  if !token?
+    token = req.headers['x-csrf-token']
+  if !token?
+    token = req.headers['x-xsrf-token']
+  return token
+
 app.use(express.csrf({ value: csrfValue }))
 
 app.use( (req, res, next) ->
@@ -187,7 +271,8 @@ app.use( (req, res, next) ->
 
   if req.method is 'POST' and req.url.toLowerCase() is '/login'
     if req.body.rememberme
-      req.session.cookie.maxAge = 2592000000
+      hour = 3600000
+      req.session.cookie.maxAge = 14 * 24 * hour # 2 weeks
     else
       req.session.cookie.expires = false
 
@@ -211,6 +296,8 @@ else if process.env.NODE_ENV == 'production'
   mongoUri = 'mongodb://www.arianesoft.ca/glassfrog:12500/'
 exports.mongoUri = mongoUri
 
+console.log "Initializing Mongoose framework..."
+
 mongoose.connect(mongoUri + 'glassfrog')
 exports.mongoose = mongoose
 
@@ -221,59 +308,32 @@ autoIncrement.initialize(mongoose.connection)
 
 models_paths = __dirname + '/models'
 fs.readdirSync(models_paths).forEach((file) ->
+  console.log "Loading model {0}...".format(file)
   require(models_paths + '/' + file)
 )
 exports.models_paths = models_paths
 
 routes_paths = __dirname + '/routes'
 fs.readdirSync(routes_paths).forEach((file) ->
+  console.log "Loading route {0}...".format(file)
   require(routes_paths + '/' + file)
 )
 exports.routes_paths = routes_paths
 
-validUser = (req) ->
-  req? and req.user? and req.user._id? and req.user.isVerified and req.isAuthenticated()
-exports.validUser = validUser
+console.log "Registering API endpoints..."
 
-model = (name, req, cb) ->
-  m = mongoose.model(name)
-  if !m and req and validUser(req)
-    req.user.model(name, (mm) ->
-      cb(mm) if cb
-    )
-  else
-    cb(m) if cb
-exports.model = model
+endpoints.register()
 
-for k of mongoose.models
-  show = []
-  hide = []
-  readOnly = []
-  populate = []
-  endpoints.register(k, null, show, hide, readOnly, populate)
+app.all('/api/*', (req, res, next) ->
+  next()
+)
 
-multiPathSet = (object, path, value) ->
-  nw = object
-  paths = path.split('.')
-  while paths.length > 1
-    n = paths.shift()
-    if !nw[n]
-      nw[n] = {}
-    nw = nw[n]
-  nw[paths.shift()] = value
+app.param('model', (req, res, next, model) ->
+  req.params['model'] = model.toProperCase()
+  next()
+)
 
-userInfo = (req) ->
-  u = {}
-  s = mongoose.model('User').schema
-  s.eachPath((name, field) ->
-    if !field.options.private
-      multiPathSet(u, name, eval('req.user.' + name))
-  )
-  for k of s.virtuals
-    v = mongoose.model('User').schema.virtuals[k]
-    multiPathSet(u, v.path, eval('req.user.' + v.path))
-  return u
-exports.userInfo = userInfo
+console.log "Initializing i18 framework..."
 
 i18n.init(
   useCookie: true
@@ -295,7 +355,7 @@ i18n.init(
   sendMissing: true
   resPostPath: 'app/assets/locales/add/__ns__-__lng__.json'
   sendMissingTo: 'all'
-  debug: true
+#  debug: true
 , (t) ->
 
 )
@@ -307,6 +367,8 @@ i18n.registerAppHelper(app)
 #   console.log "Eval executed in following function: " + caller
 #)
 
+console.log "Securing javascript..."
+
 secure.on("insecure", (problems) ->
    console.log "Some of globals couldn't be protected: " + problems
 )
@@ -314,13 +376,7 @@ secure.on("insecure", (problems) ->
 secure.securePrivates(exports, {configurable: false})
 secure.secureMethods(exports, {configurable: false})
 
-
-app.all('/api/*', (req, res, next) ->
-  if !validUser(req)
-    res.send(403)
-  else
-    next()
-)
+console.log "Setting global routes..."
 
 app.get('/', (req, res) ->
   if validUser(req)
@@ -344,6 +400,8 @@ app.get('/app', user.ensureAuthenticated, (req, res) ->
   )
 )
 
+console.log "Connecting to MongoDB server..."
+
 db.on('error', console.error.bind(console, 'connection error:'))
 
 db.once('open', () ->
@@ -351,3 +409,5 @@ db.once('open', () ->
     console.log 'Express server listening on port ' + app.get('port')
   )
 )
+
+console.log "All done!"

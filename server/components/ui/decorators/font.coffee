@@ -1,58 +1,82 @@
 module.exports = [
 
-  name: 'Bold'
+  name: 'Fonts'
+  desc: 'Fonts'
+  extra:
+    display: 'Font'
+    category: 'Decorators'
+    options: 'c'
+    icon: 'cic-font'
+    color: 'darkorange'
+,
+
+  name: 'Font'
+  desc: 'Font'
+  extra:
+    category: 'Fonts'
+    color: 'darkorange'
+    options: 'h!'
+    icon: 'cic-font'
+    inherit: 'Decorator'
+,
+
+  name: 'Font.Bold'
   desc: 'Bold text appearance'
   extra:
-    icon: 'bold'
-    inherit: 'Decorator'
+    icon: 'cic-bold'
+    inherit: 'Font'
     code:
       render: (node) ->
         if node
-          e = angular.element('#node-label-id_' + node.id())
+          e = node.element('label')
         else
-          e = angular.element('#component-label-id_' + this.id())
-        e.addClass('bold')
+          e = @element('label')
+        if e and e.length
+          e.addClass('bold')
 ,
 
-  name: 'Italic'
+  name: 'Font.Italic'
   desc: 'Italic text appearance'
   extra:
-    icon: 'italic'
-    inherit: 'Decorator'
+    icon: 'cic-italic'
+    inherit: 'Font'
     code:
       render: (node) ->
         if node
-          e = angular.element('#node-label-id_' + node.id())
+          e = node.element('label')
         else
-          e = angular.element('#component-label-id_' + this.id())
-        e.addClass('italic')
+          e = @element('label')
+        if e and e.length
+          e.addClass('italic')
 ,
 
-  name: 'Underline'
+  name: 'Font.Underline'
   desc: 'Underline text appearance'
   extra:
-    icon: 'underline'
-    inherit: 'Decorator'
+    icon: 'cic-underline'
+    inherit: 'Font'
     code:
       render: (node) ->
         if node
-          e = angular.element('#node-label-id_' + node.id())
+          e = node.element('label')
         else
-          e = angular.element('#component-label-id_' + this.id())
-        e.addClass('underline')
+          e = @element('label')
+        if e and e.length
+          e.addClass('underline')
 ,
 
-  name: 'Strike'
+  name: 'Font.Strike'
   desc: 'Strike through text appearance'
   extra:
-    icon: 'strikethrough'
-    inherit: 'Decorator'
+    icon: 'cic-strikethrough'
+    inherit: 'Font'
     code:
       render: (node) ->
         if node
-          e = angular.element('#node-label-id_' + node.id())
+          e = node.element('label')
         else
-          e = angular.element('#component-label-id_' + this.id())
-        e.addClass('strikethrough')
+          e = @element('label')
+        if e and e.length
+          e.addClass('strikethrough')
 
 ]

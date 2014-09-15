@@ -3,6 +3,8 @@ timestamps = require('mongoose-time')()
 Version = require('../mongoose_plugins/mongoose-version')()
 comments = require('../mongoose_plugins/mongoose-comments')
 likes = require('../mongoose_plugins/mongoose-likes')
+Moment = require('moment')
+safejson = require('safejson')
 
 RepositorySchema = mongoose.Schema(
   orig:
@@ -50,9 +52,27 @@ RepositorySchema = mongoose.Schema(
   label: 'Repositories'
 )
 
+RepositorySchema.set('toObject', {virtuals: true})
+
 RepositorySchema.plugin(timestamps)
 RepositorySchema.plugin(comments)
 RepositorySchema.plugin(likes)
+
+RepositorySchema.virtual('version').get(->
+  VersionClass = require("../version")
+  l = { date: null, version: new VersionClass(), comments: ''}
+  for h in @history
+    hv = new VersionClass(h.version)
+    if hv.compareTo(l.version) > 0
+      l = h
+  if !l.date
+    l = null
+  return l
+)
+
+RepositorySchema.virtual('test.name').get(->
+  "test_name"
+)
 
 RepositorySchema.method(
 
@@ -128,3 +148,87 @@ RepositorySchema.static(
 )
 
 module.exports = mongoose.model('Repository', RepositorySchema)
+
+setTimeout( ->
+  data = [
+    name: 'Briefcases organizer'
+    desc: 'Organizes all your briefcases to fit the most heroin possible ;)'
+    icon: 'cic-suitcase6'
+    color: 'darkorange'
+    extra:
+      root:
+        name: 'Root'
+        component: 'root'
+        nodes: [
+          name: 'Briefcase'
+          component: 'Schema'
+          nodes: [
+            name: 'Kg'
+            component: 'Field'
+            nodes: [
+              component: 'Number'
+            ]
+          ]
+        ]
+    history: [
+      date: new Date()
+      version: '1.0.1a'
+      comments: 'Second release'
+    ,
+      date: new Moment().subtract('days', 7)
+      version: '1.0.0a'
+      comments: 'First release'
+    ]
+  ,
+    name: 'Test Module'
+    desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
+    icon: 'cic-uniF7DF'
+    color: 'blue'
+    history: [
+      date: new Date()
+      version: '1.5.0r'
+      comments: 'Third release'
+    ,
+      date: new Moment().subtract('days', 12)
+      version: '1.3.2b'
+      comments: 'Second release'
+    ,
+      date: new Moment().subtract('days', 30)
+      version: '1.0.0r'
+      comments: 'First release'
+    ]
+  ]
+
+  M = mongoose.model('Repository')
+
+  M.remove({}, (err) ->
+
+    mongoose.model('User').find({}, (err, users) ->
+      if users
+        owner = users[0]._id.toString()
+
+        dd = data.map((d) ->
+          f = _.cloneDeep(d)
+
+          f.name = _.str.classify(f.name)
+          f.owner_id = owner
+
+          if f.extra
+            safejson.stringify(f.extra, (err, json) ->
+              if !err
+                f.extra = json
+              else
+                throw err
+            )
+
+          return f
+        )
+
+        M.create(dd, (err) ->
+          if err
+            console.log err
+        )
+    )
+  )
+
+, 1000)

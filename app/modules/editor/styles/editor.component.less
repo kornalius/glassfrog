@@ -9,11 +9,15 @@
 
 .component {
 //  width: @component-width;
-  background: @component-color;
-  font-size: 12px;
+  background: lighten(@component-color, 3%);
+  font-size: 10px;
 //  max-width: @component-width;
   min-height: @component-height;
-  cursor: pointer;
+  cursor: default !important;
+}
+
+.component-category {
+  background: @component-color;
 }
 
 .component-highlighted {
@@ -44,7 +48,7 @@
 .component-icon {
   font-size: medium;
   vertical-align: middle;
-  color: @dark-icon-color;
+  color: @icon-color;
 }
 
 .component-label-col {
@@ -57,6 +61,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: middle;
   padding-right: 4px;
 }
 
@@ -65,31 +70,19 @@
   background: @component-color;
   font-size: x-small;
 //  max-width: @component-width;
-  cursor: pointer;
+  cursor: default !important;
 }
 
-.component-xs-highlighted {
-  background: @control-highlight-color;
-}
-
-.component-xs-selected {
-  background: @control-selection-color;
-}
-
-.component-xs-selected-highlighted {
-  background: @control-selection-color;
-}
-
-.component-xs-icon-col {
-//  width: 24px;
-//  min-width: 24px;
+.component-expand-col {
+  width: 24px;
+  min-width: 24px;
   text-align: center;
 }
 
-.component-xs-icon {
-  font-size: small;
+.component-expand {
+  font-size: 18px;
   vertical-align: middle;
-  color: @dark-icon-color;
+  color: @icon-color;
 }
 
 .bold {
@@ -108,28 +101,32 @@
   text-decoration: line-through;
 }
 
-@media screen and (max-width: 768px) {
-  .row-toolbar-offcanvas {
-    position: relative;
-    -webkit-transition: all 0.25s ease-out;
-    -moz-transition: all 0.25s ease-out;
-    transition: all 0.25s ease-out;
-  }
-
-  .row-toolbar-offcanvas-left.active {
-    left: 30%;
-  }
-
-  .row-toolbar-offcanvas-left.active .components-offcanvas {
-    left: -30%;
-    position: absolute;
-    top: 0;
-    width: 30%;
-  }
-}
+//@media screen and (max-width: 768px) {
+//  .row-toolbar-offcanvas {
+//    position: relative;
+//    -webkit-transition: all 0.25s ease-out;
+//    -moz-transition: all 0.25s ease-out;
+//    transition: all 0.25s ease-out;
+//  }
+//
+//  .row-toolbar-offcanvas-left.active {
+//    left: 30%;
+//  }
+//
+//  .row-toolbar-offcanvas-left.active .components-offcanvas {
+//    left: -30%;
+//    position: absolute;
+//    top: 0;
+//    width: 30%;
+//  }
+//}
 
 #editor-components-root {
   background-color: @component-color;
+}
+
+#editor-components-root a:hover {
+  text-decoration: none;
 }
 
 #editor-components {
@@ -146,12 +143,54 @@
 }
 
 #editor-components-list {
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
 }
 
-#editor-components-xs-list {
-  overflow-x: hidden;
-  overflow-y: auto;
-  min-width: 36px;
+#editor-components-root .angular-ui-tree {
+
+}
+
+#editor-components-root .angular-ui-tree-empty {
+  background: none !important;
+  border: none !important;
+}
+
+#editor-components-root .angular-ui-tree-nodes {
+//  display: block;
+//  position: relative;
+//  margin: 0px;
+//  padding: 0px;
+//  list-style: none;
+}
+
+#editor-components-root .angular-ui-tree-nodes .angular-ui-tree-nodes {
+//  padding-left: 20px;
+}
+
+#editor-components-root .angular-ui-tree-node {
+
+}
+
+#editor-components-root .angular-ui-tree-placeholder {
+  min-height: @component-height;
+  height: @component-height;
+  line-height: @component-height;
+  margin: 0px;
+}
+
+#editor-components-list .angular-ui-tree-handle {
+//  cursor: move;
+//  text-decoration: none;
+//  -webkit-box-sizing: border-box;
+//  -moz-box-sizing: border-box;
+//  box-sizing: border-box;
+//  font-weight: normal !important;
+//  min-height: @component-height !important;
+//  height: @component-height !important;
+//  line-height: @component-height !important;
+}
+
+.angular-ui-tree-drag .component {
+  .rotate(2.5deg);
 }

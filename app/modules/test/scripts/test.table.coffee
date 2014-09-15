@@ -26,7 +26,7 @@ angular.module('test.table', ['dynamicForm'])
         label: "Edit"
         name: "myEditModal"
         layout: {type:'modal', style:'horizontal'}
-        buttons: [{ icon: 'disk3', class: 'success', label: 'Save', url: "ok" }, { icon: null, class: 'danger', label: 'Cancel', url: "cancel" }]
+        buttons: [{ icon: 'cic-disk3', class: 'success', label: 'Save', url: "ok" }, { icon: null, class: 'danger', label: 'Cancel', url: "cancel" }]
 
         fields: [
           type: "tabs"

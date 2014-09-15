@@ -8,6 +8,17 @@ angular.module('twolist.services', ['app', 'app.globals'])
 
   ($scope, globals) ->
 
+    $scope.options = []
+
+    $scope.processOptions = (options) ->
+      l = []
+      for i in [0..options.length - 1]
+        if !options[i].label and !options[i].value
+          l.push({value: options[i], label: options[i]})
+        else
+          l.push(options[i])
+      return l
+
 ])
 
 .directive('twolist', [
@@ -25,6 +36,14 @@ angular.module('twolist.services', ['app', 'app.globals'])
 
     link: (scope, element, attrs, ctrl) ->
 
+      scope.options = scope.processOptions($parse(attrs.options)(scope))
+
+      defaults =
+        config: {}
+#          afterInit: (container) ->
+#            ctrl.$setViewValue([])
+        selected: []
+
       if attrs.field?
         field = $parse(attrs.field)(scope)
       else
@@ -32,54 +51,41 @@ angular.module('twolist.services', ['app', 'app.globals'])
           config: {}
           selected: []
 
-      o = angular.extend(
-        afterInit: (container) ->
-          ctrl.$setViewValue([])
-
-#        afterSelect: (values) ->
-#          $timeout(->
-#            console.log "afterSelect", ctrl.$viewValue, values
-#            ctrl.$setViewValue(ctrl.$viewValue.concat(values))
-#          )
-#
-#        afterDeselect: (values) ->
-#          $timeout(->
-#            console.log "afterDeselect", ctrl.$viewValue, values
-#            v = ctrl.$viewValue
-#            for i in values
-#              x = v.indexOf(i)
-#              v.splice(x) if x != -1
-#            ctrl.$setViewValue(v)
-#          )
-
-      , field.config)
+      field.config = angular.extend({}, field.config, defaults.config)
 
 #      ctrl.$render = ->
 #        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
+#        console.log "$render twolist", ctrl.$viewValue, ctrl.$modelValue
 #        element.multiSelect('select', newValue)
+#        element.multiSelect('refresh')
 
-#      element.on('change', ->
-#        console.log "change", element.val()
-#        if !angular.equals(ctrl.$viewValue, element.val())
-#          $timeout(->
-#            scope.$apply(->
-#              ctrl.$setViewValue(element.val())
-#            )
-#          )
-#      )
-
-      scope.$watch(attrs.ngModel, (newValue) ->
-        newValue = (if newValue then newValue else [])
-#        console.log "$watch", ctrl.$viewValue, newValue
-        if !angular.equals(ctrl.$viewValue, newValue)
+      element.on('change', ->
+        if !angular.equals(element.val(), ctrl.$viewValue)
           $timeout(->
+            scope.$apply(->
+              ctrl.$setViewValue(element.val())
+            )
+          )
+      )
+
+      scope.$watch('options', (newValue, oldValue) ->
+        if !angular.equals(newValue, oldValue)
+          element.trigger('change')
+      , true)
+
+      scope.$watch(attrs.ngModel, (newValue, oldValue) ->
+        if !angular.equals(newValue, oldValue)
+          $timeout(->
+            if !newValue
+              newValue = []
             element.multiSelect('select', newValue)
             element.multiSelect('refresh')
           )
       )
 
       $timeout( ->
-        element.multiSelect(o)
+        element.multiSelect(field.config)
         element.multiSelect('select', if field.selected? then field.selected else [])
+        element.multiSelect('refresh')
       )
 ])

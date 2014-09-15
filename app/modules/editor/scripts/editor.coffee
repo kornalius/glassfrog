@@ -1,4 +1,4 @@
-angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component', 'editor.node', 'editor.preview', 'dynamicForm'])
+angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'editor.preview', 'dynamicForm'])
 
 .run([
   '$http'
@@ -9,32 +9,44 @@ angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component'
   ($http, Rest, EditorComponent, EditorModule) ->
 
     require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->
-      console.log "Loading components..."
-      $http.get('/api/components')
-      .success((data, status) ->
-        VCGlobal.components = data
-        for c in VCGlobal.components
-          Component.make(c)
-        console.log "Loaded {0} components".format(VCGlobal.components.length)
+#      console.log "Loading components..."
+#      VCGlobal.components = new Rest('component', '/api/components')
+#      VCGlobal.components.rows = VCGlobal.components.fetch({}, (data) ->
+#        for c in data
+#          Component.make(c)
+#        console.log "Loaded {0} components".format(VCGlobal.components.rows.length), data
+#        EditorComponent.refresh()
+#      )
 
-        EditorComponent.refresh()
-      )
-      .error((data, status) ->
+      VCGlobal.loadComponents((data) ->
+        if data
+          EditorComponent.refresh()
       )
 
-      console.log "Loading modules..."
-      $http.get('/api/modules')
-      .success((data, status) ->
-        VCGlobal.modules = new Rest('module')
-        VCGlobal.modules.rows = (if data? then data else [])
-        for m in VCGlobal.modules.rows
-          Module.make(m)
-        console.log "Loaded {0} modules".format(VCGlobal.modules.rows.length)
+      console.log "Loading user's modules..."
+      VCGlobal.modules = new Rest('module', '/api/modules')
+      VCGlobal.modules.rows = VCGlobal.modules.fetch({}, (data, err) ->
+        if !err
+          for m in data
+            Module.make(m)
+          console.log "Loaded {0} modules".format(data.length)
+          EditorModule.refresh()
+        else
+          console.log "Error loading modules", err
+      )
 
-        EditorModule.refresh()
-      )
-      .error((data, status) ->
-      )
+#      $http.get('/api/modules')
+#      .success((data, status) ->
+#        VCGlobal.modules = new Rest('module')
+#        VCGlobal.modules.rows = (if data? then data else [])
+#        for m in VCGlobal.modules.rows
+#          Module.make(m)
+#        console.log "Loaded {0} modules".format(VCGlobal.modules.rows.length), data
+#
+#        EditorModule.refresh()
+#      )
+#      .error((data, status) ->
+#      )
     )
 
 ])
@@ -94,14 +106,12 @@ angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component'
 
   (dynModal, $timeout, $interval) ->
     over: null
-    drag: null
-    dragOver: null
+    prevOver: null
+    expandTimeout: null
+    dragging: null
     module: null
     rootNodes: []
     oldContainer: null
-    draggedWidth: 0
-    draggedHeight: 0
-    currentDragID: null
 
     isModuleSaved: () ->
       !@module or @module.isSaved()
@@ -125,33 +135,42 @@ angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component'
       @askSaveModule((ok) ->
         require(['vc_global'], (VCGlobal) ->
           if ok
-            that.module = m
-            for mm in VCGlobal.modules.rows
-              mm.delState('e')
-            m.addState('e')
-            that.rootNodes = m.getRoot().nodes
-            m.doGenerate(true)
-            m.doGenerate(false)
-          cb(that.module) if cb
+            m.edit((ok) ->
+              if ok
+                that.module = m
+                that.rootNodes = m.getRoot().nodes
+#                $timeout(->
+#                  m.generateCode(true)
+#                  m.generateCode(false)
+#                , 1000)
+              cb(that.module) if cb
+            )
+          else
+            cb(that.module) if cb
         )
       )
 
     saveModule: (m, cb) ->
-      m.save((err, result) ->
-        cb() if cb
+      m.save((ok) ->
+        cb(ok) if cb
       )
 
     isOver: (o) ->
       @over == o
 
     setOver: (o) ->
-      @over = o
-
-    isDragOver: (o) ->
-      @dragover == o
-
-    setDragOver: (o) ->
-      @dragover = o
+      if @prevOver != o
+        @over = o
+        @prevOver = o
+        if @expandTimeout
+          $timeout.cancel(@expandTimeout)
+          @expandTimeout = null
+        if @dragging and @dragging != o and o and o.$data and o.$data.isNode and o.isClosed()
+          that = @
+          @expandTimeout = $timeout( ->
+            o.open()
+            that.expandTimeout = null
+          , 500)
 ])
 
 .controller('EditorCtrl', [
@@ -169,6 +188,8 @@ angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component'
 
     $scope.$watchCollection('service.rootNodes', (newVal) ->
       $scope.rootNodes = newVal
+      if Editor.module
+        Editor.module.getRoot().nodes = newVal
     )
 
     require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->
@@ -195,11 +216,5 @@ angular.module('editor', ['editor.module', 'editor.dragdrop', 'editor.component'
 
     $scope.setOver = (o) ->
       Editor.setOver(o)
-
-    $scope.isDragOver = (o) ->
-      Editor.isDragOver(o)
-
-    $scope.setDragOver = (o) ->
-      Editor.setDragOver(o)
 
 ])

@@ -1,4 +1,4 @@
 return {
-  generate: (node) ->
-    return 'type: Currency'
+  generate: (node, client, user) ->
+    return 'type: mongooseCurrency'
 }

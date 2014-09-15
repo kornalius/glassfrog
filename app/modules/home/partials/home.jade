@@ -1,2 +1,6 @@
 div(ng-controller='HomeCtrl')
   pre {{user}}
+
+button.btn.btn-danger(ng-click="globals.showMessage('This is an error message!', 'error')") Error
+
+button.btn.btn-warning(ng-click="globals.showMessage('This is an warning message!', 'warning')") Warning

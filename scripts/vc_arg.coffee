@@ -1,6 +1,7 @@
 ArgClass =
 
 #  name
+#  label
 #  desc
 #  component
 #  options
@@ -9,7 +10,6 @@ ArgClass =
 #  states
 
   VCGlobal: null
-  VCComponent: null
 
   setData: (k, a, node) ->
     if a.clearData
@@ -22,6 +22,7 @@ ArgClass =
     a.$data._node = node
     a.$data._states = ''
     a.$data._component = null
+    a.$data._link = null
     a.$data.isArg = true
 
     if k? and !a.name?
@@ -32,7 +33,11 @@ ArgClass =
       if ad
 #        if ad.enum
 #          a.enum = ad.enum
-        a.component = ad.getComponent().name
+        cc = ad.getComponent()
+        if !cc
+          cc = ArgClass.VCGlobal.findComponent('Literal.String')
+        if cc
+          a.component = cc.name
 
 
     a.hasData = () ->
@@ -45,11 +50,99 @@ ArgClass =
     a.getName = () ->
       return (if @name then @name.toLowerCase() else "")
 
+    a.getLabel = () ->
+      if @hasLabel()
+        if @label?
+          return (if @label then @label.toLowerCase() else "")
+        else
+          return (if @name then @name.toLowerCase() else "")
+      else
+        return null
+
+    a.displayValue = () ->
+      t = @getInputType()
+      if t == 'icon'
+        return ''
+      else
+        return @getValue()
+
     a.getValue = () ->
-      return @value
+      if @isLink()
+        n = @getLink()
+        if n
+          return n.displayName()
+      v = @value
+      t = type(v)
+      if t is 'boolean'
+        return (if v then 'true' else 'false')
+      else if t is 'number'
+        return (if Number.isNaN(v) then '0' else v.toString())
+      else if t is 'moment'
+        return v.format('L LT')
+      else if t is 'date'
+        return moment(v).format('L LT')
+      else if t is 'array'
+        return v.join(', ')
+      else if t is 'regexp'
+        return v.toString()
+      else if t is 'tinycolor'
+        return v.toHex8String()
+      else if t is 'function'
+        return v.toString()
+      else
+        return v
+
+    a.getValueOrDefault = () ->
+      v = @getValue()
+      if !v?
+        v = @getDefault()
+      if !v?
+        v = 'null'
+      return v
+
+    a.isLink = () ->
+      @hasOption('l')
+
+    a.getLink = () ->
+      if @isLink()
+        if @$data and !@$data._link and @value
+          n = ArgClass.VCGlobal.find(@value, true)
+          if n and n.$data
+            @$data._link = n
+        return (if @$data and @$data._link then @$data._link else null)
+      else
+        return null
+
+    a.setLink = (n) ->
+      if !n and @$data
+        @delOption('l')
+        @$data._link = null
+        delete @value
+        @setModified(true)
+        return true
+      else
+        n = ArgClass.VCGlobal.find(n)
+        if n and @$data and n != @$data._link
+          @addOption('l')
+          @value = n.id()
+          @$data._link = n
+          @setModified(true)
+          return true
+        else
+          return false
 
     a.setValue = (value) ->
-      @value = value
+      if value and value.$data?
+        @setLink(value)
+      else if value and type(value) is 'string' and value.match(/^[0-9a-fA-F]{24}$/)
+        @setLink(value)
+      else
+        console.log value
+        if @value != value
+          if @isLink()
+            @setLink(null)
+          @value = value
+          @setModified(true)
 
     a.displayName = () ->
       return (if @name then @name else "")
@@ -58,7 +151,14 @@ ArgClass =
       return (if @desc then @desc else "")
 
     a.getDefault = () ->
-      return (if @default then @default else "")
+      if @default?
+        return @default
+      else
+        c = @getComponent()
+        if c
+          return c.getDefault()
+        else
+          return null
 
     a.hasComponent = () ->
       return @getComponent()
@@ -108,18 +208,36 @@ ArgClass =
     a.isReadOnly = () ->
       return @hasOption('r')
 
-    a.getOptions = () ->
-      if @options
-        return @options
-      else
-        return ''
+    a.refreshScope = () ->
+      s = @scope()
+      if s
+        setTimeout(->
+          s.$apply()
+        )
 
     a.hasOption = (s) ->
-      o = @getOptions()
-      if o?
-        o.indexOf(s) > -1
+      if @options?
+        @options.indexOf(s) > -1
       else
         return false
+
+    a.addOption = (s) ->
+      if !@hasOption(s)
+        if !@options?
+          @options = s
+        else
+          @options += s
+        @setModified(true)
+        @refreshScope()
+
+    a.delOption = (s) ->
+      if @options?
+        i = @options.indexOf(s)
+      else
+        i = -1
+      if i != -1
+        @options = @options.substr(0, i) + @options.substr(i + 1)
+        @setModified(true)
 
     a.hasState = (s) ->
       if @$data
@@ -130,28 +248,26 @@ ArgClass =
     a.addState = (s) ->
       if !@hasState(s) and @$data
         @$data._states += s
-        @refreshScope()
 
     a.delState = (s) ->
       if @$data
         i = @$data._states.indexOf(s)
         if i != -1
           @$data._states = @$data._states.substr(0, i) + @$data._states.substr(i + 1)
-          @refreshScope()
 
     a.hasEnum = () ->
       @getEnum().length
 
-    a.getEnum = () ->
+    a.getEnum = (asObject) ->
       if @$data._node
         ad = @$data._node.getArgDef(@name)
         if ad
-          e = ad.getEnum()
+          e = ad.getEnum(asObject)
           if e and e.length
             return e
 
       else if @enum
-        return ArgClass.VCGlobal.enumToList(@enum)
+        return ArgClass.VCGlobal.enumToList(@enum, @$data._node, asObject)
 
       c = @getComponent()
       if c
@@ -164,6 +280,9 @@ ArgClass =
 
     a.isOptional = () ->
       @hasOption('o')
+
+    a.hasLabel = () ->
+      !@hasOption('h')
 
     a.isModified = () ->
       @hasState('m')
@@ -208,20 +327,35 @@ ArgClass =
         cc = @getComponent()
         return cc and cc.kindOf(name)
 
-    a.codeValue = () ->
+    a.codeValue = (client, user) ->
       c = @getComponent()
-      if c and c.hasGenerate()
-        return c.doGenerate(@)
+      if c
+        return c.generateCode(@, client, user)
       else
-        v = @getValue()
-        i = parseInt(v, 10)
-        if i != NaN
-          return v
-        else
-          return '"' + v + '"'
+        return @getValue()
 
-    a.element = () ->
-      e = angular.element('#node-arg-element-id_' + @name)
+    a.domName = (type) ->
+      if !type?
+        type = 'element'
+      n = @getNode()
+      if n
+        id = n.id()
+      else
+        id = '0'
+      'node-arg-' + type + '_' + id + "_" + @getName()
+
+    a.domId = (type) ->
+      if !type?
+        type = 'element'
+      n = @getNode()
+      if n
+        id = n.id()
+      else
+        id = '0'
+      'node-arg-' + type + '-id_' + id + "_" + @getName()
+
+    a.element = (type) ->
+      e = angular.element('#' + @domId(type))
       if e and e.length
         return e
       else
@@ -234,14 +368,35 @@ ArgClass =
         return scope
       return null
 
+    a.getLabelStyles = () ->
+      t = @getInputType()
+      s = {}
+      if t == 'color'
+        _.extend(s, {'background-color': tinycolor(a.getValue()).toRgbString()})
+      return s
+
+    a.getLabelClass = () ->
+      t = @getInputType()
+      scope = @scope('label')
+      c = 'node-arg-label-' + t
+      if scope.isOver(@)
+        c += ' highlighted'
+      if scope.isSelection(@)
+        c += ' selected'
+      if t == 'icon'
+        c += ' cic ' + @getValueOrDefault()
+      return c
+
     a.getInputType = () ->
       if @hasEnum()
         return "enum"
       c = @getComponent()
       if c
-        if c.getInputType()
-          return c.getInputType()
+        it = c.getInputType()
+        if it
+          return it
       return "string"
+
 
   make: (name, a, node) ->
     @setData(name, a, node)
@@ -249,13 +404,12 @@ ArgClass =
 
 if define?
   define('vc_arg', [], () ->
-    require(['vc_global', 'vc_component'], (gd, cd) ->
+    require(['vc_global'], (gd) ->
       ArgClass.VCGlobal = gd
-      ArgClass.VCComponent = cd
     )
     return ArgClass
   )
 else
   ArgClass.VCGlobal = require('./vc_global')
-  ArgClass.VCComponent = require('./vc_component')
   module.exports = ArgClass
+  return ArgClass

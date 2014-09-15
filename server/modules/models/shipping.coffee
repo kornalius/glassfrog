@@ -56,7 +56,7 @@ ShippingSchema = mongoose.Schema(
       label: 'Max. Unit Value'
 
     discount:
-      type: Currency
+      type: mongooseCurrency
       default: 0
       label: 'Discount'
 
@@ -66,7 +66,7 @@ ShippingSchema = mongoose.Schema(
       label: 'Extra Handling Fee Percent'
 
     fee:
-      type: Currency
+      type: mongooseCurrency
       default: 0
       label: 'Discount'
 

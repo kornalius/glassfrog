@@ -105,18 +105,12 @@ module.exports = (grunt) ->
         files: [
           src: "app/styles/app.less"
           dest: out_dev + "css/app.css"
-        ,
-          src: "bower_components/font-awesome/less/font-awesome.less"
-          dest: out_dev + "css/font-awesome.css"
         ]
 
       prod:
         files: [
           src: "app/styles/app.less"
           dest: out + "css/app.css"
-        ,
-          src: "bower_components/font-awesome/less/font-awesome.less"
-          dest: out + "css/font-awesome.css"
         ]
 
     jade:
@@ -200,9 +194,9 @@ module.exports = (grunt) ->
           dest: out_dev + 'fonts'
         ,
           expand: true
-          cwd: 'bower_components/font-awesome/fonts'
-          src: '*'
-          dest: out_dev + 'fonts'
+          cwd: 'bower_components/fancytree/dist/skin-lion'
+          src: '*.gif'
+          dest: out_dev + 'css'
         ,
           src: 'node_modules/assurance/build/assurance.js'
           dest: out_dev + 'js/assurance.js'
@@ -230,9 +224,9 @@ module.exports = (grunt) ->
           dest: out + 'fonts'
         ,
           expand: true
-          cwd: 'bower_components/font-awesome/fonts'
-          src: '*'
-          dest: out + 'fonts'
+          cwd: 'bower_components/fancytree/dist/skin-lion'
+          src: '*.gif'
+          dest: out + 'css'
         ,
           src: 'node_modules/assurance/build/assurance.min.js'
           dest: out + 'js/assurance.js'
@@ -242,9 +236,6 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out + 'js/humanize.js'
-        ,
-          src: 'bower_components/safejson/dist/safejson.min.js'
-          dest: out + 'js/safejson.js'
         ]
 
       server_dev:
@@ -282,10 +273,14 @@ module.exports = (grunt) ->
             'node_modules/underscore.string/lib/underscore.string.js'
             'node_modules/underscore-query/lib/underscore-query.js'
 #            'node_modules/lodash-prototype/lodash-prototype.js'
+            'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/mustache/mustache.js'
+            'node_modules/handlebars/dist/handlebars.js'
+            'node_modules/swag/lib/swag.js'
+            'node_modules/js-beautify/js/lib/beautify.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
+            'bower_components/safejson/dist/safejson.js'
             'bower_components/moment/moment.js'
             'bower_components/moment/lang/en_ca.js'
             'bower_components/moment/lang/fr.js'
@@ -320,7 +315,24 @@ module.exports = (grunt) ->
             'bower_components/angular-spectrum-colorpicker/dist/angular-spectrum-colorpicker.js'
             'bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.js'
             'bower_components/jquery-smooth-scroll/jquery.smooth-scroll.js'
-            'bower_components/jquery-sortable/source/js/jquery-sortable.js'
+            'bower_components/angular-ui-tree/dist/angular-ui-tree.js'
+            'bower_components/angular-ui-sortable/sortable.js'
+            'bower_components/malhar-angular-dashboard/dist/angular-ui-dashboard.js'
+            'bower_components/malhar-angular-widgets/dist/malhar-angular-widgets.js'
+            'bower_components/d3/d3.js'
+            'bower_components/nvd3/nv.d3.js'
+            'bower_components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.js'
+            'bower_components/pines-notify/pnotify.core.js'
+            'bower_components/pines-notify/pnotify.buttons.js'
+            'bower_components/pines-notify/pnotify.callbacks.js'
+            'bower_components/pines-notify/pnotify.confirm.js'
+            'bower_components/pines-notify/pnotify.desktop.js'
+            'bower_components/pines-notify/pnotify.history.js'
+            'bower_components/pines-notify/pnotify.nonblock.js'
+            'bower_components/pines-notify/pnotify.reference.js'
+            'bower_components/angular-pines-notify/src/pnotify.js'
+            'bower_components/fontawesome-iconpicker/dist/js/fontawesome-iconpicker.js'
+            'bower_components/angular-moment/angular-moment.js'
             'node_modules/diff/diff.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
@@ -333,16 +345,27 @@ module.exports = (grunt) ->
             'node_modules/underscore.string/lib/underscore.string.js'
             'node_modules/underscore-query/lib/underscore-query.js'
 #            'node_modules/lodash-prototype/lodash-prototype.js'
+            'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/mustache/mustache.js'
+            'node_modules/handlebars/dist/handlebars.js'
+            'node_modules/swag/lib/swag.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
             'bower_components/safejson/dist/safejson.js'
             'bower_components/moment/moment.js'
-            'node_modules/color/color-0.6.0.js'
+            'bower_components/tinycolor/tinycolor.js'
             'bower_components/bootstrap/dist/js/bootstrap.js'
             'bower_components/i18next/i18next.js'
             'bower_components/selectize/dist/js/standalone/selectize.js'
+            'bower_components/jquery-smooth-scroll/jquery.smooth-scroll.js'
+            'bower_components/pines-notify/pnotify.core.js'
+            'bower_components/pines-notify/pnotify.buttons.js'
+            'bower_components/pines-notify/pnotify.callbacks.js'
+            'bower_components/pines-notify/pnotify.confirm.js'
+            'bower_components/pines-notify/pnotify.desktop.js'
+            'bower_components/pines-notify/pnotify.history.js'
+            'bower_components/pines-notify/pnotify.nonblock.js'
+            'bower_components/pines-notify/pnotify.reference.js'
             'bower_components/requirejs/require.js'
           ]
           dest: out_dev + 'js/index.js'
@@ -359,8 +382,29 @@ module.exports = (grunt) ->
             'bower_components/selectize/dist/css/selectize.bootstrap3.css'
             'bower_components/spectrum/spectrum.css'
             'bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.css'
+            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.css'
+            'bower_components/malhar-angular-dashboard/dist/angular-ui-dashboard.css'
+            'bower_components/pines-notify/pnotify.core.css'
+            'bower_components/pines-notify/pnotify.buttons.css'
+            'bower_components/pines-notify/pnotify.history.css'
+            'bower_components/pines-notify/pnotify.picon.css'
+            'bower_components/nvd3/nv.d3.css'
+            'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.css'
           ]
           dest: out_dev + 'css/vendor.css'
+        ,
+          src: [
+            'bower_components/yamm3/yamm/yamm.css'
+            'bower_components/jquery-ui/themes/base/minified/jquery-ui.css'
+            'bower_components/jquery-switchbutton/jquery.switchButton.css'
+            'bower_components/selectize/dist/css/selectize.bootstrap3.css'
+            'bower_components/spectrum/spectrum.css'
+            'bower_components/pines-notify/pnotify.core.css'
+            'bower_components/pines-notify/pnotify.buttons.css'
+            'bower_components/pines-notify/pnotify.history.css'
+            'bower_components/pines-notify/pnotify.picon.css'
+          ]
+          dest: out_dev + 'css/index.css'
         ]
 
       prod:
@@ -371,8 +415,11 @@ module.exports = (grunt) ->
             'node_modules/underscore.string/dist/underscore.string.min.js'
             'node_modules/underscore-query/lib/underscore-query.min.js'
 #            'node_modules/lodash-prototype/lodash-prototype.js'
+            'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/mustache/mustache.js'
+            'node_modules/handlebars/dist/handlebars.min.js'
+            'node_modules/swag/lib/swag.min.js'
+            'node_modules/js-beautify/js/lib/beautify.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/minified/jquery-ui.min.js'
             'bower_components/safejson/dist/safejson.min.js'
@@ -407,7 +454,24 @@ module.exports = (grunt) ->
             'bower_components/angular-spectrum-colorpicker/dist/angular-spectrum-colorpicker.min.js'
             'bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.js'
             'bower_components/jquery-smooth-scroll/jquery.smooth-scroll.min.js'
-            'bower_components/jquery-sortable/source/js/jquery-sortable-min.js'
+            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.js'
+            'bower_components/angular-ui-sortable/sortable.min.js'
+            'bower_components/malhar-angular-dashboard/dist/angular-ui-dashboard.js'
+            'bower_components/d3/d3.min.js'
+            'bower_components/nvd3/nv.d3.min.js'
+            'bower_components/angularjs-nvd3-directives/dist/angularjs-nvd3-directives.min.js'
+            'bower_components/malhar-angular-widgets/dist/malhar-angular-widgets.js'
+            'bower_components/pines-notify/pnotify.core.js'
+            'bower_components/pines-notify/pnotify.buttons.js'
+            'bower_components/pines-notify/pnotify.callbacks.js'
+            'bower_components/pines-notify/pnotify.confirm.js'
+            'bower_components/pines-notify/pnotify.desktop.js'
+            'bower_components/pines-notify/pnotify.history.js'
+            'bower_components/pines-notify/pnotify.nonblock.js'
+            'bower_components/pines-notify/pnotify.reference.js'
+            'bower_components/angular-pines-notify/src/pnotify.js'
+            'bower_components/fontawesome-iconpicker/dist/js/fontawesome-iconpicker.min.js'
+            'bower_components/angular-moment/angular-moment.min.js'
             'node_modules/diff/diff.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
@@ -420,17 +484,27 @@ module.exports = (grunt) ->
             'node_modules/underscore.string/dist/underscore.string.min.js'
             'node_modules/underscore-query/lib/underscore-query.js'
 #            'node_modules/lodash-prototype/lodash-prototype.js'
+            'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/mustache/mustache.js'
+            'node_modules/handlebars/dist/handlebars.min.js'
+            'node_modules/swag/lib/swag.min.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/jquery-ui.min.js'
             'bower_components/safejson/dist/safejson.min.js'
-#            'bower_components/underscore/underscore.js'
             'bower_components/moment/moment-with-langs.min.js'
-            'node_modules/color/color-0.6.0.min.js'
+            'bower_components/tinycolor/tinycolor.js'
             'bower_components/bootstrap/dist/js/bootstrap.min.js'
             'bower_components/i18next/i18next.min.js'
             'bower_components/selectize/dist/js/standalone/selectize.min.js'
+            'bower_components/jquery-smooth-scroll/jquery.smooth-scroll.min.js'
+            'bower_components/pines-notify/pnotify.core.js'
+            'bower_components/pines-notify/pnotify.buttons.js'
+            'bower_components/pines-notify/pnotify.callbacks.js'
+            'bower_components/pines-notify/pnotify.confirm.js'
+            'bower_components/pines-notify/pnotify.desktop.js'
+            'bower_components/pines-notify/pnotify.history.js'
+            'bower_components/pines-notify/pnotify.nonblock.js'
+            'bower_components/pines-notify/pnotify.reference.js'
             'bower_components/requirejs/require.js'
           ]
           dest: out + 'js/index.js'
@@ -446,8 +520,29 @@ module.exports = (grunt) ->
             'bower_components/selectize/dist/css/selectize.bootstrap3.css'
             'bower_components/spectrum/spectrum.css'
             'bower_components/bootstrap-touchspin/dist/jquery.bootstrap-touchspin.min.css'
+            'bower_components/angular-ui-tree/dist/angular-ui-tree.min.css'
+            'bower_components/malhar-angular-dashboard/dist/angular-ui-dashboard.css'
+            'bower_components/pines-notify/pnotify.core.css'
+            'bower_components/pines-notify/pnotify.buttons.css'
+            'bower_components/pines-notify/pnotify.history.css'
+            'bower_components/pines-notify/pnotify.picon.css'
+            'bower_components/nvd3/nv.d3.min.css'
+            'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.min.css'
           ]
           dest: out + 'css/vendor.css'
+        ,
+          src: [
+            'bower_components/yamm3/yamm/yamm.css'
+            'bower_components/jquery-ui/themes/base/minified/jquery-ui.min.css'
+            'bower_components/jquery-switchbutton/jquery.switchButton.css'
+            'bower_components/selectize/dist/css/selectize.bootstrap3.css'
+            'bower_components/spectrum/spectrum.css'
+            'bower_components/pines-notify/pnotify.core.css'
+            'bower_components/pines-notify/pnotify.buttons.css'
+            'bower_components/pines-notify/pnotify.history.css'
+            'bower_components/pines-notify/pnotify.picon.css'
+          ]
+          dest: out + 'css/index.css'
         ]
 
     "file-creator":
@@ -493,6 +588,14 @@ module.exports = (grunt) ->
       jadeDynForm:
         files: ['app/dynFormTemplates/*.jade']
         tasks: ['jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'reload']
+
+#      bower:
+#        files: ['bower_components/**/*']
+#        tasks: ['concat:dev', 'reload']
+
+#      npm:
+#        files: ['node_modules/**/*']
+#        tasks: ['reload']
 
       server_jade:
         files: ['server/**/*.jade']
