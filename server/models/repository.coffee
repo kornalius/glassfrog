@@ -175,7 +175,7 @@ setTimeout( ->
       version: '1.0.1a'
       comments: 'Second release'
     ,
-      date: new Moment().subtract('days', 7)
+      date: new Moment().subtract(7, 'days')
       version: '1.0.0a'
       comments: 'First release'
     ]
@@ -189,11 +189,11 @@ setTimeout( ->
       version: '1.5.0r'
       comments: 'Third release'
     ,
-      date: new Moment().subtract('days', 12)
+      date: new Moment().subtract(12, 'days')
       version: '1.3.2b'
       comments: 'Second release'
     ,
-      date: new Moment().subtract('days', 30)
+      date: new Moment().subtract(30, 'days')
       version: '1.0.0r'
       comments: 'First release'
     ]

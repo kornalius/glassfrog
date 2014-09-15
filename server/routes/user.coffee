@@ -132,7 +132,15 @@ app.get("/login", (req, res) ->
   )
 )
 
-app.post("/login", passport.authenticate("local", {successRedirect: '/', failureRedirect: '/login', failureFlash: true}))
+app.post("/login", (req, res, next) ->
+  console.log "/login", req.body
+  if req.body.rememberme
+    hour = 3600000
+    req.session.cookie.maxAge = 14 * 24 * hour # 2 weeks
+  else
+    req.session.cookie.expires = false
+  next()
+, passport.authenticate("local", {successRedirect: '/', failureRedirect: '/login', failureFlash: true}))
 
 #app.get("/profile", ensureAuthenticated, (req, res) ->
 #  res.render("profile",

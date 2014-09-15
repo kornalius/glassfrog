@@ -10,22 +10,33 @@ modulesPath = 'client_modules'
 exports.modulesPath = modulesPath
 
 exts = require("./exts")
-express = require('express')
+
 http = require('http')
 path = require('path')
+
+flash = require('express-flash')
+express = require('express')
+favicon = require('serve-favicon')
+serveStatic = require('serve-static')
+session = require('express-session')
+bodyParser = require('body-parser')
+cookieParser = require('cookie-parser')
+methodOverride = require('method-override')
+errorhandler = require('errorhandler')
+morgan = require('morgan')
 passport = require('passport')
 LocalStrategy = require('passport-local').Strategy
-flash = require('connect-flash')
+helmet = require('helmet')
+csrf = require('csurf')
+
 #require('debug-trace')({ colors: true, always: true})
 i18n = require('i18next')
-expressValidator = require('express-validator')
-helmet = require('helmet')
 fs = require("fs")
 path = require("path")
 endpoints = require("./endpoints")
 autoIncrement = require('mongoose-auto-increment')
-secure = require("node-secure")
 mongoose = require('mongoose')
+secure = require("node-secure")
 
 global.mongooseCurrency = require('mongoose-currency').loadType(mongoose)
 global.mongooseSetter = require('mongoose-setter')(mongoose)
@@ -54,37 +65,6 @@ global.traverse = require('traverse')
 
 global.tinycolor = require('tinycolor2')
 
-console.log "Server modules required!"
-
-
-logErrors = (err, req, res, next) ->
-  console.error(err.stack)
-  next(err)
-
-clientErrorHandler = (err, req, res, next) ->
-  if req.xhr
-    res.send(500, { error: 'Something blew up!' })
-  else
-    next(err)
-
-errorHandler = (err, req, res, next) ->
-  res.status(500)
-
-#  e = []
-#
-#  if req.flash? and req.flash('error')
-#    e.concat(req.flash('error'))
-#
-#  if err
-#    e.push(err)
-
-#  res.render('error',
-#    title: 'Error'
-#    user: req.user
-#    errors: e
-#    warnings: req.flash('info')
-#  )
-  next()
 
 validUser = (req) ->
   req? and req.user? and req.user._id? and req.user.isVerified and req.isAuthenticated()
@@ -134,7 +114,7 @@ exports.userInfo = userInfo
 
 console.log "Creating Passport functions..."
 
-passport.serializeUser( (user, done) ->
+passport.serializeUser((user, done) ->
   createAccessToken = () ->
 
     if !token
@@ -156,7 +136,7 @@ passport.serializeUser( (user, done) ->
   createAccessToken()
 )
 
-passport.deserializeUser( (token, done) ->
+passport.deserializeUser((token, done) ->
   if token? and mongoose.model('User')?
     mongoose.model('User').findOne({ accessToken: token }, (err, user) ->
       if user?
@@ -197,7 +177,8 @@ console.log "Initializing Express framework..."
 console.log "Initializing Redis server..."
 
 app = express()
-RedisStore = require('connect-redis')(express)
+
+RedisStore = require('connect-redis')(session)
 if process.env.NODE_ENV == 'development'
   store = new RedisStore(
     host: 'localhost'
@@ -220,48 +201,60 @@ exports.i18n = i18n
 app.set('port', process.env.PORT or 3000)
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'jade')
-app.use(express.static(path.join(__dirname, '../_public')))
-app.use(express.favicon())
-app.use(express.urlencoded())
-app.use(express.json())
-app.use(express.logger('dev'))
-app.use(express.bodyParser())
-app.use(helmet.xframe())
-app.use(helmet.iexss())
-app.use(helmet.contentTypeOptions())
-app.use(helmet.cacheControl())
-app.use(express.methodOverride())
+
+if process.env.NODE_ENV == 'production'
+  app.set('trust proxy', 1)
+
+app.use(morgan('dev'))
+app.use(methodOverride('X-HTTP-Method-Override'))
+app.use(cookieParser('dc04ddbab0a4381fd1d4015db6438f172698374c'))
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+app.use(serveStatic(path.join(__dirname, '../_public')))
+app.use(favicon(path.join(__dirname, '../_public/favicon.ico')))
 app.use(flash())
-app.use(express.cookieParser('dc04ddbab0a4381fd1d4015db6438f172698374c'))
-app.use(express.cookieSession())
-app.use(expressValidator())
-app.use(express.session(
+app.use(session(
   store: store
-  key: 'sid'
+  name: 'sid'
   secret: '81acf724ef73d87efc8fdc447a7f54b525f5a18c'
+  resave: false
+  saveUninitialized: false
   cookie:
     maxAge: 60000
+    path: '/'
     httpOnly: true
-    secure: true
+    secure: true if process.env.NODE_ENV == 'production'
   )
 )
 
-csrfValue = (req) ->
-  if req.body?
-    token = req.body._csrf
-  if !token? and req.query?
-    token = req.query._csrf
-  if !token? and req.session?
-    token = req.session._csrf
-  if !token?
-    token = req.headers['x-csrf-token']
-  if !token?
-    token = req.headers['x-xsrf-token']
-  return token
+app.use(passport.initialize())
+app.use(passport.session())
 
-app.use(express.csrf({ value: csrfValue }))
+app.use(i18n.handle)
 
-app.use( (req, res, next) ->
+app.use(helmet())
+
+app.use(csrf())
+#  value: (req) ->
+#    if req.body?
+#      token = req.body._csrf
+#      console.log "body", token
+#    if !token? and req.query?
+#      token = req.query._csrf
+#      console.log "query", token
+#    if !token? and req.session?
+#      token = req.session._csrf
+#      console.log "session", token
+#    if !token?
+#      token = req.headers['x-csrf-token']
+#      console.log "headers x-csrf", token
+#    if !token?
+#      token = req.headers['x-xsrf-token']
+#      console.log "headers x-xsrf", token
+#    return token
+#))
+
+app.use((req, res, next) ->
   token = req.csrfToken()
   res.cookie('XSRF-TOKEN', token)
   res.locals.csrftoken = token
@@ -269,30 +262,20 @@ app.use( (req, res, next) ->
   if mongoose.model('Log')?
     mongoose.model('Log').log(mongoose.model('Log').LOG_REQUEST, null, req.method, req.ip, req.url)
 
-  if req.method is 'POST' and req.url.toLowerCase() is '/login'
-    if req.body.rememberme
-      hour = 3600000
-      req.session.cookie.maxAge = 14 * 24 * hour # 2 weeks
-    else
-      req.session.cookie.expires = false
-
   next()
 )
 
-app.use(passport.initialize())
-app.use(passport.session())
-
-app.use(i18n.handle)
-app.use(app.router)
-app.use(logErrors)
-app.use(clientErrorHandler)
-app.use(errorHandler)
+app.use((err, req, res, next) ->
+  if req.xhr
+    res.send(500, { error: 'Something blew up!' })
+  else
+    next(err)
+)
 
 if process.env.NODE_ENV == 'development'
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }))
+  app.use(errorhandler())
   mongoUri = 'mongodb://localhost/'
 else if process.env.NODE_ENV == 'production'
-  app.use(express.errorHandler())
   mongoUri = 'mongodb://www.arianesoft.ca/glassfrog:12500/'
 exports.mongoUri = mongoUri
 
@@ -405,7 +388,7 @@ console.log "Connecting to MongoDB server..."
 db.on('error', console.error.bind(console, 'connection error:'))
 
 db.once('open', () ->
-  http.createServer(app).listen(app.get('port'), () ->
+  app.listen(app.get('port'), () ->
     console.log 'Express server listening on port ' + app.get('port')
   )
 )
