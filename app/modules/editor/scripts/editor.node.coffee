@@ -459,6 +459,12 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.getEnum = (n) ->
       EditorNode.getEnum(n)
 
+    $scope.hasMulti = (n) ->
+      EditorNode.hasMulti(n)
+
+    $scope.getMulti = (n) ->
+      EditorNode.getMulti(n)
+
     $scope.edit = (n) ->
       EditorNode.edit(n)
 
@@ -488,13 +494,13 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.schema = (cb) ->
       planes = new Rest('Planes')
-      planes.create({'FlightNo': '1'}, false, (p, err) ->
+      planes.create({'FlightNo': '1'}, (p, err) ->
         console.log p, err
-        planes.create({'FlightNo': '2'}, false, (p, err) ->
+        planes.create({'FlightNo': '2'}, (p, err) ->
           console.log p, err
-          planes.create({'FlightNo': '3'}, false, (p, err) ->
+          planes.create({'FlightNo': '3'}, (p, err) ->
             console.log p, err
-            planes.fetch({perPage: 10}, (result, err) ->
+            planes.find({l: 10}, (result, err) ->
               console.log result, err
               for p in planes.rows
                 console.log p
@@ -507,12 +513,19 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       n.toggle(recursive)
 
     $scope.save = (cb) ->
-      Editor.module.saveLocally((ok) ->
+      m = Editor.module
+      m.saveLocally((ok) ->
         if ok
+#          Editor.module = null
+#          Editor.rootNodes = []
           require(['vc_global', 'vc_module'], (VCGlobal, VCModule) ->
-            VCGlobal.modules.update(Editor.module, (result, err) ->
+            VCGlobal.modules.update(m, (result, err) ->
               if !err
                 VCModule.make(result)
+                m.setModified(false)
+#                Editor.editModule(result, cb)
+              else
+                cb(null) if cb
             )
           )
       )
@@ -523,22 +536,22 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       )
 
     $scope.choose = (cb) ->
-      dynModal.chooseModal("Select", "Select all that applies", [
+      dynModal.chooseModal({title:"Select", caption:"Select all that applies", items:[
         {label: 'Alain', value: 1},
         {label: 'Steven', value: 2},
         {label: 'Paul', value: 3},
         {label: 'Joe', value: 4},
         {label: 'Aganistaz', value: 5}
-      ], () ->
+      ]}, ->
         cb() if cb
       )
 
     $scope.quickForm = (cb) ->
       dynForm.quickForm('testForm', null, null, 'Test Form', 'user', (formDefinition) ->
         user = new Rest('user')
-        user.fetch(globals.user._id, ->
+        user.findById(globals.user._id, ->
 #          $('#editor-preview-main').contents().remove()
-          dynModal.showModalForm(formDefinition, user, () ->
+          dynModal.showModalForm({scope:$scope, formDefinition:formDefinition, model:user}, ->
             cb() if cb
           )
         )
@@ -547,10 +560,10 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.preview = (node, cb) ->
       dynForm.quickForm('testForm', null, null, 'Test Form', 'user', (formDefinition) ->
         user = new Rest('user')
-        user.fetch(globals.user._id, ->
+        user.findById(globals.user._id, ->
           scope = $rootScope.$new(true)
           dynForm.build(scope, formDefinition, user, null, (template) ->
-            dynModal.showModal('Preview', scope, template, () ->
+            dynModal.showModal({title:'Preview', scope:scope, model:user, template:template}, ->
               cb() if cb
             )
           )
@@ -584,11 +597,11 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
   ($scope) ->
 
     $scope.$watch('a.value', (newValue, oldValue) ->
-      if newValue != oldValue
-        if type(newValue) is 'array' and newValue.length == 1
+      if !_.isEqual(newValue, oldValue)
+        if $scope.a.hasEnum() and type(newValue) is 'array' and newValue.length == 1
           newValue = newValue[0]
-        if type(newValue) is 'array'
-          newValue = null
+#        if type(newValue) is 'array'
+#          newValue = null
         $scope.a.setValue(newValue)
     )
 

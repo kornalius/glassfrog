@@ -103,8 +103,11 @@ GlobalClass =
     finally
       return syntax
 
-  enumToList: (l, node, asObject) ->
-    nl = ['']
+  enumToList: (l, node, asObject, multi) ->
+    if !multi
+      nl = ['']
+    else
+      nl = []
     for i in [0..l.length - 1]
       ii = l[i]
       if ii and typeof ii is 'string'
@@ -137,28 +140,28 @@ GlobalClass =
 
     console.log "Loading components..."
 
-    if window?
-      $http = angular.injector(['ng']).get('$http')
-      $http.get('/api/components')
-      .success((data, status) ->
-        if data
-          require(['vc_component'], (VCComponent) ->
-            that.components = data
-            for c in that.components
-              VCComponent.make(c)
-            console.log "Loaded {0} components".format(data.length)
-            cb(data) if cb
-          )
-        else
+    if window? and angular?
+      $http = angular.injector(['ng']).invoke(['$http', ($http) ->
+        $http.get('/api/components')
+        .success((data, status) ->
+          if data
+            require(['vc_component'], (VCComponent) ->
+              that.components = data
+              for c in that.components
+                VCComponent.make(c)
+              console.log "Loaded {0} components".format(data.length)
+              cb(data) if cb
+            )
+          else
+            cb(null) if cb
+        )
+        .error((data, status) ->
+          console.log "Error loading components", status
           cb(null) if cb
-      )
-      .error((data, status) ->
-        console.log "Error loading components", status
-        cb(null) if cb
-      )
+        )
+      ])
     else
-      mongoose = require('mongoose')
-      mongoose.model('Component').find({}, (err, data) ->
+      require('mongoose').model('Component').find({}, (err, data) ->
         if data
           VCComponent = require('./vc_component')
           that.components = []

@@ -11,9 +11,10 @@
 
     .components
 
-      #editor-components-list
+      #editor-components-list(perfect-scrollbar)
 
         .components-tree(ui-tree="treeOptions", data-empty-place-holder-enabled="false", data-max-depth="1", ng-cloak)
 
           ol(ng-model="componentCategories", id="tree-components-root", ui-tree-nodes="", data-nodrop)
+
             li(ng-repeat="c in componentCategories", data-collapsed="true", ui-tree-node, data-nodrop, ng-include="'/partials/component-template.html'")

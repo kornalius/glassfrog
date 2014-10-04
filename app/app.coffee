@@ -16,7 +16,7 @@ moduleNames = [
   'suggestions'
   'user'
   'editor'
-  'dashboard'
+#  'dashboard'
   'repository'
 ]
 
@@ -38,38 +38,22 @@ app = angular.module('app', [
 
   #used for angular-ui-router
   'ui.router.state'
-
   'ngCookies'
   'ngResource'
+  'angular-loading-bar'
   'ngAnimate'
   'ngSanitize'
   'angularMoment'
-
   'webStorageModule'
-
   'ui.config'
   'ui.directives'
   'ui.filters'
-
-  'ui.selectize'
-  'nvd3ChartDirectives'
-  'ui.dashboard'
-
-  'pagination.services'
-  'ncy-angular-breadcrumb'
-
   'rest.services'
-
   'jm.i18next'
-  'ajoslin.promise-tracker'
   'frapontillo.ex.filters'
   'angular-lodash'
   'underscore.string'
-
-  'Datetimepicker'
-  'angularSpectrumColorpicker'
-
-  'ui.tree'
+  'perfect_scrollbar'
 
 #  'ngDatatables'
 #  'ngBaseDataTables'
@@ -84,10 +68,21 @@ app = angular.module('app', [
   'app.filters'
   'app.services'
 
+  'autosize.services'
   'switch.services'
   'twolist.services'
   'checklistbox.services'
   'iconpicker.services'
+  'pageslide-directive'
+  'Datetimepicker'
+  'angularSpectrumColorpicker'
+  'ui.tree'
+  'ui.selectize'
+  'nvd3ChartDirectives'
+  'ui.dashboard'
+  'pagination.services'
+  'ncy-angular-breadcrumb'
+  'hc.marked'
 
   'sidebar'
   'navbar'
@@ -136,8 +131,10 @@ app = angular.module('app', [
   '$urlRouterProvider'
   '$i18nextProvider'
   '$breadcrumbProvider'
+  'markedProvider'
+  'cfpLoadingBarProvider'
 
-  ($stateProvider, $urlRouterProvider, $i18nextProvider, $breadcrumbProvider) ->
+  ($stateProvider, $urlRouterProvider, $i18nextProvider, $breadcrumbProvider, markedProvider, cfpLoadingBarProvider) ->
 
 #    _.mixin(_.string.exports())
 
@@ -173,4 +170,15 @@ app = angular.module('app', [
       templateUrl: 'partials/breadcrumb.html'
     )
 
+    markedProvider.setOptions(
+      gfm: true
+      tables: true
+      breaks: true
+      sanitize: true
+      smartLists: true
+      smartypants: true
+    )
+
+    cfpLoadingBarProvider.includeSpinner = false
+    cfpLoadingBarProvider.latencyThreshold = 50
 ])

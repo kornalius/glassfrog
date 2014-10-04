@@ -1,6 +1,6 @@
 .navbar-main.navbar.navbar-default.navbar-static-top.navbar-fixed-top(role="navigation", ng-controller="NavbarCtrl")
   .navbar-header
-    button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+    button.navbar-toggle(type='button', data-toggle='collapse', data-target='#main-navbar-collapse')
       span.sr-only Toggle navigation
       span.icon-bar
       span.icon-bar
@@ -9,7 +9,7 @@
     a.navbar-brand.proper(href='/')
       | &nbsp;Glassfrog
 
-  nav.collapse.navbar-collapse
+  .collapse.navbar-collapse#main-navbar-collapse
 
     ul.nav.navbar-nav.navbar-right(style="margin-right: 15px;")
       li.dropdown
@@ -61,8 +61,10 @@
           //  | &nbsp;Sign Out
 
     ul.nav.navbar-nav.navbar-right(ng-cloak)
-      li(ng-repeat="m in navs()", ui-sref-active="active")
-        a.proper(ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.navbarHidden") {{"nav." + (m.altname ? m.altname : m.name) | i18next}}
+      li(ng-repeat="m in navs()", ng-class="{ active: $state.includes(m.name.split('.')[0]) }")
+        a.proper(ui-sref="{{m.name}}", ng-show="!m.navbarHidden")
+          span.navbar-menu-icon.cic(class="{{m.icon}}", ng-show="m.icon")
+          | {{"nav." + (m.altname ? m.altname : m.name) | i18next}}
 
 //form.navbar-form.navbar-right(role='search')
 //  .form-group

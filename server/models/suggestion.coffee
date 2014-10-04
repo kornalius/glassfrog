@@ -1,5 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 SuggestionSchema = mongoose.Schema(
 
@@ -12,6 +13,11 @@ SuggestionSchema = mongoose.Schema(
     type: String
     required: true
     label: 'Email'
+
+  date:
+    type: Date
+    required: false
+    label: 'Test Date'
 
   message:
     type: String
@@ -29,5 +35,6 @@ SuggestionSchema = mongoose.Schema(
 )
 
 SuggestionSchema.plugin(timestamps)
+SuggestionSchema.plugin(filterPlugin)
 
 module.exports = mongoose.model('Suggestion', SuggestionSchema)

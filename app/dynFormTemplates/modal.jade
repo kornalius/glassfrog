@@ -14,4 +14,6 @@ div(ng-controller="dynModalCtrl")
 
   .modal-footer(ng-show="form.buttons")
     span(ng-repeat="b in form.buttons", style="padding:4px;")
-      input.btn(type="button", class="btn-{{b.class}}", ng-click="modalClick(b.url)", value="{{b.label}}")
+      button.btn(type="button", class="btn-{{b.class}}", ng-click="modalClick(b.url)")
+        span.cic(ng-if="b.icon", class="{{b.icon}}") &nbsp;
+        | {{b.label}}

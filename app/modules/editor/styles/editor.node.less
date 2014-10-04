@@ -254,10 +254,6 @@
   margin: 0px;
 }
 
-#editor-content-toolbar-menu .nav {
-  height: 36px !important;
-}
-
 #editor-content ul.nav.nav-tabs {
   height: 42px;
   padding-left: 5px;
@@ -269,7 +265,8 @@
   border-radius: 4px;
   padding: 12px;
   background-color: @darker-blue-color;
-  overflow: auto;
+  position: relative;
+  overflow: hidden;
 }
 
 #editor-toolbar {
@@ -324,9 +321,14 @@
   min-width: 50px;
 
   &.node-arg-label-string-col {
+    max-width: none;
   }
 
   &.node-arg-label-enum-col {
+  }
+
+  &.node-arg-label-multi-col {
+    max-width: none;
   }
 
   &.node-arg-label-number-col {
@@ -363,7 +365,7 @@
 }
 
 .node-arg-label {
-  background: @gray-color;
+  background: lighten(@gray-color, 10%);
   color: @light-text-color;
   box-shadow: none;
   padding-left: 4px;
@@ -376,7 +378,7 @@
   text-overflow: ellipsis;
 
   &.highlighted {
-    background: lighten(@dark-gray-color, 15%);
+    background: lighten(@gray-color, 15%);
   }
 
   &.selected {
@@ -393,6 +395,9 @@
   }
 
   &.node-arg-label-enum {
+  }
+
+  &.node-arg-label-multi {
   }
 
   &.node-arg-label-number {
@@ -455,7 +460,8 @@
   box-shadow: none;
 
   &.node-arg-input-string {
-    min-width: 200px;
+    max-width: none;
+    min-width: 50px;
     width: 200px;
     padding-left: 3px;
     padding-right: 3px;
@@ -488,6 +494,56 @@
 
     & .selectize-control {
 
+    }
+
+  }
+
+  &.node-arg-input-multi {
+    font-size: small;
+    min-width: 250px;
+//    max-width: 250px;
+    vertical-align: middle;
+
+    & .selectize-input, & .selectize-input input {
+      min-height: @node-arg-height;
+      max-height: @node-arg-height;
+      line-height: @node-arg-height - 6px;
+      padding: 3px;
+      vertical-align: middle;
+
+      &.has-items {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+    }
+    }
+
+    & .selectize-input:after {
+      right: 6px !important;
+      top: 48% !important;
+
+      &.has-items {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+      }
+    }
+
+    & .selectize-dropdown {
+      margin-top: 0px !important;
+      border-top-left-radius: 4px! important;
+      border-top-right-radius: 4px! important;
+    }
+
+    & .selectize-control {
+      &.multi {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+        padding-top: 0px !important;
+        padding-bottom: 0px !important;
+      }
     }
 
   }

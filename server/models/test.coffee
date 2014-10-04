@@ -2,6 +2,7 @@ mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 ownable = require('mongoose-ownable')
 async = require('async')
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 TestSchema = mongoose.Schema(
   value:
@@ -14,34 +15,33 @@ TestSchema = mongoose.Schema(
     label: 'Hidden field'
 
   dict:
-    type:
-      testString:
-        type: String
-      testBoolean:
-        type: Boolean
-    label: 'Dict-documents'
+    testString:
+      type: String
 
-  sub:
-    type: [
+    testBoolean:
+      type: Boolean
+
+  sub: [
+    testString:
+      type: String
+
+    testBoolean:
+      type: Boolean
+
+    testDict:
       testString:
         type: String
+
       testBoolean:
         type: Boolean
-      testDict:
-        type:
-          testString:
-            type: String
-          testBoolean:
-            type: Boolean
-        label: 'SubDict-documents'
-    ]
-    label: 'Sub-documents'
+  ]
 ,
   label: 'Tests'
 )
 
 TestSchema.plugin(timestamps)
 TestSchema.plugin(ownable)
+TestSchema.plugin(filterPlugin)
 
 TestSchema.method(
 )
@@ -56,31 +56,27 @@ setTimeout( ->
         Test.create(
           value: i
           hidden: i.toString()
-          dict: [
+          dict:
             testString: 'a'
             testBoolean: true
-          ]
           sub: [
             testString: 'a'
             testBoolean: true
-            testDict: [
+            testDict:
               testString: 'a.a'
               testBoolean: true
-            ]
           ,
             testString: 'b'
             testBoolean: false
-            testDict: [
+            testDict:
               testString: 'b.b'
               testBoolean: false
-            ]
           ,
             testString: 'c'
             testBoolean: true
-            testDict: [
+            testDict:
               testString: 'c.c'
               testBoolean: true
-            ]
           ]
         , (err) ->
           callback()

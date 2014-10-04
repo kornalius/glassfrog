@@ -12,6 +12,7 @@ module.exports = ((schema, options) ->
       owner:
         type: String
         label: 'Account/Card owner name'
+        private: true
 
       number:
         type: String
@@ -40,12 +41,14 @@ module.exports = ((schema, options) ->
           type: mongooseCurrency
           label: 'Transaction Amount'
           readOnly: true
+          private: true
   )
 
   if options && options.index
     schema.path('payment').index(options.index)
 
   schema.set('toObject', {virtuals: true})
+  schema.set('toJSON', {virtuals: true})
 
   schema.virtual('amount').get( ->
     return (if @isTransaction then @payment.transaction.amount else 0.00)

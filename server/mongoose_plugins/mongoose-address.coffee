@@ -83,6 +83,7 @@ module.exports = ((schema, options) ->
     schema.path('mobile').index(options.index.mobile)
 
   schema.set('toObject', {virtuals: true})
+  schema.set('toJSON', {virtuals: true})
 
   schema.virtual('name.full')
     .get(->

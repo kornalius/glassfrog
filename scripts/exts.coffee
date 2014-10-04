@@ -89,8 +89,98 @@ if !Array::where
       if match is hit then true else false
 
 
+if !window?
+  log = console.log
+  console.log = () ->
+#    console.trace "console.log()"
+    util = require('util')
+    ansi = require('simple-ansi')
+    Moment = require('moment')
+    l = []
+    for a in Array.prototype.slice.call(arguments)
+      if type(a) is 'object'
+        l.push(util.inspect(a, {depth: 2, colors: true}).replace(/\s+/g,' ').replace(/\n/g,''))
+#        l.push(serialize(a))
+      else
+        l.push(a)
+    t = l.join(' ')
+    for c in ['blue', 'red', 'green', 'cyan', 'yellow', 'magenta', 'bgGray', 'bgRed', 'bgGreen', 'bgYellow', 'bgBlue', 'bgMagenta', 'bgCyan', 'white', 'black', 'bold', 'italic', 'underline', 'reset']
+      t = t.replace('{' + c + '}', ansi[c], 'gim')
+    util.puts "{0} [{1}.{2}:{3}] {4}".format(ansi.reset + ansi.blue + new Moment().format('h:m:s.S') + ansi.reset, ansi.cyan + ansi.underline + __file__, __ext__ + ansi.yellow, __line__ + ansi.reset, t)
+
+  Object.defineProperty(global, '__stack__',
+    get: ->
+      orig = Error.prepareStackTrace
+      Error.prepareStackTrace = (_, stack) -> return stack
+      err = new Error
+      Error.captureStackTrace(err, arguments.callee)
+      stack = err.stack
+      Error.prepareStackTrace = orig
+      return stack
+  )
+
+  Object.defineProperty(global, '__line__',
+    get: ->
+      if  __stack__[2]
+        return __stack__[2].getLineNumber()
+      else
+        return 0
+  )
+
+  Object.defineProperty(global, '__file__',
+    get: ->
+      if  __stack__[2] and __stack__[2].getFileName()
+        return __stack__[2].getFileName().split('/').slice(-1)[0].split('.').slice(0)[0]
+      else
+        return ''
+  )
+
+  Object.defineProperty(global, '__ext__',
+    get: ->
+      if  __stack__[2] and __stack__[2].getFileName()
+        return __stack__[2].getFileName().split('.').slice(-1)[0]
+      else
+        return ''
+  )
+
+  Object.defineProperty(global, '__dir__',
+    get: ->
+      if  __stack__[2] and __stack__[2].getFileName()
+        filename = __stack__[2].getFileName().split('/').slice(-1)[0]
+        return __stack__[2].getFileName().split(filename).slice(0)[0]
+      else
+        return ''
+  )
 
 exp = {}
+
+exp.jsonToString = (obj, cb) ->
+  s = ''
+  e = null
+  try
+    s = CircularJSON.stringify(obj)
+  catch err
+    e = err
+    console.log e
+    throw e
+  if cb
+    cb(e, s)
+  else
+    return s
+
+exp.stringToJson = (str, cb) ->
+  json = null
+  e = null
+  try
+    json = CircularJSON.parse(str)
+  catch err
+    e = err
+    console.log e
+    throw e
+  if cb
+    cb(e, json)
+  else
+    return json
 
 exp.type = (obj) ->
   if obj == undefined or obj == null
@@ -137,3 +227,40 @@ for k of exp
     window[k] = exp[k]
   else if global? and !global[k]
     global[k] = exp[k]
+
+
+JSON.flatten = (data) ->
+  result = {}
+  recurse = (cur, prop) ->
+    if Object(cur) != cur
+      result[prop] = cur
+    else if Array.isArray(cur)
+      for i in [0..cur.length - 1]
+        recurse(cur[i], prop + "[" + i + "]")
+      if cur.length == 0
+        result[prop] = []
+    else
+      isEmpty = true
+      for p of cur
+        isEmpty = false
+        recurse(cur[p], (if prop then prop + "." + p else p))
+      if isEmpty and prop
+        result[prop] = {}
+  recurse(data, "")
+  return result
+
+JSON.unflatten = (data) ->
+  'use strict'
+  if Object(data) != data or Array.isArray(data)
+    return data
+  regex = /\.?([^.\[\]]+)|\[(\d+)\]/g
+  resultholder = {}
+  for p of data
+    cur = resultholder
+    prop = ""
+    while m = regex.exec(p)
+      cur = cur[prop] or (cur[prop] = (if m[2] then [] else {}))
+      prop = m[2] or m[1]
+    cur[prop] = data[p]
+  return resultholder[""] or resultholder
+

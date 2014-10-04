@@ -38,10 +38,7 @@ ComponentClass =
 
     if c.extra?
       if typeof c.extra is 'string'
-        try
-          c.$data._json = JSON.parse(c.extra)
-        catch e
-          console.log "Error parsing JSON data", e
+        c.$data._json = stringToJson(c.extra)
       else
         c.$data._json = _.cloneDeep(c.extra)
 

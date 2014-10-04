@@ -48,6 +48,7 @@ module.exports = ((schema, options) ->
     schema.path('locale').index(options.index.locale)
 
   schema.set('toObject', {virtuals: true})
+  schema.set('toJSON', {virtuals: true})
 
   schema.virtual('name.full').get(->
     @name.first + ' ' + @name.last

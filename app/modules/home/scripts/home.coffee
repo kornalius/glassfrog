@@ -18,6 +18,7 @@ angular.module('home', ['app'])
     $stateProvider
       .state('home',
         url:'/home'
+        icon: 'cic-home3'
         templateUrl: '/partials/home.html'
         sidebarHidden: true
         data:

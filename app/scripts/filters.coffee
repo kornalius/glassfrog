@@ -39,3 +39,23 @@ angular.module('app.filters', [])
       else
         return input
 ])
+
+.filter('partition', [
+  '$cacheFactory'
+
+  ($cacheFactory) ->
+    arrayCache = $cacheFactory('partition')
+    filter = (arr, size) ->
+      if !arr
+        return
+      newArr = []
+      for i in [0..arr.length] by size
+        newArr.push(arr.slice(i, i + size))
+      arrString = jsonToString(arr)
+      cachedParts = arrayCache.get(arrString + size)
+      if jsonToString(cachedParts) == jsonToString(newArr)
+        return cachedParts
+      arrayCache.put(arrString + size, newArr)
+      return newArr
+    return filter
+])

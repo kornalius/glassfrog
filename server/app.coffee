@@ -1,15 +1,18 @@
-winston = require('winston')
-global.winston = winston
-logger = new winston.Logger()
-logger.add(winston.transports.Console, { colorize: true })
-#logger.extend(console)
+if !process.env.NODE_ENV?
+  process.env.NODE_ENV = 'development'
 
-console.log "Loading Server's required modules..."
+if global?
+  global.CircularJSON = require('circular-json')
+
+exts = require("./exts")
+
+#if process.env.NODE_ENV == 'development'
+#  require("node-codein")
+
+console.log "{red}Loading Server's required modules..."
 
 modulesPath = 'client_modules'
 exports.modulesPath = modulesPath
-
-exts = require("./exts")
 
 http = require('http')
 path = require('path')
@@ -28,12 +31,14 @@ passport = require('passport')
 LocalStrategy = require('passport-local').Strategy
 helmet = require('helmet')
 csrf = require('csurf')
+util = require('util')
+
+global.serialize = require('serialize-js')
 
 #require('debug-trace')({ colors: true, always: true})
 i18n = require('i18next')
 fs = require("fs")
 path = require("path")
-endpoints = require("./endpoints")
 autoIncrement = require('mongoose-auto-increment')
 mongoose = require('mongoose')
 secure = require("node-secure")
@@ -70,47 +75,97 @@ validUser = (req) ->
   req? and req.user? and req.user._id? and req.user.isVerified and req.isAuthenticated()
 exports.validUser = validUser
 
-model = (name, req, cb) ->
-  m = null
-  if mongoose.modelNames()[name]?
-    m = mongoose.model(name)
-  if !m and validUser(req)
-    req.user.model(name, null, req, (m) ->
-      cb(m) if cb
-    )
-  else
-    cb(m) if cb
-exports.model = model
-
-multiPathSet = (object, path, value) ->
-  nw = object
-  paths = path.split('.')
-  while paths.length > 1
-    n = paths.shift()
-    if !nw[n]
-      nw[n] = {}
-    nw = nw[n]
-  nw[paths.shift()] = value
-
 userInfo = (req) ->
-  u = {}
-  s = mongoose.model('User').schema
-  s.eachPath((name, field) ->
-    if !field.options.private
-      try
-        multiPathSet(u, name, eval('req.user.' + name))
-      catch error
-        console.log error
-  )
-  for k of s.virtuals
-    v = s.virtuals[k]
-    try
-      multiPathSet(u, v.path, eval('req.user.' + v.path))
-    catch error
-      console.log error
-  return u
+  return mongoose.model('User').filter(req.user, {}, 'private')
 exports.userInfo = userInfo
 
+model = (name, req, cb) ->
+  console.log "app.model()", name
+  m = null
+  if mongoose.modelNames().indexOf(name) != -1
+    m = mongoose.model(name)
+  if !m and validUser(req)
+    req.user.model(name, (m, plan, c, prefix) ->
+      cb(m, plan, c, prefix) if cb
+    )
+  else
+    cb(m, null, mongoose.db, '') if cb
+exports.model = model
+
+modelSync = (name, req) ->
+  console.log "app.modelSync()", name
+  m = null
+  if mongoose.modelNames().indexOf(name) != -1
+    m = mongoose.model(name)
+  if !m and validUser(req)
+    m = req.user.modelSync(name, req)
+  return m
+exports.modelSync = modelSync
+
+schemaPaths = (schema, node, path) ->
+  results = {}
+
+  if !node
+    return results
+
+  if node instanceof Array
+    f = _.first(node)
+    if f
+      if path
+        results[path] = {type: 'NestedArray'}
+      if f.tree
+        for k of f.tree
+          _.extend(results, schemaPaths(schema, f.tree[k], (if path then path + '.' + k else k)))
+      else
+        for k of f
+          _.extend(results, schemaPaths(schema, f[k], (if path then path + '.' + k else k)))
+    else
+      results[path] = {}
+      results[path].type = 'Array'
+
+  else if _.isObject(node) and !node.type and !node.getters and schema.pathType(path) != 'real'
+    if path
+      if schema.pathType(path) == 'Nested'
+        results[path] = {}
+        results[path].type = 'Nested'
+      else
+        results[path] = {}
+        results[path].type = undefined
+
+    for k of node
+      _.extend(results, schemaPaths(schema, node[k], (if path then path + '.' + k else k)))
+
+  else if _.isObject(node) and !node.type and node.getters
+    results[path] = {}
+    results[path].type = 'Virtual'
+
+  else
+    results[path] = {}
+
+    for k of node
+      p = node[k]
+      keys = _.keys(p)
+      f = _.filter(_.values(p), (v) -> type(v) != 'function')
+      if f.length == keys.length
+        results[path][k] = p
+
+    if type(node.type) is 'function'
+      results[path].type = node.type.prototype.constructor.name
+    else if type(node) is 'function'
+      results[path].type = node.prototype.constructor.name
+    else if node.instance? and type(node.instance) is 'string'
+      results[path].type = node.instance.toProperCase()
+
+  return results
+exports.schemaPaths = schemaPaths
+
+modelPaths = (model) ->
+  return schemaPaths(model.schema, model.schema.tree)
+exports.modelPaths = modelPaths
+
+hasOwner = (model) ->
+  return model.schema.path('owner_id')
+exports.hasOwner = hasOwner
 
 console.log "Creating Passport functions..."
 
@@ -234,7 +289,7 @@ app.use(i18n.handle)
 
 app.use(helmet())
 
-app.use(csrf())
+#app.use(csrf())
 #  value: (req) ->
 #    if req.body?
 #      token = req.body._csrf
@@ -255,19 +310,25 @@ app.use(csrf())
 #))
 
 app.use((req, res, next) ->
-  token = req.csrfToken()
+#  token = req.csrfToken()
+  token = ''
   res.cookie('XSRF-TOKEN', token)
   res.locals.csrftoken = token
 
   if mongoose.model('Log')?
     mongoose.model('Log').log(mongoose.model('Log').LOG_REQUEST, null, req.method, req.ip, req.url)
 
-  next()
+  if req.user and !req.user.cache
+    req.user.createRequestVars(req, ->
+      next()
+    )
+  else
+    next()
 )
 
 app.use((err, req, res, next) ->
   if req.xhr
-    res.send(500, { error: 'Something blew up!' })
+    res.status(500, { error: 'Something blew up!' }).end()
   else
     next(err)
 )
@@ -289,32 +350,15 @@ exports.db = db
 
 autoIncrement.initialize(mongoose.connection)
 
+console.log "Registering models..."
+
 models_paths = __dirname + '/models'
 fs.readdirSync(models_paths).forEach((file) ->
-  console.log "Loading model {0}...".format(file)
-  require(models_paths + '/' + file)
+  if path.extname(file) == '.js'
+    console.log "Loading model {0}...".format(file)
+    m = require(models_paths + '/' + file)
 )
 exports.models_paths = models_paths
-
-routes_paths = __dirname + '/routes'
-fs.readdirSync(routes_paths).forEach((file) ->
-  console.log "Loading route {0}...".format(file)
-  require(routes_paths + '/' + file)
-)
-exports.routes_paths = routes_paths
-
-console.log "Registering API endpoints..."
-
-endpoints.register()
-
-app.all('/api/*', (req, res, next) ->
-  next()
-)
-
-app.param('model', (req, res, next, model) ->
-  req.params['model'] = model.toProperCase()
-  next()
-)
 
 console.log "Initializing i18 framework..."
 
@@ -361,7 +405,25 @@ secure.secureMethods(exports, {configurable: false})
 
 console.log "Setting global routes..."
 
-app.get('/', (req, res) ->
+app.all('*', (req, res, next) ->
+  sanitizer = require('sanitizer')
+
+  if req.params?
+    for k of req.params
+      req.params[k] = sanitizer.sanitize(req.params[k])
+
+  if req.query?
+    for k of req.query
+      req.query[k] = sanitizer.sanitize(req.query[k])
+
+  if req.body?
+    s = jsonToString(req.body)
+    req.body = stringToJson(sanitizer.sanitize(s))
+
+  next()
+)
+
+app.get('/', (req, res, next) ->
   if validUser(req)
     res.redirect("/app")
   else
@@ -370,18 +432,35 @@ app.get('/', (req, res) ->
       errors: req.flash('error')
       warnings: req.flash('info')
     )
+  next()
 )
 
 user = require('./routes/user')
 
-app.get('/app', user.ensureAuthenticated, (req, res) ->
+app.get('/app', user.ensureAuthenticated, (req, res, next) ->
   res.render('app',
     title: 'App'
     user: userInfo(req)
     errors: req.flash('error')
     warnings: req.flash('info')
   )
+  next()
 )
+
+console.log "Registering routes..."
+
+routes_paths = __dirname + '/routes'
+fs.readdirSync(routes_paths).forEach((file) ->
+  if path.extname(file) == '.js'
+    console.log "Loading route {0}...".format(file)
+    require(routes_paths + '/' + file)
+)
+exports.routes_paths = routes_paths
+
+console.log "Registering endpoints..."
+
+endpoints = require('./endpoints')
+endpoints.register()
 
 console.log "Connecting to MongoDB server..."
 

@@ -1,5 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 User = require('./user')
 
 LogSchema = mongoose.Schema(
@@ -33,15 +34,17 @@ LogSchema = mongoose.Schema(
     label: 'Comment'
 
   user:
-    type: mongoose.Schema.ObjectId
+    type: mongoose.Schema.Types.ObjectId
     ref: 'User'
     readOnly: true
     populate: true
 ,
   label: 'Logs'
+  readOnly: true
 )
 
 LogSchema.plugin(timestamps)
+LogSchema.plugin(filterPlugin)
 
 LogSchema.static(
   log: (user, action, schema, comment, ip, url) ->

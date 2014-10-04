@@ -22,7 +22,7 @@ angular.module('pagination.services', ['app'])
       m = $scope.Math.floor($scope.maxButtons / 2)
       start = $scope.Math.max(1, $scope.currentPage - m)
       end = $scope.Math.min($scope.pageCount(), $scope.currentPage + m)
-      if end - start < $scope.maxButtons and $scope.rest.perPage >= $scope.maxButtons
+      if end - start < $scope.maxButtons and $scope.rest.l >= $scope.maxButtons
         if start == 1
           end = $scope.Math.min($scope.pageCount(), start + $scope.maxButtons - 1)
         else if end == $scope.pageCount()
@@ -65,9 +65,11 @@ angular.module('pagination.services', ['app'])
     $scope.updateRest = () ->
       $scope.checkPage()
 
+      console.log $scope.oldPage, $scope.currentPage, $scope.pageCount(), $scope.rest
+
       if $scope.oldPage != $scope.currentPage
-        $scope.oldPage = $scope.currentPage
         if $scope.rest?
+          $scope.oldPage = $scope.currentPage
 
           $scope.cancel()
           $scope.removeErrors()
@@ -75,7 +77,8 @@ angular.module('pagination.services', ['app'])
           sc = $scope
           while sc and !sc.hasOwnProperty('rows')
             sc = sc.$parent
-          $scope.rest.fetch({page: $scope.currentPage}, (results) ->
+
+          $scope.rest.find({page: $scope.currentPage}, (results) ->
             sc.rows = results
           )
 

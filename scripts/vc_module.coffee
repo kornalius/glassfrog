@@ -48,22 +48,27 @@ ModuleClass =
 
     if m.extra
       if typeof m.extra is 'string'
-        try
-          m.$data._json = JSON.parse(m.extra)
-        catch e
-          console.log "Error parsing JSON data", e
+        m.$data._json = stringToJson(m.extra)
       else
         m.$data._json = _.cloneDeep(m.extra)
 
-      if !m.$data._json.root
-        nn = { name: 'Root', component: 'root' }
-        m.$data._json.root = nn
-
+    if m.$data._json.root
       ModuleClass.VCNode.make(m.$data._json.root, null, m)
 
 
     m.id = () ->
       @_id
+
+    m.initRoot = () ->
+      nn =
+        name: 'Root'
+        component: 'root'
+        nodes: [
+          name: 'Config'
+          component: 'Module.Config'
+        ]
+      ModuleClass.VCNode.make(nn, null, m)
+      m.$data._json.root = nn
 
     m.getName = () ->
       return (if @name then @name.toLowerCase() else "")
@@ -78,6 +83,8 @@ ModuleClass =
         return "Untitled"
 
     m.getRoot = () ->
+      if @$data and !@$data._json.root
+        @initRoot()
       return (if @$data and @$data._json.root then @$data._json.root else null)
 
     m.setRoot = (n) ->
@@ -111,7 +118,7 @@ ModuleClass =
           else
             ne.root = e.root
         try
-          @extra = JSON.stringify(ne)
+          @extra = jsonToString(ne)
         catch e
           console.log "Error stringifying JSON data", e
 
@@ -303,13 +310,13 @@ ModuleClass =
 
     m.edit = (cb) ->
       that = @
+      mod = that.isModified()
       ModuleClass.async.eachSeries(ModuleClass.VCGlobal.modules.rows, (mm, callback) ->
         mm.saveLocally((ok) ->
           callback((if ok then null else true))
         )
       , (err) ->
         if !err
-          mod = that.isModified()
           that.addState('e')
           if window?
             window.setTimeout( ->
@@ -317,7 +324,7 @@ ModuleClass =
                 that.setModified(mod)
                 cb(true) if cb
               )
-            , 100)
+            )
         else
           cb(false) if cb
       )
@@ -325,7 +332,7 @@ ModuleClass =
     m.plainObject = () ->
       o = {}
       for k of @
-        if type(@[k]) is not 'function' and k != '$data'
+        if type(@[k]) != 'function' and k != '$data'
           o[k] = _.cloneDeep(@[k])
       return o
 
@@ -333,9 +340,9 @@ ModuleClass =
       if @isEditing() and @isModified()
         @delState('e')
         @setConfig()
-        @setModified(false)
+#        @setModified(false)
         @setExtra(
-          root: (if @getRoot() then @getRoot().plainObject() else {})
+          root: @getRoot().plainObject()
           options: (if @$data and @$data._json.options? then @$data._json.options else '')
         )
       cb(true) if cb
@@ -343,8 +350,9 @@ ModuleClass =
 
   make: (m) ->
     @setData(m)
-    for n in m.$data._json.root.nodes
-      ModuleClass.VCNode.make(n, m.$data._json.root, m)
+    if m.$data._json.root
+      for n in m.$data._json.root.nodes
+        ModuleClass.VCNode.make(n, m.$data._json.root, m)
 
   list: () ->
     l = []

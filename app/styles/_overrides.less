@@ -325,6 +325,7 @@ textarea.form-control {
 
   [data-selectable] {
     height: auto;
+    min-height: 18px;
     line-height: 18px;
     padding: 2px 2px;
     vertical-align: middle !important;
@@ -394,4 +395,14 @@ a .display-icon {
 
 .iconpicker-popover.popover {
   width: 532px !important;
+}
+
+.btn-link:focus {
+  outline: none !important;
+  border-color: none !important;
+}
+
+.btn-link:active {
+  background-color: @btn-default-border;
+  border-radius: @border-radius-base !important;
 }

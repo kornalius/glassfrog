@@ -1,9 +1,9 @@
 class VersionClass
 
   major: 0
-  minor: 1
-  maintenance: 'a'
+  minor: 0
   build: 0
+  maintenance: 'a'
 
   constructor: (major, minor, maintenance, build) ->
     if major and major instanceof VersionClass
@@ -12,7 +12,7 @@ class VersionClass
       @maintenance = major.maintenance
       @build = major.build
 
-    else if major and typeof(major) is 'string'
+    else if major and type(major) is 'string'
       @_fromString(major)
 
     else
@@ -78,45 +78,64 @@ class VersionClass
     return @maintenance == 'r'
 
   compareTo: (other) ->
-    if @major > other.major or @minor > other.minor or @build > other.build
-      return 1
 
-    else if @major < other.major or @minor < other.minor or @build < other.build
-      return -1
-
-    else
-      if @maintenance == 'a'
-        if other.maintenance == 'b' or other.maintenance == 'r' or other.maintenance == 'rc'
-          return 1
-        else if other.maintenance != 'a'
+    _compare_maintenance = (maintenance, other_maintenance) ->
+      if maintenance == 'a'
+        if other_maintenance != 'a'
           return -1
         else
           return 0
 
-      else if @maintenance == 'b'
-        if other.maintenance == 'r' or other.maintenance == 'rc'
-          return 1
-        else if other.maintenance != 'b'
+      else if maintenance == 'b'
+        if other_maintenance == 'r' or other_maintenance == 'rc'
           return -1
+        else if other_maintenance != 'b'
+          return 1
         else
           return 0
 
-      else if @maintenance == 'r'
-        if other.maintenance == 'rc'
-          return 1
-        else if other.maintenance != 'r'
+      else if maintenance == 'rc'
+        if other_maintenance == 'r'
           return -1
+        else if other_maintenance != 'rc'
+          return 1
         else
           return 0
 
-      else if @maintenance == 'rc'
-        if other.maintenance != 'r'
-          return -1
+      else if maintenance == 'r'
+        if other_maintenance != 'r'
+          return 1
         else
           return 0
 
       else
         return 0
+
+    _compare = (value, otherValue) ->
+      if value > otherValue
+        return 1
+      else if value < otherValue
+        return -1
+      else
+        return 0
+
+    maintenance = _compare_maintenance(@maintenance, other.maintenance)
+    major = _compare(@major, other.major)
+    minor = _compare(@minor, other.minor)
+    build = _compare(@build, other.build)
+
+    # Check if =
+    if maintenance == 0 and build == 0 and minor == 0 and major == 0
+      return 0
+
+    # Check if >
+    else if maintenance >= 0 and build >= 0 and minor >= 0 and major >= 0
+      return 1
+
+    # Check if <
+    else
+      return -1
+
 
   @validate: (s) ->
     return /^v?(?:([0-9]+)(?:\.([0-9]+)(?:\.([0-9]+))([abr]|rc)?))$/.test(s)

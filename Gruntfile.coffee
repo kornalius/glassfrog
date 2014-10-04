@@ -33,71 +33,62 @@ module.exports = (grunt) ->
 
     coffee:
       dev:
+        options:
+          join: true
+#          sourceMap: true
         files: [
           src: 'app/**/*.coffee'
           dest: out_dev + 'js/app.js'
-          options:
-            join: true
-            sourceMap: true
         ,
           src: 'scripts/**/*.coffee'
           dest: out_dev + 'js/scripts.js'
-          options:
-            join: true
-            sourceMap: true
         ]
 
       prod:
+        options:
+          join: true
         files: [
           src: 'app/**/*.coffee'
           dest: out + 'js/app.js'
-          options:
-            join: true
-            sourceMap: true
         ,
           src: 'scripts/**/*.coffee'
           dest: out + 'js/scripts.js'
-          options:
-            join: true
-            sourceMap: true
         ]
 
       server_dev:
+        options:
+          join: true
+#          sourceMap: true
         files: [
           expand: true
           cwd: 'scripts/'
           src: '**/*.coffee'
           dest: server_out_dev
           ext: '.js'
-          options:
-            sourceMap: true
         ,
           expand: true
           cwd: 'server/'
           src: '**/*.coffee'
           dest: server_out_dev
           ext: '.js'
-          options:
-            sourceMap: true
         ]
 
       server_prod:
+        options:
+          join: true
+          sourceMap: true
         files: [
           expand: true
           cwd: 'scripts/'
           src: '**/*.coffee'
           dest: server_out
           ext: '.js'
-          options:
-            sourceMap: true
         ,
           expand: true
           cwd: 'server/'
           src: '**/*.coffee'
           dest: server_out
           ext: '.js'
-          options:
-            sourceMap: true
         ]
 
     less:
@@ -278,6 +269,7 @@ module.exports = (grunt) ->
             'node_modules/handlebars/dist/handlebars.js'
             'node_modules/swag/lib/swag.js'
             'node_modules/js-beautify/js/lib/beautify.js'
+            'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
             'bower_components/safejson/dist/safejson.js'
@@ -294,7 +286,6 @@ module.exports = (grunt) ->
             'bower_components/angular-ui-router/release/angular-ui-router.js'
             'bower_components/i18next/i18next.js'
             'bower_components/ng-i18next/dist/ng-i18next.js'
-            'bower_components/angular-promise-tracker/promise-tracker.js'
             'bower_components/restangular/dist/restangular.js'
             'bower_components/select2/select2.js'
             'bower_components/ng-table/ng-table.js'
@@ -333,7 +324,14 @@ module.exports = (grunt) ->
             'bower_components/angular-pines-notify/src/pnotify.js'
             'bower_components/fontawesome-iconpicker/dist/js/fontawesome-iconpicker.js'
             'bower_components/angular-moment/angular-moment.js'
+            'bower_components/marked/lib/marked.js'
+            'bower_components/angular-marked/angular-marked.js'
+            'bower_components/angular-loading-bar/build/loading-bar.js'
+            'bower_components/angular-pageslide-directive/dist/angular-pageslide-directive.js'
+            'bower_components/perfect-scrollbar/src/perfect-scrollbar.js'
+            'bower_components/angular-perfect-scrollbar/src/angular-perfect-scrollbar.js'
             'node_modules/diff/diff.js'
+            'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
             tmp_dev + '/dynFormTemplates.js'
@@ -349,6 +347,7 @@ module.exports = (grunt) ->
             'bower_components/traverse/traverse.js'
             'node_modules/handlebars/dist/handlebars.js'
             'node_modules/swag/lib/swag.js'
+            'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
             'bower_components/safejson/dist/safejson.js'
@@ -366,6 +365,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.history.js'
             'bower_components/pines-notify/pnotify.nonblock.js'
             'bower_components/pines-notify/pnotify.reference.js'
+            'bower_components/perfect-scrollbar/src/perfect-scrollbar.js'
             'bower_components/requirejs/require.js'
           ]
           dest: out_dev + 'js/index.js'
@@ -390,6 +390,8 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.picon.css'
             'bower_components/nvd3/nv.d3.css'
             'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.css'
+            'bower_components/angular-loading-bar/build/loading-bar.css'
+            'bower_components/perfect-scrollbar/src/perfect-scrollbar.css'
           ]
           dest: out_dev + 'css/vendor.css'
         ,
@@ -403,6 +405,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.buttons.css'
             'bower_components/pines-notify/pnotify.history.css'
             'bower_components/pines-notify/pnotify.picon.css'
+            'bower_components/perfect-scrollbar/src/perfect-scrollbar.css'
           ]
           dest: out_dev + 'css/index.css'
         ]
@@ -420,6 +423,7 @@ module.exports = (grunt) ->
             'node_modules/handlebars/dist/handlebars.min.js'
             'node_modules/swag/lib/swag.min.js'
             'node_modules/js-beautify/js/lib/beautify.js'
+            'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/minified/jquery-ui.min.js'
             'bower_components/safejson/dist/safejson.min.js'
@@ -433,7 +437,6 @@ module.exports = (grunt) ->
             'bower_components/angular-ui-router/release/angular-ui-router.min.js'
             'bower_components/i18next/i18next.min.js'
             'bower_components/ng-i18next/dist/ng-i18next.min.js'
-            'bower_components/angular-promise-tracker/promise-tracker.js'
             'bower_components/restangular/dist/restangular.min.js'
             'bower_components/select2/select2.min.js'
             'bower_components/ng-table/ng-table.min.js'
@@ -472,7 +475,14 @@ module.exports = (grunt) ->
             'bower_components/angular-pines-notify/src/pnotify.js'
             'bower_components/fontawesome-iconpicker/dist/js/fontawesome-iconpicker.min.js'
             'bower_components/angular-moment/angular-moment.min.js'
+            'bower_components/marked/lib/marked.js'
+            'bower_components/angular-marked/angular-marked.min.js'
+            'bower_components/angular-loading-bar/build/loading-bar.min.js'
+            'bower_components/angular-pageslide-directive/dist/angular-pageslide-directive.min.js'
+            'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.js'
+            'bower_components/angular-perfect-scrollbar/src/angular-perfect-scrollbar.js'
             'node_modules/diff/diff.js'
+            'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
             tmp + '/dynFormTemplates.js'
@@ -488,6 +498,7 @@ module.exports = (grunt) ->
             'bower_components/traverse/traverse.js'
             'node_modules/handlebars/dist/handlebars.min.js'
             'node_modules/swag/lib/swag.min.js'
+            'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/jquery-ui.min.js'
             'bower_components/safejson/dist/safejson.min.js'
@@ -505,6 +516,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.history.js'
             'bower_components/pines-notify/pnotify.nonblock.js'
             'bower_components/pines-notify/pnotify.reference.js'
+            'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.js'
             'bower_components/requirejs/require.js'
           ]
           dest: out + 'js/index.js'
@@ -528,6 +540,8 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.picon.css'
             'bower_components/nvd3/nv.d3.min.css'
             'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.min.css'
+            'bower_components/angular-loading-bar/build/loading-bar.min.css'
+            'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.css'
           ]
           dest: out + 'css/vendor.css'
         ,
@@ -541,6 +555,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.buttons.css'
             'bower_components/pines-notify/pnotify.history.css'
             'bower_components/pines-notify/pnotify.picon.css'
+            'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.css'
           ]
           dest: out + 'css/index.css'
         ]
@@ -572,7 +587,7 @@ module.exports = (grunt) ->
       options:
         spawn: false
         livereload: true
-        debounceDelay: 1000
+#        debounceDelay: 1000
 
       gruntfile:
         files: ['Gruntfile.coffee']
@@ -581,11 +596,15 @@ module.exports = (grunt) ->
           interrupt: true
           reload: true
 
-      jade:
+      html:
+        files: ['app/**/*.html', 'server/**/*.html']
+        tasks: ['reload']
+
+      app_jade:
         files: ['app/**/*.jade']
         tasks: ['jade:dev', 'reload']
 
-      jadeDynForm:
+      app_jadeDynForm:
         files: ['app/dynFormTemplates/*.jade']
         tasks: ['jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'reload']
 
@@ -597,15 +616,15 @@ module.exports = (grunt) ->
 #        files: ['node_modules/**/*']
 #        tasks: ['reload']
 
-      server_jade:
-        files: ['server/**/*.jade']
-        tasks: ['copy:server_dev', 'reload']
+      app_js:
+        files: ['app/**/*.js']
+        tasks: ['concat:dev', 'copy:dev', 'reload']
 
-      less:
+      app_less:
         files: ['app/**/*.less']
         tasks: ['less:dev', 'reload']
 
-      coffee:
+      app_coffee:
         files: ['app/**/*.coffee']
         tasks: ['coffee:dev', 'concat:dev', 'copy:dev', 'reload']
 
@@ -613,25 +632,21 @@ module.exports = (grunt) ->
         files: ['server/**/*.coffee']
         tasks: ['coffee:server_dev', 'copy:server_dev', 'express:dev', 'reload']
 
+      server_jade:
+        files: ['server/**/*.jade']
+        tasks: ['copy:server_dev', 'reload']
+
       global_coffee:
         files: ['scripts/**/*.coffee']
         tasks: ['coffee:server_dev', 'copy:server_dev', 'coffee:dev', 'concat:dev', 'copy:dev', 'express:dev', 'reload']
 
-      js:
-        files: ['app/**/*.js', 'server/**/*.js']
-        tasks: ['concat:dev', 'copy:dev', 'reload']
+#      server_js:
+#        files: ['server/**/*.js']
+#        tasks: ['copy:server_dev']
 
-      server_js:
-        files: ['server/**/*.js']
-        tasks: ['copy:server_dev']
-
-      html:
-        files: ['app/**/*.html', 'server/**/*.html']
-        tasks: ['reload']
-
-      server_config:
-        files: ['server/config/**']
-        tasks: ['coffee:server_dev', 'copy:server_dev', 'express:dev', 'reload']
+#      server_config:
+#        files: ['server/config/**']
+#        tasks: ['coffee:server_dev', 'copy:server_dev', 'express:dev', 'reload']
 
     express:
       options:
@@ -645,6 +660,15 @@ module.exports = (grunt) ->
           port: 3000
           node_env: 'development'
           debug: true
+
+#    env:
+#      options: {}
+#
+#      dev:
+#        NODE_ENV: 'development'
+#
+#      build:
+#        NODE_ENV: 'production'
 
 #    curl:
 #      dev: 'http://localhost:35729/changed?files=/js/app.js'
@@ -679,6 +703,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-express-server')
   grunt.loadNpmTasks('grunt-file-creator')
+#  grunt.loadNpmTasks('grunt-env')
 #  grunt.loadNpmTasks('grunt-open')
 #  grunt.loadNpmTasks('grunt-curl')
 
@@ -709,3 +734,5 @@ module.exports = (grunt) ->
   grunt.registerTask('default', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'express:dev', 'reload', 'watch'])
 
   grunt.registerTask('prod', ['clean:server_prod', 'coffee:server_prod', 'copy:server_prod', 'clean:prod', 'less:prod', 'coffee:prod', 'copy:prod', 'jade:prod', 'jade:prodDynForm', 'file-creator:prod', 'concat:prod'])
+
+  grunt.registerTask('debug', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'reload', 'watch'])

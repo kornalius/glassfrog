@@ -1,6 +1,7 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 async = require('async')
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 RoleSchema = mongoose.Schema(
   name:
@@ -10,64 +11,62 @@ RoleSchema = mongoose.Schema(
     required: true
     label: 'Name'
 
-  inherits:
-    type: [
-      type: mongoose.SchemaTypes.ObjectId
-      ref: 'Role'
-    ]
+  inherits: [
+    type: mongoose.Schema.Types.ObjectId
+    ref: 'Role'
     default: []
     label: 'Parent roles'
+  ]
 
-  rules:
-    type: [
-      subject:
-        type: String
-        required: true
-        label: 'Rule subject'
+  rules: [
+    subject:
+      type: String
+      required: true
+      label: 'Rule subject'
 
-      action:  # *, read, write, create, delete, schema, defaults, share
-        type: String
-        label: 'Allowed rule action'
+    action:  # *, read, write, create, delete, schema, defaults, share
+      type: String
+      label: 'Allowed rule action'
 
-      owned:
-        type: Boolean
-        label: 'Only if own the record'
-    ]
-    label: 'Rules'
-
+    owned:
+      type: Boolean
+      label: 'Only if own the record'
+  ]
 ,
   label: 'Roles'
+  readOnly: true
 )
 
 RoleSchema.plugin(timestamps)
+RoleSchema.plugin(filterPlugin)
 
 RoleSchema.method(
 
-  allRules: (subject, actions, cb) ->
+  allRules: (model, actions, cb) ->
     if typeof actions is 'string'
       actions = actions.split(',')
     that = @
-    r = []
+    results = []
     @allParentRoles((roles) ->
       if roles
         roles.push(that)
         for role in roles
           for rule in role.rules
-            if that.ruleMatch(rule, subject, actions)
-              r.push(rule)
-      cb(r) if cb
+            if that.ruleMatch(rule, model.modelName, actions)
+              results.push(_.extend({}, rule, {role: role}))
+      cb(results) if cb
     )
 
   allParentRoles: (cb) ->
-    r = []
+    results = []
     @populate('inherits', (err, rl) ->
       async.eachSeries(rl.inherits, (role, callback) ->
         role.allParentRoles((inherits) ->
-          r = r.concat(inherits)
+          results = results.concat(inherits)
           callback()
         )
       , (err) ->
-        cb(r) if cb
+        cb(results) if cb
       )
     )
 
@@ -143,12 +142,9 @@ RoleSchema.method(
     for rule in @rules
       if @ruleMatch(rule, subject, actions)
         r.push(rule)
-
     for rule in r
       @rules.remove(rule)
-
     @save()
-
     cb() if cb
 
   removeRules: (rules, cb) ->
@@ -174,26 +170,36 @@ RoleSchema.method(
 
     return false
 
-  can: (user, actions, subject, row, cb) ->
-    that = @
+  can: (user, actions, subject, rows, cb) ->
+    if @isAdmin()
+      cb(@) if cb
+      return
+
+    that = mongoose.model('Role')
     @allRules(subject, actions, (rules) ->
       if rules
-        rule = that.canWithRules(user, rules, actions, subject, row)
+        rule = that.canWithRules(user, rules, rows)
         cb(rule) if cb
       else
         cb(null) if cb
     )
-
-  canWithRules: (user, rules, actions, subject, row) ->
-    id = user._id.toString()
-    for rule in rules
-      if (!row or !user) or ((rule.owned and row.owner_id? and row.owner_id.toString() == id) or rule == 'admin')
-        return rule
-    return null
-
 )
 
 RoleSchema.static(
+
+  canWithRules: (user, rules, rows) ->
+    id = user._id.toString()
+    if !rows
+      rows = [null]
+    if type(rows) != 'array'
+      rows = [rows]
+    for row in rows
+      for rule in rules
+        if rule.role and rule.role.isAdmin()
+          return rule
+        if (!row or !user) or (row.owner_id? and row.owner_id.toString() == id)
+          return rule
+    return null
 
 )
 

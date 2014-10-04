@@ -1,5 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 User = require('./user')
 
 PlanSchema = mongoose.Schema(
@@ -24,10 +25,10 @@ PlanSchema = mongoose.Schema(
       required: true
       label: 'Max. size for a field\'s value'
 
-    projects:
+    modules:
       type: Number
       required: true
-      label: 'Max. number of projects'
+      label: 'Max. number of modules'
 
     schemas:
       type: Number
@@ -59,6 +60,7 @@ PlanSchema = mongoose.Schema(
 )
 
 PlanSchema.plugin(timestamps)
+PlanSchema.plugin(filterPlugin)
 
 PlanSchema.method(
 
@@ -95,7 +97,7 @@ PlanSchema.method(
   isPaidPlan: () ->
     !@isFreePlan()
 
-  canCreateRecord: (model, cb) ->
+  verifyRecordsLimits: (user, model, rows, cb) ->
     if @limits.records == -1
       cb(true) if cb
     else
@@ -106,6 +108,73 @@ PlanSchema.method(
         else
           cb(false) if cb
       )
+
+  verifyFieldsLimits: (user, model, cb) ->
+    if @limits.fields == -1
+      cb(true) if cb
+    else
+      cb(model) if cb
+
+  verifyFieldsSizeLimits: (user, model, rows, cb) ->
+    if @limits.fieldSize == -1
+      cb(true) if cb
+    else
+      that = @
+      for r in rows
+        for k of r
+          try
+            j = jsonToString(r[k])
+            if j.length > that.limits.fieldSize
+              cb(false) if cb
+              return
+          catch e
+            console.log e
+      cb(true) if cb
+
+  verifyModulesLimits: (user, cb) ->
+    if @limits.modules == -1
+      cb(true) if cb
+    else
+      that = @
+      user.modules((modules) ->
+        if modules
+          cb(modules.length + 1 >= that.limits.modules) if cb
+        else
+          cb(false) if cb
+      )
+
+  verifySchemasLimits: (user, cb) ->
+    if @limits.schemas == -1
+      cb(true) if cb
+    else
+      that = @
+      user.modules((modules) ->
+        if modules
+          cb(modules.schemas().length + 1 >= that.limits.schemas) if cb
+        else
+          cb(false) if cb
+      )
+
+  verifyLimits: (user, action, model, rows, cb) ->
+    that = @
+
+    if action == 'create'
+      that.verifyRecordsLimits(user, action, model, rows, (ok) ->
+        if ok
+          that.verifyFieldsSizeLimits(user, model, rows, (ok) ->
+            cb(ok) if cb
+          )
+        else
+          cb(false) if cb
+      )
+
+    else if action == 'write'
+      that.verifyFieldsSizeLimits(user, model, rows, (ok) ->
+        cb(ok) if cb
+      )
+
+    else
+      cb(false) if cb
 )
 
 module.exports = mongoose.model('Plan', PlanSchema)

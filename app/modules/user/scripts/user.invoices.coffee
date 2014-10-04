@@ -10,7 +10,7 @@ angular.module('user.invoices', ['dynamicForm'])
 
   $scope.invoice = new Rest('invoice')
 
-  $scope.invoice.fetch(1, ->
+  $scope.invoice.find({}, ->
     invoicesTable =
       label: 'Invoices'
       name: "invoicesTable"

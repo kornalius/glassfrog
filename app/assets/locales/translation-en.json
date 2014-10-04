@@ -10,7 +10,9 @@
     "test": "test",
     "suggestions": "suggestions",
     "editor": "editor",
-    "dashboard": "dashboard",
+    "dashboard": {
+      "main": "dashboard"
+    },
     "module": "module",
     "repository": {
       "main": "repositories",

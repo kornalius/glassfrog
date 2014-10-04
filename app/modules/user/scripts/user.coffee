@@ -6,18 +6,14 @@ angular.module('user', ['user.profile', 'user.invoices', 'user.info'])
   ($stateProvider) ->
     $stateProvider
 
-    .state('user_root',
+    .state('user',
       abstract: true
+      url: '/user'
       templateUrl: '/partials/user.html'
-      data:
-        ncyBreadcrumbLabel: 'User'
-#          ncyBreadcrumbSkip: true
-      controller: ($scope) ->
     )
 
-    .state('user',
-      url: '/user'
-      parent: 'user_root'
+    .state('user.info',
+      url: ''
       navbarHidden: true
       sidebarHidden: true
       data:
@@ -32,7 +28,6 @@ angular.module('user', ['user.profile', 'user.invoices', 'user.info'])
 
     .state('user.profile',
       url: '/profile'
-      parent: 'user_root'
       icon: 'cic-user32'
       data:
         root: 'user'
@@ -47,7 +42,6 @@ angular.module('user', ['user.profile', 'user.invoices', 'user.info'])
 
     .state('user.invoices',
       url: '/invoices'
-      parent: 'user_root'
       icon: 'cic-cash'
       data:
         root: 'user'
@@ -62,7 +56,6 @@ angular.module('user', ['user.profile', 'user.invoices', 'user.info'])
 
     .state('user.shares',
       url: '/shares'
-      parent: 'user_root'
       icon: 'cic-share52'
       data:
         root: 'user'

@@ -13,7 +13,13 @@ div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName
           .panel-body
             .container-fluid
               .row-fluid
-                ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in $parent.row[$parent.fn] track by $index", novalidate)
-                  // <row>
+                div(ng-if="angular.isArray($parent.row[$parent.fn])")
+                  ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in $parent.row[$parent.fn] track by $index", novalidate)
+                    // <row>
+
+                div(ng-if="!angular.isArray($parent.row[$parent.fn])")
+                  ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-init="row = $parent.row[$parent.fn]; $index = 0", novalidate)
+                    // <row>
+
               .row-fluid
 

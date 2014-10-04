@@ -18,6 +18,11 @@ module.exports = [
     accepts: ['Color', 'Font+', 'Field.Type', 'Field.Attribute+', 'Field.Validator+']
     icon: 'cic-uniF6CA'
     color: 'pink'
+    args:
+      'options':
+        desc: 'Specify options for the field'
+        multi: ['Required', 'ReadOnly', 'Private', 'Encrypted', 'Indexed', 'Populated', 'Selected', 'Trimmed', 'FullTextSearch']
+        default: ['Selected']
     code:
       render: (node) ->
         if node
@@ -30,11 +35,29 @@ module.exports = [
         Handlebars.compile('
           "{{name}}": {\n
             {{generate_nodes node user "Field.Type,Field.Attribute,Field.Validator" ",\n"}}
+            index: {{index}},\n
+            required: {{required}},\n
+            private: {{private}},\n
+            readOnly: {{readonly}},\n
+            select: {{select}},\n
+            populate: {{populate}},\n
+            trim: {{trim}},\n
+            fullTextSearch: {{fulltextsearch}},\n
+            encrypt: {{encrypt}}\n
           }
         ')(
           component: @
           node: node
           name: node.varName()
+          index: (if node.getArg('options').is('indexed') then 'true' else 'false')
+          required: (if node.getArg('options').is('required') then 'true' else 'false')
+          private: (if node.getArg('options').is('private') then 'true' else 'false')
+          readonly: (if node.getArg('options').is('readonly') then 'true' else 'false')
+          select: (if node.getArg('options').is('selected') then 'true' else 'false')
+          populate: (if node.getArg('options').is('populated') then 'true' else 'false')
+          trim: (if node.getArg('options').is('trimmed') then 'true' else 'false')
+          fulltextsearch: (if node.getArg('options').is('fulltextsearch') then 'true' else 'false')
+          encrypt: (if node.getArg('options').is('encrypted') then 'true' else 'false')
         )
 ,
 
@@ -123,44 +146,44 @@ module.exports = [
     inherit: 'Field.Type'
 ,
 
-  name: 'Field.Validators'
-  desc: 'Field validators'
-  extra:
-    category: 'Fields'
-    options: 'c'
-    icon: 'cic-check'
-    color: 'red'
-,
-
-  name: 'Field.Validator'
-  desc: 'Field validator'
-  extra:
-    category: 'Field.Validators'
-    inherit: 'Object'
-    options: 'hp!'
-    icon: 'cic-check'
-    color: 'red'
-,
-
-  name: 'Field.Required'
-  desc: 'Required'
-  extra:
-    icon: 'cic-spam2'
-    inherit: 'Field.Validator'
-    code:
-      both: (node, user) ->
-        Handlebars.compile('required: true')({})
-,
-
-  name: 'Field.ReadOnly'
-  desc: 'Read-only'
-  extra:
-    icon: 'cic-lock32'
-    inherit: 'Field.Validator'
-    code:
-      both: (node, user) ->
-        Handlebars.compile('readOnly: true')({})
-,
+#  name: 'Field.Validators'
+#  desc: 'Field validators'
+#  extra:
+#    category: 'Fields'
+#    options: 'c'
+#    icon: 'cic-check'
+#    color: 'red'
+#,
+#
+#  name: 'Field.Validator'
+#  desc: 'Field validator'
+#  extra:
+#    category: 'Field.Validators'
+#    inherit: 'Object'
+#    options: 'hp!'
+#    icon: 'cic-check'
+#    color: 'red'
+#,
+#
+#  name: 'Field.Required'
+#  desc: 'Required'
+#  extra:
+#    icon: 'cic-spam2'
+#    inherit: 'Field.Validator'
+#    code:
+#      both: (node, user) ->
+#        Handlebars.compile('required: true')({})
+#,
+#
+#  name: 'Field.ReadOnly'
+#  desc: 'Read-only'
+#  extra:
+#    icon: 'cic-lock32'
+#    inherit: 'Field.Validator'
+#    code:
+#      both: (node, user) ->
+#        Handlebars.compile('readOnly: true')({})
+#,
 
   name: 'Field.Attributes'
   desc: 'Field Attributes'
@@ -179,45 +202,65 @@ module.exports = [
     icon: 'cic-tools'
 ,
 
-  name: 'Field.Encrypted'
-  desc: 'Encrypt field'
-  extra:
-    icon: 'cic-security2'
-    inherit: 'Field.Attribute'
-    code:
-      both: (node, user) ->
-        return 'encrypted: true'
-,
-
-  name: 'Field.Index'
-  desc: 'Indexed field'
-  extra:
-    icon: 'cic-uniF6CD'
-    inherit: 'Field.Attribute'
-    code:
-      both: (node, user) ->
-        return 'index: true'
-,
-
-  name: 'Field.Populate'
-  desc: 'Populate field'
-  extra:
-    icon: 'cic-document-fill'
-    inherit: 'Field.Attribute'
-    code:
-      both: (node, user) ->
-        return 'populate: true'
-,
-
-  name: 'Field.Trim'
-  desc: 'Always trim field value before storing in document.'
-  extra:
-    icon: 'cic-cut2'
-    inherit: 'Field.Attribute'
-    code:
-      both: (node, user) ->
-        return 'trim: true'
-,
+#  name: 'Field.Encrypted'
+#  desc: 'Encrypt field'
+#  extra:
+#    icon: 'cic-security2'
+#    inherit: 'Field.Attribute'
+#    code:
+#      both: (node, user) ->
+#        return 'encrypted: true'
+#,
+#
+#  name: 'Field.Index'
+#  desc: 'Indexed field'
+#  extra:
+#    icon: 'cic-uniF6CD'
+#    inherit: 'Field.Attribute'
+#    code:
+#      both: (node, user) ->
+#        return 'index: true'
+#,
+#
+#  name: 'Field.Populate'
+#  desc: 'Populate field'
+#  extra:
+#    icon: 'cic-document-fill'
+#    inherit: 'Field.Attribute'
+#    code:
+#      both: (node, user) ->
+#        return 'populate: true'
+#,
+#
+#  name: 'Field.Trim'
+#  desc: 'Always trim field value before storing in document.'
+#  extra:
+#    icon: 'cic-cut2'
+#    inherit: 'Field.Attribute'
+#    code:
+#      both: (node, user) ->
+#        return 'trim: true'
+#,
+#
+#  name: 'Field.Private'
+#  desc: 'Private field. Will not be transmitted to the client side.'
+#  extra:
+#    icon: 'cic-eye-close'
+#    inherit: 'Field.Attribute'
+#    code:
+#      both: (node, user) ->
+#        Handlebars.compile('private: true')({})
+#,
+#
+#  name: 'Field.FullTextSearch'
+#  desc: 'Mark this field has being able to be full text searchable.'
+#  extra:
+#    icon: 'cic-eye-zoom-in'
+#    inherit: 'Field.Attribute'
+#    code:
+#      generate: (node, user) ->
+#        return null
+#,
 
   name: 'Field.Round'
   desc: 'Round field value before storing in document.'
@@ -241,25 +284,5 @@ module.exports = [
     code:
       both: (node, user) ->
         Handlebars.compile('label: \'{{caption}}\'')({caption: node.getName()})
-,
-
-  name: 'Field.Private'
-  desc: 'Private field. Will not be transmitted to the client side.'
-  extra:
-    icon: 'cic-eye-close'
-    inherit: 'Field.Attribute'
-    code:
-      both: (node, user) ->
-        Handlebars.compile('private: true')({})
-#,
-#
-#  name: 'Field.FullTextSearch'
-#  desc: 'Mark this field has being able to be full text searchable.'
-#  extra:
-#    icon: 'cic-eye-zoom-in'
-#    inherit: 'Field.Attribute'
-#    code:
-#      generate: (node, user) ->
-#        return null
 
 ]

@@ -1,5 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 SettingSchema = mongoose.Schema(
   key:
@@ -12,7 +13,7 @@ SettingSchema = mongoose.Schema(
     label: 'Key'
 
   value:
-    type: mongoose.SchemaTypes.Mixed
+    type: mongoose.Schema.Types.Mixed
     label: 'Value'
 ,
   _id: false
@@ -21,6 +22,7 @@ SettingSchema = mongoose.Schema(
 )
 
 SettingSchema.plugin(timestamps)
+SettingSchema.plugin(filterPlugin)
 
 SettingSchema.static(
   getValue: (key, cb) ->

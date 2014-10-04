@@ -6,8 +6,8 @@ div(ng-controller="dynTableCtrl")
       .panel-title {{form.label}}
 
     .panel-body
-      .row.hidden-xs
-        .pagination.pull-right(ui-pagination="form.model")
+      .row
+        include table_nav
 
       .row
         .table-responsive
@@ -18,7 +18,7 @@ div(ng-controller="dynTableCtrl")
                   a(ng-click="filtersVisible = !filtersVisible")
                     i.cic.cic-search4
                 th.table-header-text(ng-repeat="f in fields", width="{{f.width}}", custom-sort, order="f.fieldname", sort="sort", ng-show="f.label") {{f.label}}
-                th.table-header-text(ng-show="hasAction()", width="10%") Actions
+                th.table-header-text(ng-show="hasActions()", width="10%") Actions
 
               tr(ng-show="filtersVisible")
                 th
@@ -44,7 +44,7 @@ div(ng-controller="dynTableCtrl")
                 // <row>
 
                 // Actions column
-                td(ng-show="hasAction()", style="padding-bottom:0 !important")
+                td(ng-show="hasActions()", style="padding-bottom:0 !important")
                   div(ng-show="srow == $index")
                     .btn-group-sm(ng-show="!isEditing($index)")
                       .btn(ng-show="form.canEdit")
@@ -53,10 +53,10 @@ div(ng-controller="dynTableCtrl")
                         i.cic.cic-plus32(type="button", ng-click="insert($index)", style="font-size: 1.5em;")
                       .btn(ng-show="form.canDelete")
                         i.cic.cic-trash4(type="button", ng-click="delete($index)", style="font-size: 1.5em;")
-                      .btn(ng-show="form.canMove")
-                        i.cic.cic-chevron-up(type="button", ng-click="moveup($index)", style="font-size: 1.5em;")
-                      .btn(ng-show="form.canMove")
-                        i.cic.cic-chevron-down(type="button", ng-click="movedown($index)", style="font-size: 1.5em;")
+                      //.btn(ng-show="form.canMove")
+                      //  i.cic.cic-chevron-up(type="button", ng-click="moveup($index)", style="font-size: 1.5em;")
+                      //.btn(ng-show="form.canMove")
+                      //  i.cic.cic-chevron-down(type="button", ng-click="movedown($index)", style="font-size: 1.5em;")
 
                     .btn-group-sm(ng-show="isEditing($index)")
                       .btn
@@ -65,12 +65,4 @@ div(ng-controller="dynTableCtrl")
                         i.cic.cic-cancel32(type="button", ng-click="cancel($index)", style="font-size: 1.5em;")
 
       .row
-        .col.col-md-2.hidden-xs.hidden-sm
-          select.form-control(type="select", ng-model="perPage", ng-change="perPageChanged()")
-            option 10
-            option 25
-            option 50
-            option 100
-
-        .col.col-md-10
-          .pagination.pull-right(ui-pagination="form.model")
+        include table_nav

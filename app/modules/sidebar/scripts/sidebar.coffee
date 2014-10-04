@@ -20,17 +20,11 @@ angular.module('sidebar', [])
 
     $scope.sidenavs = () ->
       navs = []
-      if $state.$current
-        cl = $state.$current.name.split('.')
-
-      if cl.length >= 1
-        cn = cl[0] + '.'
-        for n in $state.get()
-          if n.name and n.name.length and !n.abstract and (n.name == cl[0] or n.name.startsWith(cn))
-            navs.push(n)
-      else
-        for n in $state.get()
-          if n.name and n.name.length and !n.abstract and n.name.indexOf('.') == -1
+      p = $state.current.name.split('.')[0]
+      pl = p.length + 1
+      for n in $state.get()
+        if n.name and n.name.length and !n.abstract and n.url != ''
+          if n.name.substr(0, pl) == p + '.'
             navs.push(n)
       return navs
 ])

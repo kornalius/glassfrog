@@ -23,8 +23,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
   '$timeout'
   '_'
   'Restangular'
+  'Globals'
 
-  ($compile, $http, $templateCache, $injector, $timeout, _, Restangular) ->
+  ($compile, $http, $templateCache, $injector, $timeout, _, Restangular, globals) ->
 
     build: (scope, formDefinition, model, selector, cb) ->
 #      dom =
@@ -97,7 +98,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
                 else
                   t = ""
-                  if field.autolabel or layout.type == 'display'
+                  if (field.autolabel or layout.type == 'display') and (field.type != 'tabs')
                     t += l
                   t += f
                   fieldTmpl = if field.type then field.type else (if layout.type == 'display' then 'label' else 'input')
@@ -160,6 +161,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       form.model = null
       form.activeTab = 0
       form.$errors = []
+      form.globals = globals
 
       navButtons1 = [
         icon: 'cic-double-angle-left'
@@ -201,14 +203,14 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         form.buttons = navButtons1.concat(form.buttons).concat(navButtons2)
 
       if form.layout.type != 'display'
+        if form.blank == undefined
+          form.blank = false
         if form.editMode == undefined
           form.editMode = 'always'
         if form.canEdit == undefined
           form.canEdit = true
-        if form.canInsert == undefined
-          form.canInsert = true
-        if form.canAppend == undefined
-          form.canAppend = true
+        if form.canCreate == undefined
+          form.canCreate = true
         if form.canDelete == undefined
           form.canDelete = true
         if form.canMove == undefined
@@ -225,13 +227,15 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       form.getClass = () ->
         c = []
-        if @layout.type == 'form' or @layout.type == 'modal`'
+
+        if @layout.type == 'form' or @layout.type == 'modal'
           if @layout.style == 'horizontal'
             c.push('form-horizontal')
           else if @layout.style == 'vertical'
             c.push('form-vertical')
           else if @layout.style == 'inline'
             c.push('form-inline')
+
         else if @layout.type == 'table'
           if @layout.style == 'horizontal'
             c.push('form-horizontal')
@@ -239,7 +243,17 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
             c.push('form-vertical')
           else if @layout.style == 'inline'
             c.push('form-inline')
+
+        else if @layout.type == 'grid'
+          if @layout.style == 'horizontal'
+            c.push('form-horizontal')
+          else if @layout.style == 'vertical'
+            c.push('form-vertical')
+          else if @layout.style == 'inline'
+            c.push('form-inline')
+
         return c.join(" ")
+
 
       form.domName = () ->
         return @name
@@ -247,20 +261,65 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       form.domId = () ->
         return @name + '_id'
 
+      form.getGridPart = (size) ->
+        if !@gridpart? and !@gridpart_xs? and !@gridpart_sm? and !@gridpart_md? and !@gridpart_lg? and (@column? or @column_xs? or @column_sm? or @column_md? or @column_lg?)
+          return Math.floor(12 / @getColumn(size))
+        p = 1
+        if @gridpart?
+          p = @gridpart
+        if size?
+          if @gridpart_xs? and size == 'xs'
+            p = @gridpart_xs
+          if @gridpart_sm? and size == 'sm'
+            p = @gridpart_sm
+          if @gridpart_md? and size == 'md'
+            p = @gridpart_md
+          if @gridpart_lg? and size == 'lg'
+            p = @gridpart_lg
+        return p
+
+      form.getColumn = (size) ->
+        if !@column? and !@column_xs? and !@column_sm? and !@column_md? and !@column_lg? and (@gridpart? or @gridpart_xs? or @gridpart_sm? or @gridpart_md? or @gridpart_lg?)
+          return Math.floor(12 / @getGridPart(size))
+        c = 12
+        if @column?
+          c = @column
+        if size?
+          if @column_xs? and size == 'xs'
+            c = @column_xs
+          if @column_sm? and size == 'sm'
+            c = @column_sm
+          if @column_md? and size == 'md'
+            c = @column_md
+          if @column_lg? and size == 'lg'
+            c = @column_lg
+        return c
+
+      form.getColClass = () ->
+        xs = @getColumn('xs')
+        sm = @getColumn('sm')
+        md = @getColumn('md')
+        lg = @getColumn('lg')
+
+        c = []
+        c.push('col-xs-{0}'.format(xs)) if xs
+        c.push('col-sm-{0}'.format(sm)) if sm
+        c.push('col-md-{0}'.format(md)) if md
+        c.push('col-lg-{0}'.format(lg)) if lg
+
+        return c.join(' ')
+
       return form
 
     populateScopeForm: (scope, form, model) ->
       scope.form = @populateForm(form)
       scope.rows = null
-
+      scope.angular = angular
       if model instanceof Array
         scope.rows = model
       else if model
         scope.form.model = model
-        scope.rows = model.rows
-
-      scope.form.rows = scope.rows
-
+        scope.form.model.getSchema()
       scope.fields = scope.form.fields
 
     populateField: (form, field) ->
@@ -277,6 +336,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         field.label = _.str.humanize(field.fieldname)
 
       field.form = form
+      field.globals = globals
 
       field.domName = (type, idx) ->
         return @form.domName() + '_' + type + '_' + (if @fieldname? then @fieldname.replace(/\./g, '_') else '') + '_' + idx
@@ -284,90 +344,84 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       field.domId = (type, idx) ->
         return @form.domName() + '_' + type + '_' +(if @fieldname? then @fieldname.replace(/\./g, '_') else '') + '_' + idx + '_id'
 
+      field.getLabelColumn = (size) ->
+        if size?
+          if @label_xs? and size == 'xs'
+            return @label_xs
+          if @label_sm? and size == 'sm'
+            return @label_sm
+          if @label_md? and size == 'md'
+            return @label_md
+          if @label_lg? and size == 'lg'
+            return @label_lg
+        c = 12
+        if @form.layout.type == 'display'
+          c = 0
+        else if size?
+          if size == 'xs'
+            c = 9
+          else if size == 'sm'
+            c = 9
+          else if size == 'md'
+            c = 9
+          else if size == 'lg'
+            c = 10
+        if @input? or @input_xs? or @input_sm? or @input_md? or @input_lg?
+          c = @getInputColumn(size)
+        return 12 - c
+
       field.getLabelClass = () ->
-        if @input?
-          xs = @input
-          sm = @input
-          md = @input
-          lg = @input
-
-        else if @form.layout.type == 'display'
-          xs = 0
-          sm = 0
-          md = 0
-          lg = 0
-
-        else
-          xs = 9
-          sm = 9
-          md = 9
-          lg = 10
-
-        if @input_xs?
-          xs = @input_xs
-        if @input_sm?
-          sm = @input_sm
-        if @input_md?
-          md = @input_md
-        if @input_lg?
-          lg = @input_lg
+        xs = @getLabelColumn('xs')
+        sm = @getLabelColumn('sm')
+        md = @getLabelColumn('md')
+        lg = @getLabelColumn('lg')
 
         c = []
-        c.push('col-xs-{0}'.format(12 - xs)) if xs
-        c.push('col-sm-{0}'.format(12 - sm)) if sm
-        c.push('col-md-{0}'.format(12 - md)) if md
-        c.push('col-lg-{0}'.format(12 - lg)) if lg
-
+        c.push('col-xs-{0}'.format(xs)) if xs
+        c.push('col-sm-{0}'.format(sm)) if sm
+        c.push('col-md-{0}'.format(md)) if md
+        c.push('col-lg-{0}'.format(lg)) if lg
         return c.join(' ')
 
-      field.getInputClass = () ->
-        if @input?
-          xs = @input
-          sm = @input
-          md = @input
-          lg = @input
-
-        else if @type == 'subform' or @type == 'tabs' or !@autolabel
-          xs = 12
-          sm = 12
-          md = 12
-          lg = 12
-
-        else if @fields?
-          xs = 12
-          sm = 12
-          md = 12
-          lg = 12
-
+      field.getInputColumn = (size) ->
+        c = 12
+        if @type == 'subform' or @type == 'tabs' or !@autolabel or @fields?
+          c = 12
         else if @form.layout.type == 'display'
-          xs = 0
-          sm = 0
-          md = 0
-          lg = 0
+          c = 0
+        else if size?
+          if size == 'xs'
+            c = 0
+          else if size == 'sm'
+            c = 9
+          else if size == 'md'
+            c = 9
+          else if size == 'lg'
+            c = 10
+        if @input?
+          c = @input
+        if size?
+          if @input_xs? and size == 'xs'
+            c = @input_xs
+          if @input_sm? and size == 'sm'
+            c = @input_sm
+          if @input_md? and size == 'md'
+            c = @input_md
+          if @input_lg? and size == 'lg'
+            c = @input_lg
+        return c
 
-        else
-          xs = 0
-          sm = 9
-          md = 9
-          lg = 10
-
-        if @input_xs?
-          xs = @input_xs
-        if @input_sm?
-          sm = @input_sm
-        if @input_md?
-          md = @input_md
-        if @input_lg?
-          lg = @input_lg
+      field.getInputClass = () ->
+        xs = @getInputColumn('xs')
+        sm = @getInputColumn('sm')
+        md = @getInputColumn('md')
+        lg = @getInputColumn('lg')
 
         c = []
-
         if @rowSize?
           c.push('row-{0}'.format(@rowSize))
-
         if @type == 'caption'
           c.push('text-center')
-
         c.push('col-xs-{0}'.format(xs)) if xs
         c.push('col-sm-{0}'.format(sm)) if sm
         c.push('col-md-{0}'.format(md)) if md
@@ -375,27 +429,26 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
         return c.join(' ')
 
-      field.getColClass = () ->
+      field.getColumn = (size) ->
+        c = 6
         if @column?
-          xs = @column
-          sm = @column
-          md = @column
-          lg = @column
+          c = @column
+        if size?
+          if @column_xs? and size == 'xs'
+            c = @column_xs
+          if @column_sm? and size == 'sm'
+            c = @column_sm
+          if @column_md? and size == 'md'
+            c = @column_md
+          if @column_lg? and size == 'lg'
+            c = @column_lg
+        return c
 
-        else
-          xs = 6
-          sm = 6
-          md = 6
-          lg = 6
-
-        if @column_xs?
-          xs = @column_xs
-        if @column_sm?
-          sm = @column_sm
-        if @column_md?
-          md = @column_md
-        if @column_lg?
-          lg = @column_lg
+      field.getColClass = () ->
+        xs = @getColumn('xs')
+        sm = @getColumn('sm')
+        md = @getColumn('md')
+        lg = @getColumn('lg')
 
         c = []
         c.push('col-xs-{0}'.format(xs)) if xs
@@ -422,11 +475,12 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       $scope.countries = countries
       $scope.country_states = states
       $scope.current_states = ""
+      $scope.prevStateIdx = -1
 
       $scope._changeSelection = (field, val) ->
         if field.type.toLowerCase() == 'country'
           idx = @countries.indexOf(val)
-          if idx != -1
+          if idx != -1 and idx != $scope.prevStateIdx
             a = @country_states[idx]
             if type(a) is 'string'
               a = a.split('|')
@@ -439,10 +493,26 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
                   for i in [0..values.length - 1]
                     values[i] = { value: values[i], label: values[i] }
 
+                ctrl = elem.controller('ngModel')
+                v = ctrl.$viewValue
+
                 selectize.clearOptions()
                 angular.forEach(values, (option) ->
                   selectize.addOption(option)
                 )
+
+                ok = false
+                for s in values
+                  if s.label == v
+                    ok = true
+                    break
+
+                if ok
+                  $timeout(->
+                    selectize.setValue(v)
+                  )
+
+          $scope.prevStateIdx = idx
 
 #      if !$scope.rows.scope and $scope.$parent and $scope.fi
 #        p = $scope.$parent
@@ -460,283 +530,280 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       $scope.hasState = (state, idx) ->
         if @validRow(idx)
-          return @editStates[idx + 1] and @editStates[idx + 1].indexOf(state) != -1
+          return @editStates[idx] and @editStates[idx].indexOf(state) != -1
         else
-          for e in @editStates
-            if e and e.indexOf(state) != -1
+          for k of @editStates
+            e = @editStates[k]
+            if e.indexOf(state) != -1
               return true
           return false
 
       $scope.addState = (state, idx) ->
-        if idx?
-          _idx = idx + 1
-        else
-          _idx = 0
-          idx = null
-        if !@hasState(state, idx)
-          if @editStates[_idx]
-            @editStates[_idx] += state
+        if @validRow(idx) and !@hasState(state, idx)
+          if @editStates[idx]
+            @editStates[idx] += state
           else
-            @editStates[_idx] = state
+            @editStates[idx] = state
 
-      $scope.removeState = (state, idx) ->
-        if idx != null
-          _idx = idx + 1
-        else
-          _idx = 0
-          idx = null
-        if @hasState(state, idx)
-          @editStates[_idx] = @editStates[_idx].replace(state, '')
+      $scope.delState = (state, idx) ->
+        if @validRow(idx) and @hasState(state, idx)
+          @editStates[idx] = @editStates[idx].replace(state, '')
 
 
     initForm: ($scope) ->
 
-      makeKey = (lhs, rhs) ->
-        if !lhs? or lhs.length == 0
-          return rhs
-        else
-          if !rhs.startsWith('[')
-            return lhs + '.' + rhs
-          else
-            return lhs + rhs
-
-      $scope._flatten = (key, _source, complex) ->
-        r = []
-
-        if angular.isArray(_source)
-          if _source.length
-            for i in [0.._source.length - 1]
-              r = r.concat(r, @_flatten(makeKey(key, '[' + i.toString() + ']'), _source[i], complex))
-
-        else if angular.isObject(_source) and Object.keys(_source).length
-          for k of _source
-            r = r.concat(@_flatten(makeKey(key, k), _source[k], complex))
-
-        else
-          if complex
-            e = {}
-            e[key] = _source
-            r.push(e)
-          else
-            r.push(_source)
-
-        return r
+#      makeKey = (lhs, rhs) ->
+#        if !lhs? or lhs.length == 0
+#          return rhs
+#        else
+#          if !rhs.startsWith('[')
+#            return lhs + '.' + rhs
+#          else
+#            return lhs + rhs
+#
+#      $scope._flatten = (key, _source, complex) ->
+#        r = []
+#
+#        if angular.isArray(_source)
+#          if _source.length
+#            for i in [0.._source.length - 1]
+#              r = r.concat(r, @_flatten(makeKey(key, '[' + i.toString() + ']'), _source[i], complex))
+#
+#        else if angular.isObject(_source) and Object.keys(_source).length
+#          for k of _source
+#            r = r.concat(@_flatten(makeKey(key, k), _source[k], complex))
+#
+#        else
+#          if complex
+#            e = {}
+#            e[key] = _source
+#            r.push(e)
+#          else
+#            r.push(_source)
+#
+#        return r
 
       $scope._diff = (_source, _target) ->
-        src = JSON.stringify(@_flatten('', _source, false))
-        tgt = JSON.stringify(@_flatten('', _target, false))
+        src = JSON.flatten(jsonToString(_source))
+        tgt = JSON.flatten(jsonToString(_target))
         return JsDiff.diffChars(src, tgt)
 
       $scope._isRowModified = (_source, _target) ->
-        src = JSON.stringify(@_flatten('', _source, false))
-        tgt = JSON.stringify(@_flatten('', _target, false))
+        src = JSON.flatten(jsonToString(_source))
+        tgt = JSON.flatten(jsonToString(_target))
+#        if src != tgt
+#          console.log "diff", JsDiff.diffChars(src, tgt)
         return src != tgt
 
       $scope.validRow = (idx) ->
-        return idx != null and @rows and idx in [0..@rows.length - 1]
+        return idx? and @rows and idx in [0..@rows.length - 1]
+
+      $scope.updateRows = (newRows) ->
+        if @form and @form.model
+          if @form.model instanceof Array
+            if newRows
+              @form.model = newRows
+            @rows = @form.model
+            return
+          else if newRows or @form.model.rows
+            if newRows
+              @form.model.rows = newRows
+            @rows = @form.model.rows
+            return
+        if !@rows
+          @rows = []
+
+      $scope.setRowValues = (idx, values) ->
+        if @rows[idx].plain?
+          r = @rows[idx].plain()
+        else
+          r = @rows[idx]
+        for k of r
+          @rows[idx][k] = values[k]
+
+      $scope.tryEdit = (idx) ->
+        that = @
+        if that.form.editMode == 'always' and !(that.form.layout.type in ['table', 'grid'])
+          if that.form.blank
+            if that.form.model.create
+              that.updateRows([])
+              that.form.model.create((r) ->
+                that.edit(0)
+              )
+            else if that.form.model instanceof Array
+              that.form.model = [{}]
+              that.rows = that.form.model
+              that.edit(0)
+          else
+            that.edit(if idx? then idx else 0)
 
       $scope.edit = (idx, forceInline) ->
-        idx = if idx != null then idx else 0
-        if @validRow(idx) and !@hasState('e', idx) and @canEdit(idx)
-          that = @
-          @cancel()
-          @origValues = null
-          @orig = null
-          @origIdx = -1
-          @origValues = _.cloneDeep(@rows[idx].plain())
-          @orig = angular.copy(@rows[idx])
-          @origIdx = idx
-          @addState('e', idx)
-          console.log "edit", idx, @origValues, @orig, @rows
-
-          if !forceInline? and @form.editModal?
+        that = @
+        idx = if idx? then idx else 0
+        if that.validRow(idx) and !that.isEditing(idx) and that.form.canEdit
+          that.cancel()
+          that.origValues = null
+          that.orig = null
+          that.origIdx = -1
+          if that.rows[idx].plain
+            that.origValues = _.cloneDeep(that.rows[idx].plain())
+          else
+            that.origValues = _.cloneDeep(that.rows[idx])
+          that.orig = angular.copy(that.rows[idx])
+          that.origIdx = idx
+          that.addState('e', idx)
+          console.log "edit", idx, that.origValues
+          if !forceInline? and that.form.editModal?
             that.form.modalEditing = true
-            $injector.get('dynModal').showModalForm(that.form.editModal, [@rows[idx]], (mr) ->
+            $injector.get('dynModal').showModalForm({formDefinition:that.form.editModal, model:[that.rows[idx]]}, (mr) ->
               if mr
                 that.save(idx)
               else
                 that.cancel(idx)
             )
 
-#          $timeout(->
-#            if that.validateAllFields?
-#              that.validateAllFields()
-#          , 10)
-
-      $scope.insert = (idx) ->
-        idx = if idx != null then idx else 0
-        if @validRow(idx) and @form.canInsert
-          if @form.model
-            that = @
-            @form.model.create({}, that.form.blank, (r) ->
-              if r and that.form.model.rows.push?
-                that.form.model.rows.push(r)
-                idx = that.form.model.rows.length - 1
-                that.addState('i', idx)
-                console.log "insert", idx, r, that.rows
-                that.edit(idx)
+      $scope.create = () ->
+        that = @
+        if that.form.canCreate and that.form.model
+          if that.form.model.create
+            if that.form.blank
+              that.updateRows([])
+            that.form.model.create((r) ->
+              if r
+                if that.rows.push?
+                  that.rows.push(r)
+                idx = that.rows.length - 1
+                console.log "create", idx, r, that.rows
+                that.form.on('create', that.rows[idx])
+                that.tryEdit(idx)
             )
+          else
+            if that.form.blank
+              that.updateRows([])
+            that.rows.push({})
+            idx = that.rows.length - 1
+            console.log "create", idx, r, that.rows
+            that.form.on('create', that.rows[idx])
+            that.tryEdit(idx)
 
-      $scope.append = () ->
-        if @form.canAppend
-          if @form.model
-            that = @
-            @form.model.create({}, that.form.blank, (r) ->
-              if r and that.form.model.rows.push?
-                that.form.model.rows.push(r)
-                idx = that.form.model.rows.length - 1
-                that.addState('a', idx)
-                console.log "append", idx, r, that.rows
-                that.edit(idx)
-            )
+      $scope.remove = (idx) ->
+        that = @
+        idx = if idx? then idx else 0
+        if that.validRow(idx) and that.form.canDelete
+          if that.isEditing(idx)
+            that.cancel(idx)
+          if that.form.model.remove
+            if that.rows[idx].fromServer
+              that.form.model.remove(that.rows[idx], () ->
+                that.form.on('remove', idx)
+                that.rows.splice(idx, 1)
+                that.tryEdit(idx)
+              )
+            else
+              that.form.on('remove', idx)
+              that.rows.splice(idx, 1)
+              that.tryEdit(idx)
+          else
+            that.form.on('remove', idx)
+            that.rows.splice(idx, 1)
+            that.tryEdit(idx)
 
-      $scope.delete = (idx) ->
-        idx = if idx != null then idx else 0
-        if @validRow(idx) and @form.canDelete
-          @form.on('delete', @rows[idx])
-          @cancel(idx)
-          @addState('d', idx)
 
       $scope.moveup = (idx) ->
-        idx = if idx != null then idx else 0
+        idx = if idx? then idx else 0
         if @validRow(idx)
           console.log ""
 
       $scope.movedown = (idx) ->
-        idx = if idx != null then idx else 0
+        idx = if idx? then idx else 0
         if @validRow(idx)
           console.log ""
 
       $scope.save = (idx) ->
         that = @
-        console.log "save", idx, @origValues, @orig, @rows
-        idx = if idx != null then idx else 0
-        if @validRow(idx)
-          @validateAllFields()
-          if !@hasErrors(idx)
-            @form.modalEditing = false
-            @removeState('e', idx)
-            if @orig and @origValues and @origIdx == idx
-              if @isModified(idx)
-                @addState('m', idx)
-              if @form.model
-                @form.model.update(@rows[idx], (result) ->
+        console.log "save", idx, that.origValues, that.orig, that.rows
+        idx = if idx? then idx else 0
+        if that.validRow(idx)
+          that.validateAllFields()
+          if !that.hasErrors(idx)
+            if that.orig and that.origValues and that.origIdx == idx and that.isModified(idx)
+              that.form.modalEditing = false
+              that.delState('e', idx)
+              that.addState('m', idx)
+              that.removeErrors()
+              that.setAllPristine()
+              if that.form.model.update?
+                that.form.model.update(that.rows[idx], (result) ->
+                  if result
+                    that.setRowValues(idx, result)
+                    that.form.on('save', result)
                   that.origValues = null
                   that.orig = null
                   that.origIdx = -1
-                  that.form.on('save', result)
-                  if (that.rows and that.rows.length == 1) or that.form.editMode == 'always'
-                    if that.form.blank
-                      that.form.model.createTemp({}, true, (d) ->
-                        that.rows = that.form.model.rows
-                        that.edit(0)
-                      )
-                    else
-                      that.edit(0)
+                  that.tryEdit(idx)
                 )
+              else if that.form.model instanceof Array
+                that.form.on('save', result)
+                that.origValues = null
+                that.orig = null
+                that.origIdx = -1
+                that.tryEdit(idx)
 
-      $scope._cancelled = (idx) ->
-        if @rows and @rows[idx]?
-          console.log "_cancelled", @orig, @rows[idx]
-
-          angular.copy(@orig, @rows[idx])
-
-          s = $scope
-          f = s[s.domName()]
-          while !f or !f.$setPristine
-            s = s.$parent
-            if !s or !s.domName
-              break
-            f = s[s.domName()]
-
-          if f and f.$setPristine
-            f.$setPristine()
-
-          @origValues = null
-          @orig = null
-          @origIdx = -1
-          @form.on('cancel')
-
-          if @rows.length == 1 or @form.editMode == 'always'
-            if @form.blank
-              that = @
-              @form.model.createTemp({}, true, (d) ->
-                that.rows = that.form.model.rows
-                that.edit(0)
-              )
-            else
-              @edit(0)
-
-#          that = @
-#          @rows[idx]._id = @orig._id
-#          @rows[idx].get().then((result) ->
-#            that.rows[idx] = angular.copy(result)
-#            console.log "get()", result, that.rows[idx]
-#            that.origValues = null
-#            that.orig = null
-#            that.origIdx = -1
-#            that.form.on('cancel')
-#
-#            if that.rows.length == 1 or that.form.editMode == 'always'
-#              that.edit(0)
-#          )
-        else
-          @origValues = null
-          @orig = null
-          @origIdx = -1
-          @form.on('cancel')
-
-          if @rows.length == 1 or @form.editMode == 'always'
-            @edit(0)
 
       $scope.cancel = (idx) ->
         that = @
-        if !@validRow(idx)
-          return @cancelAll()
+        if !that.validRow(idx)
+          return that.cancelAll()
         else
-          @form.modalEditing = false
-          @removeState('e', idx)
-#          console.log "try cancel", idx, @origValues, @orig, @rows
-          if @rows and @origIdx == idx and @origValues and @orig
-            console.log "cancel", idx, @origValues, @orig, @rows
-            if @isModified(idx)
-              @addState('m', idx)
-            if @isInserted(idx) or @isAppended(idx)
-              if @form.model
-                @form.model.delete(@rows[idx], (result) ->
-                  that.form.on('cancel', result)
-                  that._cancelled(idx)
+          that.form.modalEditing = false
+          that.delState('e', idx)
+          if that.rows and that.origIdx == idx and that.origValues and that.orig
+            if that.rows and that.rows[idx]?
+              $timeout(->
+                that.$apply(->
+                  console.log "cancel", idx, "origValues", that.origValues, "orig", that.orig, "rows", that.rows, that.form.model.rows
+                  that.setRowValues(idx, that.origValues)
+                  that.form.on('cancel')
+                  that.removeErrors(idx)
+                  that.setAllPristine()
+                  that.origValues = null
+                  that.orig = null
+                  that.origIdx = -1
+                  that.tryEdit(idx)
                 )
-            else
-              that._cancelled(idx)
+              )
 
       $scope.cancelAll = () ->
         for i in [0..@rows.length - 1]
           @cancel(i)
+        @removeErrors()
+        @setAllPristine()
 
-      $scope.hasAction = () ->
-        return @form.canEdit or @form.canInsert or @form.canAppend or @form.canDelete or @form.canMove
-
-      $scope.canEdit = () ->
-        return @form.canEdit
+      $scope.hasActions = () ->
+        return @form.canEdit or @form.canCreate or @form.canDelete or @form.canMove
 
       $scope.isEditing = (idx) ->
-        return @hasState('e', idx) or @form.editMode == 'always'
+        return @hasState('e', idx)
 
       $scope.isDeleted = (idx) ->
         return @hasState('d', idx)
-
-      $scope.isInserted = (idx) ->
-        return @hasState('i', idx)
-
-      $scope.isAppended = (idx) ->
-        return @hasState('a', idx)
 
       $scope.isModified = (idx) ->
         if @isEditing(idx) and @origValues and @orig
           return @_isRowModified(@origValues, @rows[idx].plain())
         else
           return false
+
+      $scope.setAllPristine = () ->
+        sc = @
+        f = sc[sc.domName()]
+        while !f or !f.$setPristine
+          sc = sc.$parent
+          if !sc or !sc.domName
+            break
+          f = sc[sc.domName()]
+        if f and f.$setPristine
+          f.$setPristine()
 
       $scope.removeErrors = (field, idx) ->
         if field? and type(field) is 'number' and !idx?
@@ -849,76 +916,88 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       $scope.submit = () ->
         @save()
 
+      $scope.updateRows()
+
 
     initDisplay: ($scope) ->
 
 
+    queryBuilder: (k, v) ->
+      if !k
+        k = ''
+      op = '='
+      if v.startsWith('>=')
+        v = v.substr(2)
+        op = '>='
+      else if v.startsWith('<=')
+        v = v.substr(2)
+        op = '<='
+      else if v.startsWith('<>')
+        v = v.substr(2)
+        op = '!='
+      else if v.startsWith('!=')
+        v = v.substr(2)
+        op = '!='
+      else if v.startsWith('<')
+        v = v.substr(1)
+        op = '<'
+      else if v.startsWith('>')
+        v = v.substr(1)
+        op = '>'
+      else if v.startsWith('%')
+        v = v.substr(1)
+        op = 'LIKE'
+      if v.startsWith('#')
+        v = "TIMESTAMP '{0}'".format(v.substr(1))
+      else
+        v = "'{0}'".format(v)
+      return "{0} {1} {2}".format(k, op, v)
+
+
     initTable: ($scope) ->
-      $scope.perPage = 10
+      $scope.limit = 10
       $scope.filtersVisible = false
       $scope.filters = {}
       $scope.sort =
-        sortingOrder : 'id'
+        field : '_id'
         reverse : false
+      if $scope.form.model and $scope.form.model.sort
+        s = $scope.form.model.sort
+        if type(s) is 'array'
+          s = s[0]
+        if s.startsWith('-')
+          $scope.sort.field = s.substr(1)
+          $scope.sort.reverse = true
+        else
+          $scope.sort.field = s
 
       $scope.filtersQuery = () ->
         w = []
-        for k in Object.keys($scope.filters)
+        for k in Object.keys(@filters)
           if @filters[k].length
-            v = @filters[k]
-            op = '='
-
-            if v.startsWith('>=')
-              v = v.substr(2)
-              op = '>='
-            else if v.startsWith('<=')
-              v = v.substr(2)
-              op = '<='
-            else if v.startsWith('<>')
-              v = v.substr(2)
-              op = '!='
-            else if v.startsWith('!=')
-              v = v.substr(2)
-              op = '!='
-            else if v.startsWith('<')
-              v = v.substr(1)
-              op = '<'
-            else if v.startsWith('>')
-              v = v.substr(1)
-              op = '>'
-            else if v.startsWith('%')
-              v = v.substr(1)
-              op = 'LIKE'
-
-            if v.startsWith('#')
-              v = "TIMESTAMP '{0}'".format(v.substr(1))
-            else
-              v = "'{0}'".format(v)
-
-            w.push("{0} {1} {2}".format(k, op, v))
-
+            w.push(@queryBuilder(k, @filters[k]))
         if w.length
           return w.join(', AND ')
         else
           return null
 
       $scope.sortQuery = () ->
-        return (if @sort.reverse then '-' else '') + @sort.sortingOrder
+        return (if @sort.reverse then '-' else '') + @sort.field
 
-      $scope.perPageQuery = () ->
-        return (if @perPage? then @perPage else 10)
+      $scope.limitQuery = () ->
+        return (if @limit? then @limit else 10)
 
       $scope.filtersChanged = () ->
         if @form.model
-          @form.model.where = @filtersQuery()
+          @form.model.q = @filtersQuery()
         @cancel()
         @removeErrors()
         if @form.model
           sc = @
           while sc and !sc.hasOwnProperty('rows')
             sc = sc.$parent
-          @form.model.fetch((results) ->
-            sc.rows = results
+          @form.model.find({}, ->
+            sc.updateRows()
           )
 
       $scope.sortChanged = () ->
@@ -930,22 +1009,97 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           sc = @
           while sc and !sc.hasOwnProperty('rows')
             sc = sc.$parent
-          @form.model.fetch((results) ->
-            sc.rows = results
+          @form.model.find({}, ->
+            sc.updateRows()
           )
 
-      $scope.perPageChanged = () ->
+      $scope.sortOrderChanged = () ->
+        @sort.reverse = !@sort.reverse
+        @sortChanged()
+
+
+      $scope.limitChanged = () ->
         if @form.model
-          @form.model.perPage = @perPageQuery()
+          @form.model.l = @limitQuery()
         @cancel()
         @removeErrors()
         if @form.model
           sc = @
           while sc and !sc.hasOwnProperty('rows')
             sc = sc.$parent
-          @form.model.fetch((results) ->
-            sc.rows = results
+          @form.model.find({}, ->
+            sc.updateRows()
           )
+
+    initGrid: ($scope) ->
+      $scope.limit = 10
+      $scope.search = ''
+      $scope.sort =
+        field : '_id'
+        reverse : false
+      if $scope.form.model and $scope.form.model.sort
+        s = $scope.form.model.sort
+        if type(s) is 'array'
+          s = s[0]
+        console.log "sort", s
+        if s.startsWith('-')
+          $scope.sort.field = s.substr(1)
+          $scope.sort.reverse = true
+        else
+          $scope.sort.field = s
+
+      $scope.searchQuery = () ->
+        return @queryBuilder(null, @search)
+
+      $scope.sortQuery = () ->
+        return (if @sort.reverse then '-' else '') + @sort.field
+
+      $scope.limitQuery = () ->
+        return (if @limit? then @limit else 10)
+
+      $scope.searchChanged = () ->
+        if @form.model
+          @form.model.q = @searchQuery()
+        @cancel()
+        @removeErrors()
+        if @form.model
+          sc = @
+          while sc and !sc.hasOwnProperty('rows')
+            sc = sc.$parent
+          @form.model.find({}, ->
+            sc.updateRows()
+          )
+
+      $scope.sortChanged = () ->
+        if @form.model
+          @form.model.sort = @sortQuery()
+        @cancel()
+        @removeErrors()
+        if @form.model
+          sc = @
+          while sc and !sc.hasOwnProperty('rows')
+            sc = sc.$parent
+          @form.model.find({}, ->
+            sc.updateRows()
+          )
+
+      $scope.sortOrderChanged = () ->
+        @sort.reverse = !@sort.reverse
+        @sortChanged()
+
+      $scope.limitChanged = () ->
+        if @form.model
+          @form.model.l = @limitQuery()
+        @cancel()
+        @removeErrors()
+        if @form.model
+          sc = @
+          while sc and !sc.hasOwnProperty('rows')
+            sc = sc.$parent
+          @form.model.find({}, ->
+            sc.updateRows()
+          )
+
 
     initModal: ($scope) ->
 
@@ -973,7 +1127,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
     quickForm: (name, layout, style, title, model, cb) ->
 
-      invalidFields = ['created_at', 'updated_at', 'loginAttempts', 'lockUntil', 'path', '_w', 'parentId', 'owner_id']
+      invalidFields = ['created_at', 'updated_at', '__v', '_id', 'id', 'owner_id']
 
       if !layout
         layout = 'form'
@@ -1149,7 +1303,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
           if ref
             ff.config =
-              url: '/api/{0}?perPage=10'.format(ref.toLowerCase())
+              url: '/api/{0}?l=10'.format(ref.toLowerCase())
               field: '_id'
               displayField: 'name'
 #              display_pre: '<i>'
@@ -1192,10 +1346,39 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
   '$modal'
   '$rootScope'
   '$location'
+  '$compile'
 
-  (dynForm, $modal, $rootScope, $location) ->
+  (dynForm, $modal, $rootScope, $location, $compile) ->
 
-    showModal: (title, scope, template, cb) ->
+    extendOptions: (defaultOptions, options) ->
+      initOptions =
+        scope: null
+        template: '<span></span>'
+        formDefinition: {}
+        model: null
+        title: 'Modal'
+        caption: 'Input'
+        iconsize: 40
+        fieldname: 'answer'
+        fieldtype: 'input'
+        name:  'modalForm'
+        layout: 'modal'
+        style: 'horizontal'
+        size: 'sm'
+        backdrop: 'static'
+        buttons:
+          ok: 'Ok'
+          cancel: 'Cancel'
+          yes: 'Yes'
+          no: 'No'
+          close: 'Close'
+      r = _.extend({}, initOptions, defaultOptions, options)
+      console.log defaultOptions, options, r
+      return r
+
+    showModal: (options, cb) ->
+
+      options = @extendOptions({size:'lg'}, options)
 
       ModalInstanceCtrl = ($scope, $modalInstance) ->
 
@@ -1211,24 +1394,28 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         '<div ng-controller="dynModalCtrl">' +
         '  <div class="modal-header">' +
         '    <button class="close" type="button" ng-click="modalClick(\'cancel\')">&times;</button>' +
-        '    <h4 class="modal-title">' + title + '</h4>' +
+        '    <h4 class="modal-title">' + options.title + '</h4>' +
         '  </div>' +
         '  <div class="modal-body">' +
         '    <!-- <template>-->' +
         '  </div>' +
         '  <div class="modal-footer">' +
-        '    <input class="btn btn-default" type="button" ng-click="modalClick(\'cancel\')" value="Close"/>' +
+        '    <button class="btn btn-default" type="button" ng-click="modalClick(\'cancel\')">' +
+        '      <span class="cic cic-x">&nbsp;</span>' +
+        '      ' + options.buttons.close +
+        '    </button>' +
         '  </div>'
 
 #      console.log scope, modalTemplate, template
+      scope = (if options.scope then options.scope else $rootScope.$new(true))
       modal = $modal.open(
         scope: scope
-        template: modalTemplate.replace(/\<\!-- \<template\>--\>/g, template)
+        template: modalTemplate.replace(/\<\!-- \<template\>--\>/g, $compile(options.template)(scope).html())
 #        template: template
         controller: ModalInstanceCtrl
 #          windowClass: ''
-        size: 'lg'
-        backdrop: 'static'
+        size: options.size
+        backdrop: options.backdrop
       )
 
       modal.result.then(
@@ -1238,7 +1425,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           cb(false) if cb
       )
 
-    showModalForm: (formDefinition, model, cb) ->
+    showModalForm: (options, cb) ->
 
       ModalInstanceCtrl = ($scope, $modalInstance) ->
 
@@ -1250,16 +1437,18 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           else
             $location.path(url)
 
-      scope = $rootScope.$new(true)
-      dynForm.build(scope, formDefinition, model, null, (template) ->
+      options = @extendOptions({title:'Modal', size:(if options.formDefinition.size then options.formDefinition.size else 'md')}, options)
+
+      scope = (if options.scope then options.scope else $rootScope.$new(true))
+      dynForm.build(scope, options.formDefinition, options.model, null, (template) ->
 #        console.log template
         modal = $modal.open(
           scope: scope
           template: template
           controller: ModalInstanceCtrl
 #          windowClass: ''
-          size: if formDefinition.size then formDefinition.size else 'md'
-          backdrop: 'static'
+          size: options.size
+          backdrop: options.backdrop
         )
 
         modal.result.then(
@@ -1270,142 +1459,154 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         )
       )
 
-    inputModal: (title, caption, cb) ->
-      model = [{answer: ''}]
+    inputModal: (options, cb) ->
+      options = @extendOptions({title:'Answer', size:'md'}, options)
+
+      model = [{}]
+      model[0][options.fieldname] = ''
+
       formDefinition =
-        label: title
-        name: "modalForm"
-        size: 'md'
-        layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: null, class: 'success', label: 'OK', url: "ok" }, { icon: null, class: 'danger', label: 'Cancel', url: "cancel" }]
+        label: options.title
+        name: options.name
+        size: options.size
+        layout: {type: options.type, style: options.style}
+        buttons: [{ icon: "cic-checkmark", class: 'success', label: options.buttons.ok, url: "ok" }, { icon: "cic-x", class: 'danger', label: options.buttons.cancel, url: "cancel" }]
 
         fields: [
-          label: caption
-          type: "input"
-          fieldname: 'answer'
+          label: options.caption
+          type: options.fieldtype
+          fieldname: options.fieldname
         ]
 
-      @showModalForm(formDefinition, model, (ok) ->
+      @showModalForm(_.extend({}, options, {formDefinition:formDefinition, model:model}), (ok) ->
         if ok
-          cb(model.answer) if cb
+          cb(model[options.fieldname]) if cb
         else
           cb(null) if cb
       )
 
-    yesNoModal: (title, caption, cb) ->
+    yesNoModal: (options, cb) ->
+      options = @extendOptions({title:'Confirmation', size:'md', icon:'cic-question22'}, options)
+
       model = [{}]
       formDefinition =
-        label: title
-        name: "modalForm"
-        size: 'md'
-        layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: null, class: 'success', label: 'YES', url: "ok" }, { icon: null, class: 'danger', label: 'NO', url: "cancel" }]
+        label: options.title
+        name: options.name
+        size: options.size
+        layout: {type: options.layout, style: options.style}
+        buttons: [{ icon: "cic-checkmark", class: 'success', label: options.buttons.yes, url: "ok" }, { icon: "cic-x", class: 'danger', label: options.buttons.no, url: "cancel" }]
         autolabel: false
 
         fields: [
           column: 2
           type: "icon"
-          value: "cic-question22"
-          fontsize: 40
+          value: options.icon
+          fontsize: options.iconsize
           shadow: 2
           vcenter: true
         ,
           column: 10
           type: "caption"
-          value: caption
+          value: options.caption
           fontsize: 16
           vcenter: true
         ]
 
-      @showModalForm(formDefinition, model, (ok) ->
+      @showModalForm(_.extend({}, options, {formDefinition:formDefinition, model:model}), (ok) ->
         cb(ok) if cb
       )
 
-    alert: (caption, cb) ->
+    alert: (options, cb) ->
+      options = @extendOptions({title:'Confirmation', icon:'cic-exclamation2'}, options)
+
       model = [{}]
       formDefinition =
-        label: "Alert"
-        name: "modalForm"
-        size: 'sm'
-        layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: 'cic-check', class: 'success', label: 'OK', url: "ok" }]
+        label: options.title
+        name: options.name
+        size: options.size
+        layout: {type: options.layout, style: options.style}
+        buttons: [{ icon: "cic-checkmark", class: 'success', label: options.buttons.ok, url: "ok" }]
         autolabel: false
 
         fields: [
           column: 2
           rowSize: 'sm'
           type: "icon"
-          value: "cic-exclamation2"
-          fontsize: 40
+          value: options.icon
+          fontsize: options.iconsize
           vcenter: true
           shadow: 2
         ,
           column: 10
           rowSize: 'sm'
           type: "caption"
-          value: caption
+          value: options.caption
           fontsize: 16
           vcenter: true
 #          shadow: 1
           bold: true
         ]
 
-      @showModalForm(formDefinition, model, () ->
+      @showModalForm(_.extend({}, options, {formDefinition:formDefinition, model:model}), () ->
         cb() if cb
       )
 
-    info: (caption, cb) ->
+    info: (options, cb) ->
+      options = @extendOptions({title:'Information', icon:'cic-info6'}, options)
+
       model = [{}]
       formDefinition =
-        label: "Information"
-        name: "modalForm"
-        size: 'sm'
-        layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: 'cic-check', class: 'success', label: 'OK', url: "ok" }]
+        label: options.title
+        name: options.name
+        size: options.size
+        layout: {type: options.layout, style: options.style}
+        buttons: [{ icon: "cic-checkmark", class: 'success', label: options.buttons.ok, url: "ok" }]
         autolabel: false
 
         fields: [
           column: 2
           rowSize: 'sm'
           type: "icon"
-          value: "info6"
-          fontsize: 40
+          value: options.icon
+          fontsize: options.iconsize
           shadow: 2
         ,
           column: 10
           rowSize: 'sm'
           type: "caption"
-          value: caption
+          value: options.caption
           fontsize: 16
 #          shadow: 1
           bold: true
         ]
 
-      @showModalForm(formDefinition, model, () ->
+      @showModalForm(_.extend({}, options, {formDefinition:formDefinition, model:model}), () ->
         cb() if cb
       )
 
-    chooseModal: (title, caption, items, cb) ->
+    chooseModal: (options, cb) ->
+      options = @extendOptions({title:'', size:'md', icon:'cic-info6', items:[]}, options)
+
       model = [{}]
       formDefinition =
-        label: title
-        name: "modalForm"
-        size: 'md'
-        layout: {type: 'modal', style: 'horizontal'}
-        buttons: [{ icon: null, class: 'success', label: 'OK', url: "ok" }, { icon: null, class: 'danger', label: 'Cancel', url: "cancel" }]
+        label: options.title
+        name: options.name
+        size: options.size
+        layout: {type: options.layout, style: options.style}
+        buttons: [{ icon: "cic-checkmark", class: 'success', label: options.buttons.ok, url: "ok" }, { icon: "cic-x", class: 'danger', label: options.buttons.cancel, url: "cancel" }]
         autolabel: false
 
         fields: [
           type: "caption"
-          value: caption
+          value: options.caption
           style: {name: 'font-size', value: '16px'}
         ,
           type: "checklistbox"
-          options: items
+          options: options.items
           fieldname: 'items'
         ]
 
-      @showModalForm(formDefinition, model, (ok) ->
+      @showModalForm(_.extend({}, options, {formDefinition:formDefinition, model:model}), (ok) ->
         cb(ok) if cb
       )
 
@@ -1413,52 +1614,60 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
 .controller('dynFormCtrl', [
   '$scope'
-  'Globals'
   'dynForm'
+  '$timeout'
 
-  ($scope, globals, dynForm) ->
+  ($scope, dynForm, $timeout) ->
     dynForm.initScope($scope)
     dynForm.initForm($scope)
 
-    if $scope.rows and $scope.rows.length == 1
-      $scope.edit(0)
+    $scope.tryEdit()
 ])
 
 .controller('dynDisplayCtrl', [
   '$scope'
-  'Globals'
   'dynForm'
 
-  ($scope, globals, dynForm) ->
+  ($scope, dynForm) ->
     dynForm.initScope($scope)
     dynForm.initDisplay($scope)
 ])
 
 .controller('dynTableCtrl', [
   '$scope'
-  'Globals'
   'dynForm'
 
-  ($scope, globals, dynForm) ->
+  ($scope, dynForm) ->
     dynForm.initScope($scope)
     dynForm.initForm($scope)
     dynForm.initTable($scope)
 ])
 
-.controller('dynModalCtrl', [
+.controller('dynGridCtrl', [
   '$scope'
-  'Globals'
   'dynForm'
 
-  ($scope, globals, dynForm) ->
+  ($scope, dynForm) ->
+    dynForm.initScope($scope)
+    dynForm.initForm($scope)
+    dynForm.initGrid($scope)
+])
+
+.controller('dynModalCtrl', [
+  '$scope'
+  'dynForm'
+  '$timeout'
+
+  ($scope, dynForm, $timeout) ->
     dynForm.initScope($scope)
     dynForm.initForm($scope)
     dynForm.initModal($scope)
+
+    $scope.tryEdit()
 ])
 
 .controller('dynFormObjectCtrl', [
   '$scope'
-  'Globals'
   'dynForm'
 
   ($scope, globals, dynForm) ->
@@ -1663,15 +1872,15 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       '</a>'
 
     link: (scope) ->
-      scope.sort_by = (newSortingOrder) ->
+      scope.sort_by = (newField) ->
         sort = scope.$parent.sort
-        if sort.sortingOrder == newSortingOrder
+        if sort.field == newField
           sort.reverse = !sort.reverse
-        sort.sortingOrder = newSortingOrder
+        sort.field = newField
         scope.$parent.sortChanged()
 
       scope.selectedCls = (column) ->
-        if column == scope.$parent.sort.sortingOrder
+        if column == scope.$parent.sort.field
           return 'cic cic-sort-' + (if scope.sort.reverse then 'up' else 'down')
         else
           return 'cic cic-sort'

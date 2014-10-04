@@ -96,11 +96,15 @@ angular.module('dashboard', ['app', 'dashboard.models', 'dashboard.lineChart', '
 
     $stateProvider
       .state('dashboard',
+        abstract: true
         url:'/dashboard'
         templateUrl: '/partials/dashboard.html'
-#        data:
-#          ncyBreadcrumbLabel: '<i class="cic cic-home3"/>'
-#          ncyBreadcrumbParent: 'user'
-#          ncyBreadcrumbSkip: true
+      )
+
+      .state('dashboard.main',
+        url:''
+        icon: 'cic-dashboard2'
+        data:
+          ncyBreadcrumbLabel: 'Dashboard'
       )
 ])

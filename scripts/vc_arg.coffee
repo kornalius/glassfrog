@@ -6,6 +6,7 @@ ArgClass =
 #  component
 #  options
 #  enum []
+#  multi []
 #  default
 #  states
 
@@ -15,7 +16,7 @@ ArgClass =
     if a.clearData
       a.clearData()
 
-    if type(a) is not 'object'
+    if type(a) != 'object'
       a = { value: _.cloneDeep(a) }
 
     a.$data = {}
@@ -100,6 +101,9 @@ ArgClass =
         v = 'null'
       return v
 
+    a.is = (value) ->
+      _.contains(@getValue().toLowerCase().split(', '), value.toLowerCase())
+
     a.isLink = () ->
       @hasOption('l')
 
@@ -137,10 +141,9 @@ ArgClass =
       else if value and type(value) is 'string' and value.match(/^[0-9a-fA-F]{24}$/)
         @setLink(value)
       else
-        console.log value
-        if @value != value
-          if @isLink()
-            @setLink(null)
+        if @isLink()
+          @setLink(null)
+        if !_.isEqual(@value, value)
           @value = value
           @setModified(true)
 
@@ -275,6 +278,22 @@ ArgClass =
       else
         return []
 
+    a.hasMulti = () ->
+      @getMulti().length
+
+    a.getMulti = (asObject) ->
+      if @$data._node
+        ad = @$data._node.getArgDef(@name)
+        if ad
+          m = ad.getMulti(asObject)
+          if m and m.length
+            return m
+
+      else if @multi
+        return ArgClass.VCGlobal.enumToList(@multi, @$data._node, asObject, true)
+
+      return []
+
     a.isRequired = () ->
       !@hasOption('o')
 
@@ -372,7 +391,7 @@ ArgClass =
       t = @getInputType()
       s = {}
       if t == 'color'
-        _.extend(s, {'background-color': tinycolor(a.getValue()).toRgbString()})
+        s = _.extend({}, {'background-color': tinycolor(a.getValue()).toRgbString()})
       return s
 
     a.getLabelClass = () ->
@@ -390,6 +409,8 @@ ArgClass =
     a.getInputType = () ->
       if @hasEnum()
         return "enum"
+      else if @hasMulti()
+        return "multi"
       c = @getComponent()
       if c
         it = c.getInputType()

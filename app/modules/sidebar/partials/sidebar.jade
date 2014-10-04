@@ -7,7 +7,7 @@ span.sidebar(ng-controller="SidebarCtrl")
 
   ul.nav.hidden-xs.sidebar-menu-lg#lg-menu
     li.sidebar-menu-line(ng-repeat="m in sidenavs()")
-      a.sidebar-menu(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.sidebarHidden")
+      a.sidebar-menu(ui-sref-active-eq="active", ui-sref="{{m.name}}", ng-show="!m.sidebarHidden")
         i.sidebar-menu-icon.cic.cic-point-of-interest(ng-show="!m.icon")
         i.sidebar-menu-icon.cic(class="{{m.icon}}", ng-show="m.icon")
         span.sidebar-menu-label.proper {{"nav." + (m.altname ? m.altname : m.name) | i18next}}
@@ -21,6 +21,6 @@ span.sidebar(ng-controller="SidebarCtrl")
 
   ul.nav.visible-xs.sidebar-menu-xs#xs-menu
     li.sidebar-menu-line(ng-repeat="m in sidenavs()")
-      a.sidebar-menu(ui-sref-active="active", ui-sref="{{m.name}}", ng-href="{{m.url}}", ng-show="!m.sidebarHidden")
+      a.sidebar-menu(ui-sref-active-eq="active", ui-sref="{{m.name}}", ng-show="!m.sidebarHidden")
         i.sidebar-menu-icon.cic.cic-point-of-interest(ng-show="!m.icon")
         i.sidebar-menu-icon.cic(class="{{m.icon}}", ng-show="m.icon")

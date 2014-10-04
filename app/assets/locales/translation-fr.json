@@ -10,7 +10,9 @@
     "test": "teste",
     "suggestions": "suggestions",
     "editor": "editeur",
-    "dashboard": "table de bord",
+    "dashboard": {
+      "main": "tableau de bord"
+    },
     "module": "module",
     "repository": {
       "main": "dépôts",

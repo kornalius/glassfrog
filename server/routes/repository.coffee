@@ -32,8 +32,8 @@ mongoose = require("mongoose")
 #            res.send(500, 'Must specify at least one valid user to share with')
 #        )
 #      else
-#        res.send(403)
+#        res.status(403).end()
 #    )
 #  else
-#    res.send(403)
+#    res.status(403).end()
 #)

@@ -10,7 +10,7 @@ angular.module('user.profile', ['dynamicForm'])
 
   $scope.usr = new Rest('user')
 
-  $scope.usr.fetch($scope.user._id, ->
+  $scope.usr.findById($scope.user._id, ->
     userProfileForm =
       label: "User Profile"
       name: "UserProfileForm"

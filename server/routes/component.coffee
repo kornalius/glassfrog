@@ -11,30 +11,30 @@ app.get("/api/components", (req, res) ->
           if components
             # Remove all server codes
             for c in components
-              if c.extra
-                e = JSON.parse(c.extra)
+              if c.extra and type(c.extra) is 'string'
+                e = stringToJson(c.extra)
                 if e.code and e.code.server
                   delete e.code.server
-                  c.extra = JSON.stringify(e)
-            res.send(components)
+                  c.extra = jsonToString(e)
+            res.send(components).end()
           else
-            res.send(403)
+            res.status(403).end()
         )
       else
-        res.send(403)
+        res.status(403).end()
     )
   else
-    res.send(403)
+    res.status(403).end()
 )
 
 app.put("/api/components", (req, res) ->
-  res.send(403)
+  res.status(403).end()
 )
 
 app.post("/api/components", (req, res) ->
-  res.send(403)
+  res.status(403).end()
 )
 
 app.delete("/api/components", (req, res) ->
-  res.send(403)
+  res.status(403).end()
 )

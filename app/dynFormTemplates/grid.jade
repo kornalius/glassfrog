@@ -1,0 +1,37 @@
+// grid.html
+
+div(ng-controller="dynGridCtrl")
+  .panel.panel-primary(ng-init="srow = -1", container="form.container")
+    .panel-heading
+      .panel-title {{form.label}}
+
+    .panel-body
+      .row
+        include table_nav
+
+      .row
+
+        .container-fluid
+
+          .visible-lg(ng-show="globals.isBreakpoint('lg')")
+            .row(ng-repeat="r in rows | partition:form.getGridPart('lg')")
+              span(ng-repeat="row in r track by $index", class="{{form.getColClass('lg')}}")
+                // <row>
+
+          .visible-md(ng-show="globals.isBreakpoint('md')")
+            .row(ng-repeat="r in rows | partition:form.getGridPart('md')")
+              span(ng-repeat="row in r track by $index", class="{{form.getColClass('md')}}")
+                // <row>
+
+          .visible-sm(ng-show="globals.isBreakpoint('sm')")
+            .row(ng-repeat="r in rows | partition:form.getGridPart('sm')")
+              span(ng-repeat="row in r track by $index", class="{{form.getColClass('sm')}}")
+                // <row>
+
+          .visible-xs(ng-show="globals.isBreakpoint('xs')")
+            .row(ng-repeat="r in rows| partition:form.getGridPart('xs')")
+              span(ng-repeat="row in r track by $index", class="{{form.getColClass('xs')}}")
+                // <row>
+
+      .row
+        include table_nav

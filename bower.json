@@ -30,7 +30,6 @@
     "angular-resource": "~1.2.16",
     "ng-i18next": "~0.3.1",
     "underscore": "~1.6.0",
-    "angular-promise-tracker": "~2.0.0",
     "ng-table": "~0.3.1",
     "angular-animate": "~1.2.16",
     "angular-ui": "~0.4.0",
@@ -71,7 +70,14 @@
     "angular-pines-notify": "~1.0.0",
     "malhar-angular-widgets": "git://github.com/DataTorrent/malhar-angular-widgets.git",
     "fontawesome-iconpicker": "git://github.com/mjolnic/fontawesome-iconpicker.git#~1.1.0",
-    "angular-moment": "~0.8.2"
+    "angular-moment": "~0.8.2",
+    "marked": "~0.3.2",
+    "angular-marked": "~0.0.12",
+    "angular-loading-bar": "~0.6.0",
+    "angular-growl": "~0.4.0",
+    "angular-pageslide-directive": "~0.1.8",
+    "perfect-scrollbar": "~0.5.2",
+    "angular-perfect-scrollbar": "*"
   },
   "resolutions": {
     "angular": "~1.2.18"

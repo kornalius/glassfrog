@@ -1,0 +1,30 @@
+.col.col-md-1.col-lg-1.hidden-xs.hidden-sm
+  .input-group
+    select.form-control(type="select", ng-model="limit", ng-change="limitChanged()")
+      option 10
+      option 25
+      option 50
+      option 100
+    span.input-group-btn.hidden-xs.hidden-sm
+      button.btn.btn-link(type="button")
+        span.cic.cic-numbered-list
+
+.col.col-md-2.col-lg-2.hidden-xs.hidden-sm
+  .input-group
+    select.form-control(type="select", ng-model="sort.field", ng-change="sortChanged()")
+      option(ng-repeat="ff in form.model.schema.paths", ng-if="ff.indexOf('.') == -1") {{ff}}
+    span.input-group-btn
+      button.btn.btn-link(type="button", ng-click="sortOrderChanged()")
+        span.cic.cic-sort-by-attributes(ng-show="sort.reverse")
+        span.cic.cic-sort-by-attributes-alt(ng-show="!sort.reverse")
+
+.col.col-xs-12.col-sm-10.col-md-7.col-lg-7
+  .pagination.pull-right(ui-pagination="form.model")
+
+.col.col-sm-2.col-md-2.col-lg-2.hidden-xs
+  .input-group
+    input.form-control.grid-input-filter(type='text', placeholder='Search', ng-model="search", ng-change="searchChanged()", clearable)
+    span.searchclear &times;
+    span.input-group-btn
+      button.btn.btn-default(type="button")
+        span.cic.cic-search

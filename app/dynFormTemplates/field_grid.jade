@@ -1,0 +1,9 @@
+// field_grid.html
+
+div(ng-controller="dynFormObjectCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName%}';", ng-click="$parent.edit($index, true)")
+
+  div(ng-class="{'has-error' : fields[{%fieldIndex%}].hasErrors($index)}")
+    // <input>
+
+  .help-block(ng-show="fields[{%fieldIndex%}].hasErrors($index)")
+    .label.label-danger.label-table-error(ng-repeat="e in fields[{%fieldIndex%}].errors($index)") {{e.message}}

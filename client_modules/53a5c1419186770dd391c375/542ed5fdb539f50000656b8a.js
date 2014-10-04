@@ -13,4 +13,10 @@
   var schemaExtend = require("mongoose-schema-extend");
 
 
+  exports.schemas = [Briefcase]
+  exports.queries = []
+  exports.pages = []
+  exports.views = []
+
+
 }).call(this);

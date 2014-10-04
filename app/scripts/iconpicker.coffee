@@ -56,7 +56,7 @@ angular.module('iconpicker.services', ['app', 'app.globals'])
 #        element.multiSelect('select', newValue)
 
         element.on('iconpickerSelected', (e) ->
-          console.log 'iconpickerSelected', e
+#          console.log 'iconpickerSelected', e
           newValue = e.iconpickerValue
           if newValue != ctrl.$viewValue
             $timeout(->

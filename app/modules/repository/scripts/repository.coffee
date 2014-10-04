@@ -6,38 +6,32 @@ angular.module('repository', ['repository.available', 'repository.installed'])
   ($stateProvider) ->
     $stateProvider
 
-    .state('repository_root',
+    .state('repository',
       abstract: true
       url: '/repository'
       templateUrl: '/partials/repository.html'
-      controller: ($scope) ->
-      data:
-        ncyBreadcrumbLabel: 'Repositories'
-#          ncyBreadcrumbSkip: true
     )
 
-    .state('repository',
-      altname: 'repository.main'
-      sidebarHidden: true
-      url: '/'
-      parent: 'repository_root'
-      controller: ($scope) ->
-      onEnter: ($state) ->
-        $state.go("repository.available")
+    .state('repository.main',
+      url: ''
+      icon: 'cic-cord'
       data:
-        ncyBreadcrumbLabel: 'Repositories'
-#          ncyBreadcrumbSkip: true
-      views: {}
+        root: 'repository'
+        ncyBreadcrumbLabel: 'Repository'
+      onEnter: ['$state', ($state) ->
+        window.setTimeout(->
+          $state.go('repository.available')
+        )
+      ]
     )
 
     .state('repository.available',
       url: '/available'
-      parent: 'repository_root'
+      icon: 'cic-basket'
       data:
         root: 'repository'
         ncyBreadcrumbLabel: 'Available'
-        ncyBreadcrumbParent: 'repository'
-#          ncyBreadcrumbSkip: true
+        ncyBreadcrumbParent: 'repository.main'
       views:
         available:
           templateUrl: '/partials/repository.available.html'
@@ -46,11 +40,11 @@ angular.module('repository', ['repository.available', 'repository.installed'])
 
     .state('repository.installed',
       url: '/installed'
-      parent: 'repository_root'
+      icon: 'cic-cord'
       data:
         root: 'repository'
         ncyBreadcrumbLabel: 'Installed'
-        ncyBreadcrumbParent: 'repository'
+        ncyBreadcrumbParent: 'repository.main'
 #          ncyBreadcrumbSkip: true
       views:
         installed:

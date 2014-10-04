@@ -1,20 +1,17 @@
 'use strict'
 
-angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
+angular.module('app.globals', ['ui.router.state'])
 
 .factory('Globals', [
-  'promiseTracker'
   '$timeout'
 
-  (promiseTracker, $timeout) ->
+  ($timeout) ->
     stack = {"dir1": "down", "dir2": "left", "push": "bottom", "spacing1": 0, "spacing2": 0, "context": $("body")}
 
     user: null
     modules: []
-    loadingTracker: promiseTracker()
 
     showMessage: (text, type) ->
-
       icon = 'exclamation2'
       if type == 'error'
         icon = 'spam3'
@@ -23,11 +20,13 @@ angular.module('app.globals', ['ui.router.state', 'ajoslin.promise-tracker'])
         icon = 'warning3'
       else if type == 'info'
         icon = 'info6'
-
       $timeout(->
         notice = new PNotify({text: text, icon: 'cic cic-' + icon, type: type, mouse_reset: false, stack: stack, buttons: {'sticker': false}})
         notice.get().click(-> notice.remove())
       , 100)
+
+    isBreakpoint: (size) ->
+      return $('.visible-' + size).is(':visible')
 
 ])
 

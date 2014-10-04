@@ -1,53 +1,11 @@
 angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'editor.preview', 'dynamicForm'])
 
 .run([
-  '$http'
-  'Rest'
-  'EditorComponent'
-  'EditorModule'
+  'Editor'
 
-  ($http, Rest, EditorComponent, EditorModule) ->
+  (Editor) ->
 
-    require(['vc_global', 'vc_module', 'vc_component'], (VCGlobal, Module, Component) ->
-#      console.log "Loading components..."
-#      VCGlobal.components = new Rest('component', '/api/components')
-#      VCGlobal.components.rows = VCGlobal.components.fetch({}, (data) ->
-#        for c in data
-#          Component.make(c)
-#        console.log "Loaded {0} components".format(VCGlobal.components.rows.length), data
-#        EditorComponent.refresh()
-#      )
-
-      VCGlobal.loadComponents((data) ->
-        if data
-          EditorComponent.refresh()
-      )
-
-      console.log "Loading user's modules..."
-      VCGlobal.modules = new Rest('module', '/api/modules')
-      VCGlobal.modules.rows = VCGlobal.modules.fetch({}, (data, err) ->
-        if !err
-          for m in data
-            Module.make(m)
-          console.log "Loaded {0} modules".format(data.length)
-          EditorModule.refresh()
-        else
-          console.log "Error loading modules", err
-      )
-
-#      $http.get('/api/modules')
-#      .success((data, status) ->
-#        VCGlobal.modules = new Rest('module')
-#        VCGlobal.modules.rows = (if data? then data else [])
-#        for m in VCGlobal.modules.rows
-#          Module.make(m)
-#        console.log "Loaded {0} modules".format(VCGlobal.modules.rows.length), data
-#
-#        EditorModule.refresh()
-#      )
-#      .error((data, status) ->
-#      )
-    )
+    Editor.refresh(true)
 
 ])
 
@@ -57,18 +15,19 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
   ($stateProvider) ->
     $stateProvider
 
-    .state('editor_root',
+    .state('editor',
       abstract: true
+      url: '/editor'
       templateUrl: '/partials/editor.html'
       controller: 'EditorCtrl'
 #      onEnter: () ->
 #        console.log "enter test"
     )
 
-    .state('editor',
-      url: '/editor'
-      parent: 'editor_root'
-#      hidden: true
+    .state('editor.main',
+      altname: 'editor'
+      url: ''
+      icon: 'cic-treediagram'
       data:
         root: 'editor'
         ncyBreadcrumbLabel: 'Editor'
@@ -103,8 +62,10 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
   'dynModal'
   '$timeout'
   '$interval'
+  '$injector'
+  'Rest'
 
-  (dynModal, $timeout, $interval) ->
+  (dynModal, $timeout, $interval, $injector, Rest) ->
     over: null
     prevOver: null
     expandTimeout: null
@@ -112,14 +73,45 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
     module: null
     rootNodes: []
     oldContainer: null
+    refreshNeeded: false
+
+    refresh: (full) ->
+      that = @
+
+      require(['vc_global', 'vc_module'], (VCGlobal, VCModule) ->
+        $injector.invoke(['EditorComponent', 'EditorModule', (EditorComponent, EditorModule) ->
+          if full
+            VCGlobal.loadComponents((data) ->
+              if data
+                EditorComponent.refresh()
+            )
+
+          console.log "Loading user's modules..."
+
+          VCGlobal.modules = new Rest('module', '/api/modules')
+          VCGlobal.modules.rows = VCGlobal.modules.find({}, (data, err) ->
+            if !err
+              for m in data
+                VCModule.make(m)
+              console.log "Loaded {0} modules".format(data.length)
+              EditorModule.refresh()
+              that.refreshNeeded = false
+            else
+              console.log "Error loading modules", err
+          )
+        ])
+      )
 
     isModuleSaved: () ->
       !@module or @module.isSaved()
 
-    askSaveModule: (cb) ->
+    askSaveModule: (msg, cb) ->
+      if type(msg) is 'function'
+        cb = msg
+        msg = null
       if !@isModuleSaved()
         that = @
-        dynModal.yesNoModal("Save?", "Do you want to save changes to {0}?".format(that.module.name), (ok) ->
+        dynModal.yesNoModal({title:"Save?", caption:"{0}Do you want to save changes to {1}?".format((if msg then msg + ' ' else ''), that.module.name)}, (ok) ->
           if ok
             that.saveModule(that.module, ->
               cb(true) if cb
@@ -132,27 +124,26 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
     editModule: (m, cb) ->
       that = @
-      @askSaveModule((ok) ->
-        require(['vc_global'], (VCGlobal) ->
+#      @askSaveModule((ok) ->
+      require(['vc_node'], (VCNode) ->
+        m.edit((ok) ->
+          console.log "editModule()", ok
           if ok
-            m.edit((ok) ->
-              if ok
-                that.module = m
-                that.rootNodes = m.getRoot().nodes
+            that.module = m
+            that.rootNodes = m.getRoot().nodes
 #                $timeout(->
 #                  m.generateCode(true)
 #                  m.generateCode(false)
 #                , 1000)
-              cb(that.module) if cb
-            )
-          else
-            cb(that.module) if cb
+
+          cb(that.module) if cb
         )
       )
+#      )
 
     saveModule: (m, cb) ->
-      m.save((ok) ->
-        cb(ok) if cb
+      m.save((err, m) ->
+        cb(!err) if cb
       )
 
     isOver: (o) ->
@@ -196,8 +187,15 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
       $timeout( ->
         EditorComponent.refresh(EditorNode.selection())
         EditorModule.refresh()
-      , 100)
+      )
     )
+
+    if Editor.refreshNeeded
+      Editor.askSaveModule('A refresh is needed.', ->
+        Editor.module = null
+        Editor.rootNodes = []
+        Editor.refresh()
+      )
 
     $scope.isModuleSaved = () ->
       Editor.isModuleSaved()

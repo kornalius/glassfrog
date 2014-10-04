@@ -72,15 +72,16 @@ angular.module('checklistbox.services', ['app', 'app.globals'])
           config: {}
           selected: []
 
-      field.config = angular.extend({}, field.config, defaults.config)
+      field.config = angular.extend({}, defaults.config, field.config)
       scope.format = field.config.format
       scope.delimiter = field.config.delimiter
 
       scope.options = scope.processOptions($parse(attrs.options)(scope))
 
-#      ctrl.$render = ->
+      ctrl.$render = ->
 #        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
-#        console.log "$render()", newValue
+#        ctrl.$modelValue = newValue
+        scope.updateCheck()
 
       element.on('change', ->
         r = scope.modelValue()
@@ -97,33 +98,28 @@ angular.module('checklistbox.services', ['app', 'app.globals'])
           element.trigger('change')
       , true)
 
+      scope.updateCheck = () ->
+        ls = []
+
+        v = ctrl.$modelValue
+        if scope.format.startsWith('string') and type(v) is 'string'
+          ls = v.split(scope.delimiter)
+        else if scope.format.startsWith('array') and type(v) is 'array'
+          ls = v
+
+        for o in scope.options
+          o.checked = false
+
+        for l in ls
+          for o in scope.options
+            if (scope.format == 'string-label' and o.label == l) or (scope.format == 'string-value' and o.value == l) or (scope.format == 'array-label' and o.label == l) or (scope.format == 'array-value' and o.value == l) or (scope.format == 'array' and o.value == l.value)
+              o.checked = true
+              break
+
       scope.$watch(attrs.ngModel, (newValue, oldValue) ->
         if !angular.equals(newValue, oldValue)
-          ls = []
-
-          if newValue?
-            if scope.format.startsWith('string') and type(newValue) is 'string'
-              ls = newValue.split(scope.delimiter)
-            else if scope.format.startsWith('array') and type(newValue) is 'array'
-              ls = newValue
-
-          for o in scope.options
-            o.checked = false
-
-          for l in ls
-            for o in scope.options
-              if (scope.format == 'string-label' and o.label == l) or (scope.format == 'string-value' and o.value == l) or (scope.format == 'array-label' and o.label == l) or (scope.format == 'array-value' and o.value == l) or (scope.format == 'array' and o.value == l.value)
-                o.checked = true
-                break
+          element.trigger('change')
+          scope.updateCheck()
       , true)
-
-      $timeout( ->
-        if field.selected?
-          for f in scope.processOptions(field.selected)
-            for o in scope.options
-              if o.value == f.value
-                o.checked = true
-                break
-      )
 
 ])

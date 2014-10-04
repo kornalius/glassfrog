@@ -1,4 +1,4 @@
-angular.module('editor.component', ['app.globals', 'editor.node'])
+angular.module('editor.component', ['editor.node'])
 
 .factory('EditorComponent', [
   '$timeout'
@@ -81,10 +81,9 @@ angular.module('editor.component', ['app.globals', 'editor.node'])
   'EditorComponent'
   '$parse'
   '$document'
-  'Globals'
   '$timeout'
 
-  ($scope, Rest, Editor, EditorNode, EditorComponent, $parse, $document, globals, $timeout) ->
+  ($scope, Rest, Editor, EditorNode, EditorComponent, $parse, $document, $timeout) ->
 
     $scope.componentNodes = []
     $scope.componentCategories = []

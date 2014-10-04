@@ -12,7 +12,7 @@ angular.module('test.table', ['dynamicForm'])
 
   $scope.tests = new Rest('test')
 
-  $scope.tests.fetch({perPage: 10}, ->
+  $scope.tests.find({l: 10}, ->
     testTable =
       label: 'Table test'
       name: "myTable"

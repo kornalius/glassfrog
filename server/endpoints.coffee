@@ -1,417 +1,630 @@
-app = require("./app")
+_app = require("./app")
+app = _app.app
 mongoose = require("mongoose")
-RestEndpoints = require('mongoose-rest-endpoints')
 url = require('url')
 async = require('async')
 util = require('util')
-
 require('simple-errors')
+query = require('humanquery')
 
-RestEndpoints.log.verbose(process.env.NODE_ENV == 'development')
-#RestEndpoints.log.verbose(true)
+MAX_LIMIT = 500
 
-hasOwner = (endpoint) ->
-  return endpoint.$modelClass.owner_id?
+class AccessError extends mongoose.Error
+  constructor: (@name, @path) ->
+    super('Access denied in model "' + @name + '" at path "' + @path + '"')
+    Error.captureStacklog(@, arguments.callee)
+    @name = 'AccessError'
 
-isOwned = (endpoint, doc, user) ->
-  return hasOwner(endpoint) and doc.owner_id? and doc.owner_id.toString() != user._id.toString()
+processJSON = (o) ->
+  if o.toJSON
+    j = o.toJSON()
+  else
+    try
+      j = o
+    catch e
+      j = {}
+      console.log e
+  return j
 
-paginate = (endpoint, req, rows, cb) ->
-  endpoint.$modelClass.count((err, count) ->
-    if !err
-      repr = new RestEndpoints.request(endpoint)
-      config = repr.$$getPaginationConfig(req)
-
-      limit = parseInt(config.perPage, 0)
-      skip = Number(config.page * config.perPage || 0)
-      pages = Math.round(count / config.perPage)
-      if pages < 1
-        pages = 1
-      page = config.page
-
-      rows.splice(0, 0,
-        total: count
-        displayCount: rows.length
-        perPage: limit
-        page: page
-        pages: pages
-        firstPage: 1
-        prevPage: Math.max(1, page - 1)
-        nextPage: Math.min(pages, page + 1)
-        lastPage: Math.max(1, pages)
-        limit: limit
-        skip: skip
-        first: 0
-        prev: Math.max(0, skip - limit)
-        next: Math.max(0, Math.min(count - limit, limit + skip))
-        last: Math.max(0, count - limit)
+send = (user_id, results, res, model, cb) ->
+  if !results
+    res.send('')
+    cb(null) if cb
+  else if _.isPlainObject(results)
+    res.send(results)
+    cb(results) if cb
+  else if type(results) != 'array'
+    addExtraFields(user_id, results, model, (ok) ->
+      if ok
+        j = processJSON(results)
+        res.json(j)
+        cb(j) if cb
+      else
+        cb(null) if cb
+    )
+  else
+    l = []
+    async.eachSeries(results, (r, callback) ->
+      addExtraFields(user_id, r, model, (ok) ->
+        if ok
+          l.push(processJSON(r))
+        callback()
       )
+    , (err) ->
+      if !err
+        res.json(l)
+        cb(l) if cb
+      else
+        cb(err) if cb
+    )
+exports.send = send
 
-      cb(rows) if cb
+populatedPaths = (r, model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.type == 'ObjectId' and f.ref and r[f] and r[f]._id?
+      l.push(f.path)
+  return l
+
+virtualPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.type == 'virtual'
+      l.push(f.path)
+  return l
+
+selectPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.select
+      l.push(f.path)
+  return l
+
+requiredPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.required
+      l.push(f.path)
+  return l
+
+populatePaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.populate
+      l.push(f.path)
+  return l
+
+readOnlyPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.readOnly
+      l.push(f.path)
+  return l
+
+privatePaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for f in paths
+    if f.private
+      l.push(f.path)
+  return l
+
+addExtraFields = (user_id, results, model, cb) ->
+  if !results
+    l = []
+  else if type(results) != 'array'
+    l = [results]
+  else
+    l = results
+  async.eachSeries(l, (r, rowCallback) ->
+    pp = populatedPaths(r, model)
+    async.eachSeries(pp, (f, fieldCallback) ->
+      addExtraFields(user_id, pp[f], model, ->
+        fieldCallback()
+      )
+    , (err) ->
+      if r.extraFields?
+        r.extraFields(user_id, ->
+          rowCallback()
+        )
+      else
+        rowCallback()
+    )
+  , (err) ->
+    cb(!err) if cb
+  )
+exports.addExtraFields = addExtraFields
+
+selectFields = (select, model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for s in select
+    if s.length and !s.startsWith('+')
+      ok = true
+      for k of paths
+        if k == s
+          ok = false
+          break
+      if ok
+        l.push(s)
+  for k of paths
+    if paths[k].private
+      l.push('-' + k)
+  return l
+
+populateFields = (populate, model, req) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if !f.private and f.type == 'ObjectId' and f.ref and (f.populate or k in populate)
+      m = _app.modelSync(f.ref, req)
+      if m
+        c = { path: k }
+        ss = selectFields([], m)
+        if ss.length
+          c.select = ss.join(' ')
+        pp = populateFields([], m, req)
+        if pp.length
+          c.populate = pp
+#        c.options = {}
+        l.push(c)
+  return l
+
+paginate = (model, req, results, cb) ->
+#  console.log "paginate()", req.baucis.controller.query.options, req.baucis.documents
+  model.count((err, count) ->
+    if !results
+      results = []
+
+    if type(results) != 'array'
+      results = [results]
+
+    if !err
+      limit = Math.min(MAX_LIMIT, req.query.l)
+      skip = Math.min(MAX_LIMIT, req.query.sk)
+      pages = Math.max(Math.ceil(count / limit), 1)
+      c = Math.ceil(skip / limit)
+      if c == Math.floor(skip / limit)
+        c++
+      page = Math.min(pages, Math.max(c, 1))
     else
-      cb([
-        total: 0
-        displayCount: 0
-        perPage: 1
-        page: 1
-        pages: 1
-        firstPage: 1
-        prevPage: 1
-        nextPage: 1
-        lastPage: 1
-        limit: 0
-        skip: 0
-        first: 0
-        prev: 0
-        next: 0
-        last: 0
-      ]) if cb
+      limit = 1
+      skip = 1
+      page = 1
+      pages = 1
+
+    results.splice(0, 0,
+      total: count
+      displayCount: results.length
+      limit: limit
+      skip: skip
+      page: page
+      pages: pages
+      firstPage: 1
+      prevPage: Math.max(1, page - 1)
+      nextPage: Math.min(pages, page + 1)
+      lastPage: Math.max(1, pages)
+
+      first: 0
+      prev: Math.max(0, skip - limit)
+      next: Math.max(0, Math.min(count - limit, limit + skip))
+      last: Math.max(0, count - limit)
+    )
+
+    cb(results) if cb
   )
 
-filterHiddenFields = (endpoint, req, row) ->
-  hidden = [].concat(endpoint.options._fields.hidden)
-
-  if req.query.select?
-    s = req.query.select
-
-    if !(s instanceof Array)
-      s = s.split(' ')
-
-    for k of row
-      if s.indexOf(k) == -1
-        hidden.push(k)
-
-  for k of row
-    if hidden.indexOf(k) != -1
-      delete row[k]
-
-canSendField = (endpoint, name, f) ->
-  return (f and !f.options.private) or (!name.startsWith('_') or name == '_id' or name == '_order')
-
-multiPathSet = (object, path, value) ->
-  nw = object
-  paths = path.split('.')
-  while paths.length > 1
-    n = paths.shift()
-    if !nw[n]
-      nw[n] = {}
-    nw = nw[n]
-  nw[paths.shift()] = value
 
 register = () ->
+  process_query = (req) ->
+    console.log "process_query()", jsonToString(req.query.q)
+    if req.query.q
+      try
+        qo = query.compile(query.parse(req.query.q))
+      catch e
+        console.log e
+      if !qo
+        qo = {}
+      return qo
+    else
+      return {}
 
-  endpoint = new RestEndpoints.endpoint('/api/:model', null,
-    pagination:
-      perPage: 10
-      sortField: '_id'
+  process_select = (req, q) ->
+    select = selectFields((if req.query.s then req.query.s.split(' ') else []), req.m)
+    console.log "process_select()", jsonToString(req.query.s), jsonToString(select)
+    req.query.s = select.join(' ')
+    if q
+      if select.length
+        q.select(select.join(' '))
+      return q
+    else
+      return select
+
+  process_populate = (req, q) ->
+    populate = populateFields((if req.query.p then req.query.p.split(' ') else []), req.m, req)
+    console.log "process_populate()", jsonToString(req.query.p), jsonToString(populate)
+    req.query.p = populate
+    if q
+      if populate.length
+        q.populate(populate)
+      return q
+    else
+      return populate
+
+  process_limit = (req, q) ->
+    i = 10
+
+    if req.query.l
+      try
+        i = parseInt(req.query.l, 10)
+      catch e
+        i = 0
+        console.log e
+
+    i = Math.abs(Math.min(MAX_LIMIT, i))
+
+    console.log "process_limit()", i
+
+    req.query.l = i
+
+    if q
+      q.limit(i)
+      return q
+    else
+      return i
+
+  process_skip = (req, q) ->
+    i = 0
+
+    if req.query.sk
+      try
+        i = parseInt(req.query.sk, 10)
+      catch e
+        i = 0
+        console.log e
+
+    else if req.query.page
+      try
+        i = parseInt((req.query.page - 1) * req.query.l, 10)
+      catch e
+        i = 0
+        console.log e
+
+    i = Math.abs(Math.min(MAX_LIMIT, i))
+
+    console.log "process_skip()", i
+
+    req.query.sk = i
+    if q
+      q.skip(i)
+      return q
+    else
+      return i
+
+  process_sort = (req, q) ->
+    console.log "process_sort()", jsonToString(req.query.sort)
+    if q
+      if req.query.sort
+        q.sort(req.query.sort)
+      return q
+    else
+      return req.query.sort
+
+  process_results = (req, res, err, results, cb) ->
+    console.log "process_results()"
+    if !err
+      send(req.user._id.toString(), results, res, req.m, ->
+        cb(true) if cb
+      )
+    else if err
+      res.status(403).send(err.message).end()
+      cb(false) if cb
+    else
+      res.status(500).end()
+      cb(false) if cb
+
+
+  app.all('/api/*', (req, res, next) ->
+    console.log "app.all()", req.query, req.params
+    if !_app.validUser(req)
+      res.status(403).end()
+    else
+      next()
   )
 
-  endpoint.tap('pre_filter', '*', (req, query, next) ->
-    for k of query
-      for kk of query[k]
-        if kk == '$in' and query[k][kk] instanceof Array and query[k][kk].length == 1 and typeof query[k][kk][0] == 'string'
-          query[k][kk] = query[k][kk][0].split(',')
-    next(query)
-  )
+  checkmodel = (req, res, next) ->
+    console.log "checkmodel()", req.query, req.params
 
-  endpoint.addMiddleware('*', (req, res, next) ->
-
-    console.log util.inspect(endpoint.$modelClass, {colors: true, depth: 0, showHidden: true})
-
-    if !app.validUser(req)
-      console.trace "403"
-      next(new Error(403))
+    if !req.params.model
+      res.status(404).end()
       return
 
-    model = null
-    if req.params.model?
-      model = req.params.model.toProperCase()
-
-    if !model
-      console.trace "404"
-      next(new Error(404))
-      return
-
-    mt = req.method.toUpperCase()
-
-    mn = model.toLowerCase()
-    if mt == 'POST' or mt == 'PUT' or mt == 'DELETE'
-      if mn == 'component' or mn == 'plan' or mn == 'log' or mn == 'invoice' or mn == 'role' or mn == 'activate'
-        console.trace "403"
-        next(new Error(403))
-        return
-
-    req.user.model(model, (m) ->
+    _app.model(req.params.model.toProperCase().singularize(), req, (m, plan, c, prefix) ->
+      req.m = m
+      req.plan = plan
+      req.c = c
+      req.prefix = prefix
       if m
-        endpoint.$modelClass = m
-
-        hide = []
-        show = []
-        readOnly = []
-        populate = []
-        m.schema.eachPath((name, field) ->
-          if field.options.private
-            hide.push(name)
-          else
-            show.push(name)
-
-          if field.options.readOnly
-            readOnly.push(name)
-
-          if field.options.populate
-            populate.push(name)
-        )
-        for k of m.schema.virtuals
-          v = m.schema.virtuals[k]
-          show.push(v.path)
-
-        endpoint.options._fields = {}
-        endpoint.options._fields.hidden = hide
-        endpoint.options._fields.visible = show
-        endpoint.options._fields.populate = populate
-        endpoint.options._fields.readOnly = readOnly
-
-        q = []
-        for s in show
-          q.push(s)
-          q.push('$gt_' + s)
-          q.push('$lt_' + s)
-          q.push('$gte_' + s)
-          q.push('$lte_' + s)
-          q.push('$ne_' + s)
-          q.push('$in_' + s)
-          q.push('$regex_' + s)
-          q.push('$regexi_' + s)
-        endpoint.allowQueryParam(q)
-        #  endpoint.allowBulkPost()
-
-        if mt == 'GET'
-          action = 'read'
-          action_name = 'read'
-          if req.params.action?
-            if req.params.action == 'schema'
-              action = 'schema'
-              action_name = "read schema"
-              delete req.params.id
-            else if req.params.action == 'defaults'
-              action = 'defaults'
-              action_name = "read default values"
-              delete req.params.id
-        else if mt == 'PUT'
-          action = 'write'
-          action_name = 'write'
-        else if mt == 'POST'
-          action = 'create'
-          action_name = 'create'
-        else if mt == 'DELETE'
-          action = 'delete'
-          action_name = 'delete'
-
-        if req.params.id?
-          RestEndpoints.log "endpoints.middleware()", action_name, "from/to model", endpoint.$modelClass.modelName, "row with id", req.params.id
-        else
-          RestEndpoints.log "endpoints.middleware()", action_name, "from/to model", endpoint.$modelClass.modelName, "all rows"
-
-        if action == 'schema' or action == 'defaults'
-          req.user.can(action, endpoint.$modelClass.modelName, null, (rule) ->
-            if !rule
-              console.trace "403"
-              next(new Error(403))
-              return
-            else
-              fields = {}
-
-              if action == 'defaults'
-                o = new endpoint.$modelClass()
-                fields._id = o._id
-                endpoint.$modelClass.schema.eachPath((name, f) ->
-                  if canSendField(endpoint, name, f)
-                    fields[name] = o[name]
-                )
-                for k of endpoint.$modelClass.schema.virtuals
-                  v = endpoint.$modelClass.schema.virtuals[k]
-                  if canSendField(endpoint, v.path, null)
-                    multiPathSet(fields, v.path, o[v.path])
-
-              else
-                endpoint.$modelClass.schema.eachPath((name, f) ->
-                  if canSendField(endpoint, name, f)
-                    fields[name] = f
-                )
-                for k of endpoint.$modelClass.schema.virtuals
-                  v = endpoint.$modelClass.schema.virtuals[k]
-                  if canSendField(endpoint, v.path, null)
-                    multiPathSet(fields, v.path, o[v.path])
-
-              res.send(fields)
-              console.trace action, fields
-              next(fields)
-              return
-          )
-
         next()
-
       else
-        console.trace "403"
-        next(new Error(403))
+        res.status(404).end()
     )
 
+  app.all('/api/:model/call/:method/:id', checkmodel)
+  app.all('/api/:model/schema', checkmodel)
+  app.all('/api/:model/defaults', checkmodel)
+  app.all('/api/:model/:id', checkmodel)
+  app.all('/api/:model', checkmodel)
+
+  app.get('/api/:model/call/:method/:id', (req, res, next) ->
+    console.log "app.call()", req.query, req.params
+
+    if req.params.method?
+      req.user.can(req.params.method, req.m.modelName, null, (can) ->
+        if can
+          req.m.findById(req.params.id, (err, r) ->
+            if r
+              args = []
+              args.push(req)
+              args.push(res)
+              if req.query.args?
+                args = args.concat(req.query.args)
+              args.push((err, data) ->
+                if err?
+                  if type(err.message) is 'number'
+                    res.status(err.message).end()
+                    return
+                  else if type(err.message) is 'string'
+                    try
+                      i = parseInt(err.message, 10)
+                      if i < 200 or i > 500
+                        res.status(i).end()
+                      else
+                        res.status(500).send(err.message).end()
+                        return
+                    catch e
+                      res.status(500).send(err.message).end()
+                      return
+                process_results(req, res, null, data, (ok) ->
+#                  if ok
+#                    next()
+                )
+              )
+
+              if req.m.schema.methods['$' + req.params.method]?
+                req.m.schema.methods['$' + req.params.method].apply(r, args)
+
+              else if req.m.schema.statics['$' + req.params.method]?
+                req.m.schema.statics['$' + req.params.method].apply(req.m.schema, args)
+
+              else
+                res.status(404).end()
+
+            else
+              res.status(404).end()
+          )
+        else
+          res.status(403).end()
+      )
+    else
+      res.status(404).end()
   )
 
+  app.get('/api/:model/schema', (req, res, next) ->
+    console.log "app.schema()", req.query, req.params
 
-  endpoint.tap('pre_response', '*', (req, json, next) ->
-    that = @$$endpoint
+    req.user.can('schema', req.m.modelName, null, (can) ->
+      if can
+        l = {}
+        s = _app.modelPaths(req.m)
+#        console.log s
+        for k of s
+          if !s[k].private
+            l[k] = s[k]
+        process_results(req, res, null, l, (ok) ->
+#          if ok
+#            next()
+        )
+      else
+        res.status(403).end()
+    )
+  )
 
-    console.log util.inspect(that.$modelClass, {colors: true, depth: 0, showHidden: true})
+  app.get('/api/:model/defaults', (req, res, next) ->
+    console.log "app.defaults()", req.query, req.params
 
-    if json instanceof Array
-      rows = []
-      rules = {}
-      req.user.allRoles((roles) ->
-        if roles
+    req.user.can('defaults', req.m.modelName, null, (can) ->
+      if can
+        fields = {}
+        o = new req.m()
+        paths = _app.modelPaths(req.m)
+        for k of paths
+          f = paths[k]
+          if !f.private
+            _.deepSet(fields, k, o.get(k))
+        delete fields.id
+        delete fields._id
+        delete fields.created_at
+        delete fields.updated_at
+        process_results(req, res, null, [fields], (ok) ->
+#          if ok
+#            next()
+        )
+      else
+        res.status(403).end()
+    )
+  )
 
-          # check if admin
-          if req.user.hasAdmin(roles)
-            for row in json
-              filterHiddenFields(that, req, row)
+  app.get('/api/:model/:id', (req, res, next) ->
+    console.log "app.get()", req.query, req.params
+    if !req.params.id
+      res.status(404).end()
+      return
 
-            paginate(that, req, json, (results) ->
-              next(results)
-            )
-            return
+    req.user.can('read', req.m.modelName, null, (can) ->
+      if can
+        q = req.m.findById(req.params.id)
+        process_select(req, q)
+        process_populate(req, q)
+        q.exec((err, results) ->
+          process_results(req, res, err, results, (ok) ->
+            if ok
+              next()
+          )
+        )
+      else
+        res.status(403).end()
+    )
+  )
 
-          async.eachSeries(json, (row, rowCallback) ->
+  app.get('/api/:model', (req, res, next) ->
+    console.log "app.get()", req.query, req.params
 
-            console.log row
-
-            async.eachSeries(roles, (role, roleCallback) ->
-
-              console.log role
-
-              if rules[role.name]?
-                roleCallback(role.canWithRules(req.user, rules[role.name], 'read', that.$modelClass.modelName, row))
-              else
-                role.allRules(that.$modelClass.modelName, 'read', (_rules) ->
-                  if !_rules
-                    _rules = []
-                  rules[role.name] = _rules
-                  roleCallback(role.canWithRules(req.user, rules[role.name], 'read', that.$modelClass.modelName, row))
-                )
-            , (rule) ->
-              if rule
-                filterHiddenFields(that, req, row)
-                rows.push(row)
-              rowCallback()
-            )
-
-          , (err) ->
-            console.log rows, err
-
-            paginate(that, req, rows, (results) ->
-              next(results)
+    req.user.can('read', req.m.modelName, null, (can) ->
+      if can
+        qo = process_query(req)
+        q = req.m.find(qo)
+        process_select(req, q)
+        process_populate(req, q)
+        process_sort(req, q)
+        process_limit(req, q)
+        process_skip(req, q)
+        q.exec((err, results) ->
+          paginate(req.m, req, results, (results) ->
+            process_results(req, res, err, results, (ok) ->
+              if ok
+                next()
             )
           )
-
-        else
-          console.trace "403"
-          next(new Error(403))
-      )
-
-    else
-      filterHiddenFields(that, req, json)
-      req.user.can('read', that.$modelClass.modelName, json, (rule) ->
-        if rule
-          next(json)
-        else
-          console.trace "403"
-          next(new Error(403))
-      )
-  )
-
-
-  endpoint.tap('post_retrieve', '*', (req, doc, next) ->
-    that = @$$endpoint
-
-    console.log util.inspect(that.$modelClass, {colors: true, depth: 0, showHidden: true})
-
-    action = null
-    mt = req.method.toUpperCase()
-    if mt == 'GET'
-      action = 'read'
-    else if mt == 'PUT'
-      action = 'write'
-    else if mt == 'POST'
-      action = 'create'
-    else if mt == 'DELETE'
-      action = 'delete'
-
-    if req.params.id?
-      RestEndpoints.log "endpoints.post_retrieve", that.$modelClass.modelName, req.params.id
-    else
-      RestEndpoints.log "endpoints.post_retrieve", that.$modelClass.modelName
-
-    req.user.can(action, that.$modelClass.modelName, doc, (rule) ->
-
-      RestEndpoints.log "endpoints.post_retrieve", rule, that.$modelClass.modelName, req.params.id
-
-      if !rule
-#        if !rule or (!isOwned(that, doc, req.user) and rule != 'admin')
-        next(new Error(403))
+        )
       else
-        next(doc)
+        res.status(403).end()
     )
   )
 
+  app.put('/api/:model/:id', (req, res, next) ->
+    console.log "app.put()", req.query, req.body, req.params
 
-  endpoint.tap('pre_save', '*', (req, doc, next) ->
-    that = @$$endpoint
+    if !req.params.id
+      res.status(404).end()
+      return
 
-    console.log util.inspect(that.$modelClass, {colors: true, depth: 0, showHidden: true})
+    req.user.can('write', req.m.modelName, null, (can) ->
+      if can
+        doc = req.body
+        if type(doc) is 'array'
+          if doc.length
+            doc = doc[0]
+          else
+            doc = {}
 
-    RestEndpoints.log "endpoints.pre_save", isOwned(that, doc, req.user), that.$modelClass.modelName
+#        # remove extra fields and/or invalid fields
+#        s = req.m.schema
+#        for k in _.keys(doc)
+#          if !s.path(k)
+#            delete doc[k]
 
-    action = null
-    mt = req.method.toUpperCase()
-    if mt == 'GET'
-      action = 'read'
-    else if mt == 'PUT'
-      action = 'write'
-    else if mt == 'POST'
-      action = 'create'
-    else if mt == 'DELETE'
-      action = 'delete'
+        doc = req.m.filter(doc, {remove: ['_id'], mustExists: true}, 'readOnly,private')
 
-    req.user.can(action, that.$modelClass.modelName, doc, (rule) ->
-
-      RestEndpoints.log "endpoints.pre_save", rule, isOwned(that, doc, req.user), that.$modelClass.modelName
-
-      if !rule
-        next(new Error(403))
-      else
-
-        for k of that.options._fields.readOnly
-          delete doc[k]
-
-        for k of that.$modelClass.schema.virtuals
-          delete doc[k]
-
-        console.log "<<<", doc, ">>>"
-
-        if hasOwner(that) and !isOwned(that, doc, req.user)
+        if _app.hasOwner(req.m)
           doc.owner_id = req.user._id
 
-        if that.$modelClass.db == mongoose.connection and that.$modelClass.modelName == 'Module'
-          require('./models/module').rebuildModules(req.user, () ->
-            next(doc)
-          )
-          return
+        console.log "after filter", doc
 
-        next(doc)
+        q = req.m.findOne(
+          _id: req.params.id
+          owner_id: req.user.id if _app.hasOwner(req.m)
+        )
+        process_select(req, q)
+        process_populate(req, q)
+
+        console.log "update", q
+
+        q.update(doc, (err, rowCount, results) ->
+          console.log ">>> app.put", err, rowCount, results
+          if !err
+            req.m.findById(req.params.id, (err, results) ->
+              process_results(req, res, err, results, (ok) ->
+                if ok
+                  next()
+              )
+            )
+          else if err
+            res.status(403).send(err.message).end()
+          else
+            res.status(500).end()
+        )
+      else
+        res.status(403).end()
     )
   )
 
+  app.post('/api/:model', (req, res, next) ->
+    console.log "app.post()", req.query, req.params
 
-  endpoint.register(app.app)
+    doc = req.body
+    if type(doc) is 'array'
+      if doc.length
+        doc = doc[0]
+      else
+        doc = {}
+
+    req.user.can('create', req.m.modelName, [doc], (can) ->
+      if can
+        console.log "before", doc
+
+        doc = req.m.filter(doc, {mustExists: true}, 'readOnly private')
+
+        delete doc.id
+        delete doc._id
+        delete doc.created_at
+        delete doc.updated_at
+
+        console.log "after", doc
+
+        req.m.create(doc, (err, results) ->
+          process_results(req, res, err, results, (ok) ->
+            if ok
+              next()
+          )
+        )
+      else
+        res.status(403).end()
+    )
+  )
+
+  app.delete('/api/:model/:id', (req, res, next) ->
+    console.log "app.delete()", req.query, req.params
+
+    if !req.params.id
+      res.status(404).end()
+      return
+
+    req.user.can('delete', req.m.modelName, null, (can) ->
+      if can
+        qo =
+          _id: req.params.id
+          owner_id: req.user.id if _app.hasOwner(req.m)
+        q = req.m.where(qo)
+        q.remove((err, results) ->
+          process_results(req, res, err, results, (ok) ->
+            if ok
+              next()
+          )
+        )
+      else
+        res.status(403).end()
+    )
+  )
+
+  return
 
 
 exports.register = register

@@ -1,3 +1,5 @@
-td.repository-date-col
+td.repository-date-col(colspan="2")
 
-  span.repository-date {{row.version.date | amCalendar}}
+  .repository-date
+    span.cic.cic-calendar &nbsp;
+    span {{row.latest.date | amCalendar}}

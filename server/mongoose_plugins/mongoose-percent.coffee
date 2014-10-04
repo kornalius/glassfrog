@@ -1,11 +1,11 @@
 mongoose = require("mongoose")
 percent = require('percent')
 
-class Percent extends mongoose.SchemaTypes.Number
+class SchemaPercent extends mongoose.SchemaTypes.Number
 
   constructor: (path, options) ->
     super path, options
-    @validate(@validatePercent.bind(@, options and options.required), 'percent is invalid')
+#    @validate(@validatePercent.bind(@, options and options.required), 'percent is invalid')
 
   cast: (val) =>
     if type(val) is 'string'
@@ -26,6 +26,6 @@ class Percent extends mongoose.SchemaTypes.Number
 
 
 module.exports = () ->
-  mongoose.SchemaTypes.Percent = Percent
+  mongoose.SchemaTypes.Percent = SchemaPercent
   mongoose.Types.Percent = Number
-  return Percent
+  return SchemaPercent

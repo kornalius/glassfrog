@@ -1,20 +1,23 @@
-//td(ng-controller='RepositoryCardCtrl')
-td
+.repository-card-container
 
-  .repository-card-container
+  table.repository-card(ng-model="row")
+    tr
+      include repository-card-color-template
+      td.repository-card-inside-col
+        table.repository-card-inside
+          thead
+            include repository-card-icon-template
+            include repository-card-label-template
+            include repository-card-version-template
 
-    table.repository-card(ng-model="row")
-      tr
-        include repository-card-color-template
-        td
-          table(width="100%", height="100%")
-            tr
-              include repository-card-icon-template
-              include repository-card-label-template
-              include repository-card-version-template
-              include repository-card-date-template
+          tfoot
+            include repository-card-installs-template
+            include repository-card-button-template
+
+          tbody
+            td.repository-card-info-line(colspan="4")
+              table(width="100%")
+                include repository-card-creator-template
+                include repository-card-date-template
             tr
               include repository-card-desc-template
-            tr
-              include repository-card-creator-template
-              include repository-card-button-template

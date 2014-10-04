@@ -43,11 +43,21 @@ module.exports = [
             var schemaExtend = require("mongoose-schema-extend");\n
             \n
             {{{generate_nodes node user "Schema" "\n"}}}
+            \n
+            exports.schemas = [{{schemas}}]\n
+            exports.queries = [{{queries}}]\n
+            exports.pages = [{{pages}}]\n
+            exports.views = [{{views}}]\n
+            \n
           \n}).call(this);
         ')(
           component: @
           node: node
           module: node.varName()
+          schemas: node.childrenOfKind('Schema', true).map((n) -> n.varName()).join(', ')
+          queries: node.childrenOfKind('Query', true).map((n) -> n.varName()).join(', ')
+          pages: node.childrenOfKind('Page', true).map((n) -> n.varName()).join(', ')
+          views: node.childrenOfKind('View', true).map((n) -> n.varName()).join(', ')
           modules:
             nodes: node.linkedModules(true)
             paths: node.linkedModules(true).map((m) -> m.modulePath(user))

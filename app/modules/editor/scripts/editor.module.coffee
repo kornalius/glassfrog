@@ -1,17 +1,16 @@
-angular.module('editor.module', ['app.globals', 'editor.component', 'editor.node', 'dynamicForm', 'ui.bootstrap.tpls', 'ui.bootstrap.modal'])
+angular.module('editor.module', ['editor.component', 'editor.node', 'dynamicForm', 'ui.bootstrap.tpls', 'ui.bootstrap.modal'])
 
 .factory('EditorModule', [
   'Editor'
   'EditorNode'
   'EditorComponent'
   '$timeout'
-  'Globals'
   '$http'
   'dynForm'
   'dynModal'
   '$rootScope'
 
-  (Editor, EditorNode, EditorComponent, $timeout, globals, $http, dynForm, dynModal, $rootScope) ->
+  (Editor, EditorNode, EditorComponent, $timeout, $http, dynForm, dynModal, $rootScope) ->
 
     moduleNodes: []
     selected: null

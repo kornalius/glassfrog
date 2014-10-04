@@ -4,27 +4,22 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
   '$stateProvider'
 
   ($stateProvider) ->
+
     $stateProvider
 
-    .state('test_root',
+    .state('test',
       abstract: true
+      url: '/test'
       templateUrl: '/partials/test.html'
-      controller: ($scope) ->
-        $scope.localVariable = "HELLO WORLD!"
-#      onEnter: () ->
-#        console.log "enter test"
-      data:
-        ncyBreadcrumbLabel: 'Test'
-#          ncyBreadcrumbSkip: true
     )
 
-    .state('test',
-      url: '/test'
-      parent: 'test_root'
+    .state('test.main',
+      altname: 'test'
+      url: ''
       data:
         root: 'test'
         ncyBreadcrumbLabel: 'Test'
-#          ncyBreadcrumbSkip: true
+#        ncyBreadcrumbParent: 'Test'
       views:
         form:
           templateUrl: '/partials/test.form.html'
@@ -36,11 +31,10 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
 
     .state('test.po',
       url: '/po'
-      parent: 'test_root'
       data:
         root: 'test'
         ncyBreadcrumbLabel: 'PO'
-        ncyBreadcrumbParent: 'test'
+        ncyBreadcrumbParent: 'test.main'
 #          ncyBreadcrumbSkip: true
       views:
         po:
@@ -50,11 +44,10 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
 
     .state('test.details',
       url: '/details'
-      parent: 'test_root'
       data:
         root: 'test'
         ncyBreadcrumbLabel: 'Details'
-        ncyBreadcrumbParent: 'test'
+        ncyBreadcrumbParent: 'test.main'
 #          ncyBreadcrumbSkip: true
       views:
         details:
@@ -64,11 +57,10 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
 
     .state('test.info',
       url: '/info'
-      parent: 'test_root'
       data:
         root: 'test'
         ncyBreadcrumbLabel: 'Info'
-        ncyBreadcrumbParent: 'test'
+        ncyBreadcrumbParent: 'test.main'
 #          ncyBreadcrumbSkip: true
       views:
         info:

@@ -22,6 +22,7 @@ module.exports = ((schema, options) ->
   )
 
   schema.set('toObject', {virtuals: true})
+  schema.set('toJSON', {virtuals: true})
 
   schema.virtual('discounts_fees.isDiscount').get(->
     return (@amount? and @amount < 0) or (@percent? and @percent < 0)

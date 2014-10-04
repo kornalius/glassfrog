@@ -19,7 +19,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
   $scope.yFunction = () -> (d) -> d.y
   $scope.descriptionFunction = () -> (d) -> d.key
 
-  $scope.test.fetch('53a5c1429186770dd391c377', ->
+  $scope.test.findById('541c8714e2e2c8c3eb412cac', ->
 #  $scope.test.new( ->
     testForm =
       label: "Super form"
@@ -43,30 +43,30 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         ,
           label: 'd3'
         ]
-      ,
-        label:'Dash'
-        type: 'dashboard'
-        description: 'Some dashboard'
-        options:
-          explicitSave: true
-          hideWidgetSettings: true
-          hideWidgetClose: true
-          widgetButtons: false
-          widgetDefinitions: [
-            name: 'random'
-            title: 'Random value'
-            directive: 'wt-field-watch'
-            style:
-              width: '100%'
-            attrs:
-              value: 'form.model.rows[0]._id'
-          ]
-          defaultWidgets: [
-            name: 'random'
-          ]
-          storage: $window.localStorage
-          storageId: 'dashboard'
-        tab: 5
+#      ,
+#        label:'Dash'
+#        type: 'dashboard'
+#        description: 'Some dashboard'
+#        options:
+#          explicitSave: true
+#          hideWidgetSettings: true
+#          hideWidgetClose: true
+#          widgetButtons: false
+#          widgetDefinitions: [
+#            name: 'random'
+#            title: 'Random value'
+#            directive: 'wt-field-watch'
+#            style:
+#              width: '100%'
+#            attrs:
+#              value: 'form.model.rows[0]._id'
+#          ]
+#          defaultWidgets: [
+#            name: 'random'
+#          ]
+#          storage: $window.localStorage
+#          storageId: 'dashboard'
+#        tab: 5
       ,
         label: "Country"
         type: "country"
@@ -214,7 +214,6 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           "Gaston Dubé"
           "Suzanne St-Martin"
         ]
-        selected: ["Clermont Deschênes"]
         placeholder: "Select a selection..."
         fieldname: 'id6'
         tab: 3
@@ -225,7 +224,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         config:
           hideSelected: true
           maxItems: 5
-          url: '/api/test?perPage=10'
+          url: '/api/test?l=100'
 
         placeholder: "Select multiple..."
         fieldname: 'id7'
@@ -253,7 +252,6 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           "Gaston Dubé"
           "Suzanne St-Martin"
         ]
-        selected: ["Ariane Deschênes", "Clermont Deschênes"]
         config:
           selectableHeader: "Available names"
           selectionHeader: "Selected names"
@@ -275,7 +273,6 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
           "Gaston Dubé"
           "Suzanne St-Martin"
         ]
-        selected: ["Ariane Deschênes", "Clermont Deschênes"]
         fieldname: 'id11'
         tab: 4
       ,
@@ -308,20 +305,20 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #            min: 0
 #            max: 100
             style: {name:'color', value:'darkgreen'}
-          ,
-            label: "Created"
-            type: "input"
-            placeholder: "Creation date"
-            description: "date the record was created"
-            fieldname: 'created_at'
-            datetime: true
-          ,
-            label: "Updated"
-            type: "input"
-            placeholder: "Updated date"
-            description: "date the record was modified"
-            fieldname: 'updated_at'
-            datetime: true
+#          ,
+#            label: "Created"
+#            type: "input"
+#            placeholder: "Creation date"
+#            description: "date the record was created"
+#            fieldname: 'created_at'
+#            datetime: true
+#          ,
+#            label: "Updated"
+#            type: "input"
+#            placeholder: "Updated date"
+#            description: "date the record was modified"
+#            fieldname: 'updated_at'
+#            datetime: true
           ,
             label: "Test String"
             type: "input"
@@ -375,108 +372,122 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
             fieldname: 'testBoolean'
           ]
 
-      ,
-        label:'Chart'
-        type: 'bar-chart'
-        description: 'Some chart test'
-        tab: 6
-        data: [
-          key: "Series 1"
-          values: [
-            [1025409600000, 0]
-            [1028088000000, -6.3382185140371]
-            [1030766400000, -5.9507873460847]
-          ]
-        ,
-          key: "Series 2"
-          values: [
-            [1025409600000, 0]
-            [1028088000000, 3.238712]
-            [1030766400000, 4.34280392]
-          ]
-        ]
-        options:
-          height: 300
-          showxaxis: true
-          showyaxis: true
-          showLegend: true
-          xAxisTickFormat: "xAxisTickFormatFunction()"
-          showControls: true
-          stacked: true
-          tooltips: true
-          xAxisLabel: 'Date'
-          yAxisLabel: 'Value'
-      ,
-
-        label:'Line Chart'
-        type: 'line-chart'
-        description: 'Some line chart test'
-        tab: 6
-        column: 6
-        data: [
-          key: "Series 1"
-          values: [ [1025409600000, 0], [1028088000000, -6.3382185140371], [1030766400000, -5.9507873460847], [1033358400000, -11.569146943813], [1036040400000, -5.4767332317425], [1038632400000, 0.50794682203014], [1041310800000, -5.5310285460542], [1043989200000, -5.7838296963382] ]
-        ,
-          key: "Series 2"
-          values: [ [1025409600000, 0], [1028088000000, -1.2813671283], [1030766400000, -8.283722], [1033358400000, -14.2371212], [1036040400000, -2.28372112], [1038632400000, 7.29371293721], [1041310800000, -9.293782913], [1043989200000, -15.2867332] ]
-        ]
-        options:
-#          width: 400
-          height: 300
-          showxaxis: false
-          showyaxis: true
-          showLegend: true
-          xAxisTickFormat: "xAxisTickFormatFunction()"
-          yAxisTickFormat: "yAxisTickFormatFunction()"
-          showControls: true
-          tooltips: true
-          useInteractiveGuideLine: true
-          isArea: true
-          interpolate: "cardinal"
-          yAxisLabel: 'Value'
-      ,
-
-        label:'Pie Chart'
-        type: 'pie-chart'
-        description: 'Some pie chart test'
-        tab: 6
-        column: 6
-        data: [
-          key: "One"
-          y: 5
-        ,
-          key: "Two"
-          y: 2
-        ,
-          key: "Three"
-          y: 9
-        ,
-          key: "Four"
-          y: 7
-        ,
-          key: "Five"
-          y: 4
-        ,
-          key: "Six"
-          y: 3
-        ,
-          key: "Seven"
-          y: 9
-        ]
-        options:
-          x: "xFunction()"
-          y: "yFunction()"
-#          width: 300
-          height: 300
-          showLabels: true
-          showValues: true
-#          labelType: "percent"
-          showControls: true
-          tooltips: true
-          pieLabelsOutside: false
+#      ,
+#        label:'Chart'
+#        type: 'bar-chart'
+#        description: 'Some chart test'
+#        tab: 6
+#        data: [
+#          key: "Series 1"
+#          values: [
+#            [1025409600000, 0]
+#            [1028088000000, -6.3382185140371]
+#            [1030766400000, -5.9507873460847]
+#          ]
+#        ,
+#          key: "Series 2"
+#          values: [
+#            [1025409600000, 0]
+#            [1028088000000, 3.238712]
+#            [1030766400000, 4.34280392]
+#          ]
+#        ]
+#        options:
+#          height: 300
+#          showxaxis: true
+#          showyaxis: true
+#          showLegend: true
+#          xAxisTickFormat: "xAxisTickFormatFunction()"
+#          showControls: true
+#          stacked: true
+#          tooltips: true
+#          xAxisLabel: 'Date'
+#          yAxisLabel: 'Value'
+#      ,
+#
+#        label:'Line Chart'
+#        type: 'line-chart'
+#        description: 'Some line chart test'
+#        tab: 6
+#        column: 6
+#        data: [
+#          key: "Series 1"
+#          values: [ [1025409600000, 0], [1028088000000, -6.3382185140371], [1030766400000, -5.9507873460847], [1033358400000, -11.569146943813], [1036040400000, -5.4767332317425], [1038632400000, 0.50794682203014], [1041310800000, -5.5310285460542], [1043989200000, -5.7838296963382] ]
+#        ,
+#          key: "Series 2"
+#          values: [ [1025409600000, 0], [1028088000000, -1.2813671283], [1030766400000, -8.283722], [1033358400000, -14.2371212], [1036040400000, -2.28372112], [1038632400000, 7.29371293721], [1041310800000, -9.293782913], [1043989200000, -15.2867332] ]
+#        ]
+#        options:
+##          width: 400
+#          height: 300
+#          showxaxis: false
+#          showyaxis: true
+#          showLegend: true
+#          xAxisTickFormat: "xAxisTickFormatFunction()"
+#          yAxisTickFormat: "yAxisTickFormatFunction()"
+#          showControls: true
+#          tooltips: true
+#          useInteractiveGuideLine: true
+#          isArea: true
+#          interpolate: "cardinal"
+#          yAxisLabel: 'Value'
+#      ,
+#
+#        label:'Pie Chart'
+#        type: 'pie-chart'
+#        description: 'Some pie chart test'
+#        tab: 6
+#        column: 6
+#        data: [
+#          key: "One"
+#          y: 5
+#        ,
+#          key: "Two"
+#          y: 2
+#        ,
+#          key: "Three"
+#          y: 9
+#        ,
+#          key: "Four"
+#          y: 7
+#        ,
+#          key: "Five"
+#          y: 4
+#        ,
+#          key: "Six"
+#          y: 3
+#        ,
+#          key: "Seven"
+#          y: 9
+#        ]
+#        options:
+#          x: "xFunction()"
+#          y: "yFunction()"
+##          width: 300
+#          height: 300
+#          showLabels: true
+#          showValues: true
+##          labelType: "percent"
+#          showControls: true
+#          tooltips: true
+#          pieLabelsOutside: false
 
       ]
 
+    $scope.test.rows[0].id2 = 2
+    $scope.test.rows[0].id21 = 1
+    $scope.test.rows[0].id3 = true
+    $scope.test.rows[0].id4 = ''
+    $scope.test.rows[0].id5 = ''
+    $scope.test.rows[0].id54 = ''
+    $scope.test.rows[0].id6 = ["Clermont Deschênes"]
+    $scope.test.rows[0].id7 = ''
+    $scope.test.rows[0].id8 = ''
+    $scope.test.rows[0].id10 = ["Ariane Deschênes", "Clermont Deschênes"]
+    $scope.test.rows[0].id11 = "Ariane Deschênes,Clermont Deschênes"
+    $scope.test.rows[0].country = "Canada"
+    $scope.test.rows[0].state = "Quebec"
+    $scope.test.rows[0].icon = "cic-stop"
 
     dynForm.build($scope, testForm, $scope.test, '#form')
   )

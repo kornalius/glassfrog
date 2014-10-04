@@ -42,50 +42,54 @@ angular.module('twolist.services', ['app', 'app.globals'])
         config: {}
 #          afterInit: (container) ->
 #            ctrl.$setViewValue([])
-        selected: []
 
       if attrs.field?
         field = $parse(attrs.field)(scope)
       else
         field =
           config: {}
-          selected: []
 
-      field.config = angular.extend({}, field.config, defaults.config)
+      field.config = angular.extend({}, defaults.config, field.config)
 
 #      ctrl.$render = ->
 #        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
-#        console.log "$render twolist", ctrl.$viewValue, ctrl.$modelValue
-#        element.multiSelect('select', newValue)
-#        element.multiSelect('refresh')
+#        console.trace "$render twolist", newValue, ctrl.$modelValue
 
-      element.on('change', ->
-        if !angular.equals(element.val(), ctrl.$viewValue)
-          $timeout(->
-            scope.$apply(->
-              ctrl.$setViewValue(element.val())
-            )
-          )
-      )
+#      element.on('change', ->
+#        v = element.val()
+#        if v and !angular.equals(v, ctrl.$viewValue)
+#          console.log "change", v, ctrl.$viewValue
+#          $timeout(->
+#            scope.$apply(->
+#              ctrl.$setViewValue(v)
+#            )
+#          )
+#      )
 
-      scope.$watch('options', (newValue, oldValue) ->
-        if !angular.equals(newValue, oldValue)
-          element.trigger('change')
-      , true)
+#      scope.$watch('options', (newValue, oldValue) ->
+#        console.trace "options.$watch()", newValue, oldValue
+##        if !angular.equals(newValue, oldValue)
+##          element.trigger('change')
+#      , true)
 
       scope.$watch(attrs.ngModel, (newValue, oldValue) ->
+#        console.log "model.$watch()", newValue, oldValue
         if !angular.equals(newValue, oldValue)
           $timeout(->
             if !newValue
               newValue = []
-            element.multiSelect('select', newValue)
+#            element.multiSelect('deselect_all')
+            for v in newValue
+              element.multiSelect('select', v)
             element.multiSelect('refresh')
           )
-      )
+      , true)
 
       $timeout( ->
         element.multiSelect(field.config)
-        element.multiSelect('select', if field.selected? then field.selected else [])
+        for v in ctrl.$modelValue
+          element.multiSelect('select', v)
+#        element.multiSelect('select', [], 'init')
         element.multiSelect('refresh')
       )
 ])

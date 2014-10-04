@@ -186,7 +186,13 @@ NodeClass =
         if type(@[k]) != 'function' and k != 'nodes' and k != '$data' and k != '$$hashKey'
           o[k] = _.cloneDeep(@[k])
 
-      console.log "plainObject()", @, o
+      if @hasArgs()
+        o.args = {}
+        args = n.getArgs()
+        for k of args
+          o.args[k] = args[k].getValue()
+
+#      console.log "plainObject()", @, o
 
       if @nodes
         o.nodes = []
@@ -345,7 +351,7 @@ NodeClass =
         @delState('d')
         @setModified(true)
 
-    n.className = () ->
+    n.getClassName = () ->
       return @varName().camelize(true)
 
     n.varName = () ->
@@ -444,16 +450,13 @@ NodeClass =
 
       if nodes
         if typeof nodes is 'string'
-          try
-            @nodes = JSON.parse(nodes)
-          catch e
-            console.log "Error parsing JSON data", e
+          @nodes = stringToJson(nodes)
           @setModified(true)
           p = @getParent()
           NodeClass.make(@, p, p.module())
         else
           try
-            @nodes = JSON.stringify(nodes)
+            @nodes = jsonToString(nodes)
           catch e
             console.log "Error stringifying JSON data", e
           @setModified(true)

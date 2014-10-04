@@ -1,4 +1,5 @@
 mongoose = require("mongoose")
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 GeoSchema = mongoose.Schema(
   code:
@@ -63,7 +64,10 @@ GeoSchema = mongoose.Schema(
     label: 'Greenwich Mean Time'
 ,
   label: 'Geo'
+  readOnly: true
 )
+
+GeoSchema.plugin(filterPlugin)
 
 module.exports = mongoose.model('Geo', GeoSchema)
 

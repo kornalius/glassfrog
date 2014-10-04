@@ -3,24 +3,41 @@
 
 @repository-color: @control-color;
 @repository-width: 400px;
-@repository-height: 100px;
+@repository-height: 175px;
 
 .repository-card-container {
-}
-
-.repository-card {
-  width: @repository-width;
-  min-width: @repository-width;
-  max-width: @repository-width;
-  min-height: @repository-height;
+//  width: 200px;
   height: @repository-height;
   min-height: @repository-height;
   max-height: @repository-height;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.repository-card {
+  width: 100%;
+  height: 100%;
   background: @repository-color;
   cursor: default !important;
   border-radius: @border-radius-base;
   box-shadow: 2px 2px 5px rgba(80, 80, 80, 0.25);
-  margin: 8px;
+}
+
+.repository-card thead {
+//  background: darken(@repository-color, 4%);
+}
+
+.repository-card tfoot {
+//  background: darken(@repository-color, 8%);
+}
+
+.repository-card-inside-col {
+//  padding: 8px;
+}
+
+.repository-card-inside {
+  width: 100%;
+  height: 100%;
 }
 
 .repository-color {
@@ -34,13 +51,13 @@
   text-align: center;
   width: 40px;
   max-width: 40px;
-  padding: 8px 4px 4px 8px;
+  padding: 4px;
 }
 
 .repository-icon {
   vertical-align: middle;
   color: @icon-color;
-  font-size: x-large;
+  font-size: large;
 }
 
 .repository-label-col {
@@ -48,7 +65,8 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  padding: 8px 8px 4px 4px;
+  max-width: 150px;
+  padding: 4px;
 }
 
 .repository-label {
@@ -59,58 +77,89 @@
 
 .repository-version-col {
   vertical-align: middle;
-  padding: 4px 8px 4px 8px;
+  text-align: right;
+  padding: 4px;
 }
 
 .repository-version {
   font-size: small;
-  color: @info-text-color;
+  color: @dark-purple-color;
+}
+
+.repository-card-info-line > table {
+//  background: darken(@repository-color, 8%);
 }
 
 .repository-date-col {
+//  max-width: 75px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  vertical-align: middle;
-  padding: 4px 8px 4px 8px;
+  vertical-align: top;
   text-align: right;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .repository-date {
   font-size: x-small;
-  color: @info-text-color;
+  color: @icon-color;
+//  color: @info-text-color;
 }
 
 .repository-desc-col {
-  vertical-align: middle;
-  padding: 4px 8px 4px 8px;
+  vertical-align: top;
+  height: 100%;
+  padding: 4px;
 }
 
 .repository-desc {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
   font-size: small;
   font-style: italic;
   color: @blue-color;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
 }
 
 .repository-creator-col {
+//  max-width: 75px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  max-width: 170px;
-  min-width: 170px;
-  width: 170px;
-  vertical-align: middle;
-  padding: 4px 8px 8px 8px;
+  vertical-align: top;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .repository-creator {
-  font-size: small;
+  font-size: x-small;
+  color: @icon-color;
+}
+
+.repository-installs-col {
+//  max-width: 75px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.repository-installs {
+  font-size: x-small;
   color: @icon-color;
 }
 
 .repository-button-col {
   vertical-align: middle;
-  padding: 4px 8px 8px 8px;
+  padding: 4px;
 }
 
 .repository-button {

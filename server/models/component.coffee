@@ -4,6 +4,7 @@ timestamps = require('mongoose-time')()
 fs = require('fs');
 async = require('async')
 safejson = require('safejson')
+filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 #VCGlobal = require("../vc_global")
 #Component = require("../vc_component")
@@ -36,9 +37,11 @@ ComponentSchema = mongoose.Schema(
     readOnly: true
 ,
   label: 'Components'
+  readOnly: true
 )
 
 ComponentSchema.plugin(timestamps)
+ComponentSchema.plugin(filterPlugin)
 
 ComponentSchema.method(
 )
@@ -146,7 +149,7 @@ setTimeout( ->
         else
           f.extra.code = null
 
-      safejson.stringify(f.extra, (err, json) ->
+      jsonToString(f.extra, (err, json) ->
         if !err
           f.extra = json
         else

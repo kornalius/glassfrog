@@ -6,13 +6,13 @@ div(id="module-popover-id_{{m._id}}", name="module-popover_{{m._id}}", data-plac
 
     td
 
-      table
+      table.module-inside
 
         tr
 
           include module-icon-template
-
           include module-label-template
+          include module-version-template
 
         tr
 
@@ -21,9 +21,6 @@ div(id="module-popover-id_{{m._id}}", name="module-popover_{{m._id}}", data-plac
         tr
 
           include module-shared-template
-
           include module-creator-template
-
-          include module-version-template
 
     include module-modified-template

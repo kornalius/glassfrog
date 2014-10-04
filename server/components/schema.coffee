@@ -136,7 +136,7 @@ module.exports = [
        ')(
           component: @
           node: node
-          schema: node.className() + 'Schema'
+          schema: node.getClassName() + 'Schema'
           encryptedFields: node.childrenOfKind("Field.Encrypted", true)
           passwordFields: node.childrenOfKind("Field.Password", true)
           addressFields: node.childrenOfKind("Schema.Address", true)
@@ -175,7 +175,7 @@ module.exports = [
           component: @
           node: node
           name: node.varName()
-          schema: node.getParent().className() + 'Schema'
+          schema: node.getParent().getClassName() + 'Schema'
           args: node.argToString('parameters', user)
         )
 ,
@@ -198,7 +198,7 @@ module.exports = [
           component: @
           node: node
           name: node.varName()
-          schema: node.getParent().className() + 'Schema'
+          schema: node.getParent().getClassName() + 'Schema'
           args: node.argToString('parameters', user)
         )
 ,

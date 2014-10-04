@@ -45,7 +45,7 @@ angular.module('dashboard.models', ['app'])
             if !that.rest?
               that.rest = new Rest(that.model)
 
-            that.rest.fetch(that.query, (results) ->
+            that.rest.find({filter:that.query}, (results) ->
               if that.valueField == '@total'
                 that.data.push(
                   x: Date.now()
