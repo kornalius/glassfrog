@@ -432,40 +432,52 @@ setTimeout( ->
     color: 'lightblue'
     extra:
       root:
+        _id: makeId()
         name: 'Root'
         component: 'root'
         nodes: [
+          _id: makeId()
           name: 'Config'
           component: 'Module.Config'
         ,
+          _id: makeId()
           name: 'Plane'
           component: 'Schema'
           nodes: [
+            _id: makeId()
             name: 'FlightNo'
             component: 'Field'
             args:
-              'options': ['Selected', 'Required', 'Indexed']
+              'options': ['Required', 'Trimmed']
             nodes: [
+              _id: makeId()
               component: 'Field.Text'
             ,
+              _id: makeId()
               component: 'Font.Bold'
             ,
+              _id: makeId()
               component: 'LightBlue'
             ]
           ,
+            _id: makeId()
             name: 'SeatNo'
             component: 'Field'
             nodes: [
+              _id: makeId()
               component: 'Field.Percent'
             ,
+              _id: makeId()
               component: 'Field.Round'
               args:
                 'round': 2
             ]
           ,
+            _id: makeId()
             name: 'myMethod'
             component: 'Schema.Method'
             nodes: [
+              _id: makeId()
               name: 'alert'
               component: 'alert'
               args:
@@ -474,30 +486,37 @@ setTimeout( ->
           ]
         ]
   ,
+    _id: makeId()
     name: 'Briefcases organizer'
     desc: 'Organizes all your briefcases to fit the most heroin possible ;)'
     icon: 'cic-suitcase6'
     color: 'darkorange'
     extra:
       root:
+        _id: makeId()
         name: 'Root'
         component: 'root'
         nodes: [
+          _id: makeId()
           name: 'Briefcase'
           component: 'Schema'
           nodes: [
+            _id: makeId()
             name: 'Kg'
             component: 'Field'
             nodes: [
+              _id: makeId()
               component: 'Number'
             ]
           ]
         ]
   ,
+    _id: makeId()
     name: 'Another Module'
     desc: 'This is my second test module'
     extra:
       root:
+        _id: makeId()
         name: 'Root'
         component: 'root'
         nodes: [
@@ -519,9 +538,9 @@ setTimeout( ->
           f.owner_id = owner
 
           if f.extra
-            jsonToString(f.extra, (err, json) ->
+            jsonToString(f.extra, (err, string) ->
               if !err
-                f.extra = json
+                f.extra = string
               else
                 throw err
             )

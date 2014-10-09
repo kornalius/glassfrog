@@ -138,8 +138,9 @@ UserSchema.set('toObject', {virtuals: true})
 UserSchema.pre('save', (next) ->
   if !@plan?
     that = @
-    mongoose.model('Plan').find({name: 'Free'}, (err, plan) ->
-      that.plan = plan._id
+    mongoose.model('Plan').findOne({name: 'Free'}, (err, plan) ->
+      if plan
+        that.plan = plan._id
       next()
     )
   else

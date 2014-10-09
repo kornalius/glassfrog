@@ -183,7 +183,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       fb = []
       if form.buttons
         for b in form.buttons
-          if typeof b is 'string' and form.layout.type != 'modal'
+          if type(b) is 'string' and form.layout.type != 'modal'
             if b.toLowerCase() == 'nav'
               nav = true
             if b.toLowerCase() == 'edit'
@@ -1117,12 +1117,12 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       return e
 
     modelSchema: (modelName, cb) ->
-      $http.get('/api/{0}?action=schema'.format(modelName))
-      .success((data, status) ->
-        cb(data) if cb
-      )
-      .error((data, status) ->
-        cb(null) if cb
+      r = new Rest(modelName)
+      r.getSchema((data) ->
+        if data
+          cb(data) if cb
+        else
+          cb(null) if cb
       )
 
     quickForm: (name, layout, style, title, model, cb) ->
@@ -1319,7 +1319,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           fd.fields.push(ff)
 
 
-      if model and typeof model is 'string'
+      if model and type(model) is 'string'
         @modelSchema(model, (fields) ->
           for fn of fields
             addField(formDefinition, layout, fn, fields[fn])

@@ -77,7 +77,8 @@
     "angular-growl": "~0.4.0",
     "angular-pageslide-directive": "~0.1.8",
     "perfect-scrollbar": "~0.5.2",
-    "angular-perfect-scrollbar": "*"
+    "angular-perfect-scrollbar": "*",
+    "countries": "~1.0.3"
   },
   "resolutions": {
     "angular": "~1.2.18"

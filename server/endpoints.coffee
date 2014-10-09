@@ -26,24 +26,55 @@ processJSON = (o) ->
       console.log e
   return j
 
-send = (user_id, results, res, model, cb) ->
-  if !results
-    res.send('')
-    cb(null) if cb
-  else if _.isPlainObject(results)
-    res.send(results)
-    cb(results) if cb
-  else if type(results) != 'array'
-    addExtraFields(user_id, results, model, (ok) ->
-      if ok
-        j = processJSON(results)
-        res.json(j)
-        cb(j) if cb
-      else
-        cb(null) if cb
-    )
+__send = (res, data, err, asArray) ->
+  s = {status: (if !err then 'ok' else 'error')}
+  if err
+    if type(err) is 'number'
+      err = new Error(err)
+    s.err = {code: err.code, message: err.message}
+
+  if asArray
+    if type(data) != 'array'
+      data = [s, data]
+    else if hasPagination(data)
+      data[0] = _.extend({}, data[0], s)
+    else
+      data.splice(0, 0, s)
   else
+    if type(data) == 'array' and data.length == 1
+      data = data[0]
+    data = _.extend({}, data, s)
+
+  res.setHeader('content-type', 'application/json')
+#  res.setHeader('X-Total-Count', 0)
+
+  res.json(data)
+
+send = (req, res, options, cb) ->
+  results = null
+  model = null
+  err = null
+  asArray = false
+
+  if options
+    if type(options) is 'number'
+      err = new Error(options)
+    else if options instanceof Error
+      err = options
+    else
+      results = options.results
+      model = options.model
+      err = options.err
+      asArray = options.asArray
+
+  if !results
+    results = {}
+
+  if model
+    if type(results) != 'array'
+      results = [results]
     l = []
+    user_id = req.user._id.toString()
     async.eachSeries(results, (r, callback) ->
       addExtraFields(user_id, r, model, (ok) ->
         if ok
@@ -52,11 +83,14 @@ send = (user_id, results, res, model, cb) ->
       )
     , (err) ->
       if !err
-        res.json(l)
+        __send(res, l, err, asArray)
         cb(l) if cb
       else
         cb(err) if cb
     )
+  else
+    __send(res, results, err)
+    cb(results) if cb
 exports.send = send
 
 populatedPaths = (r, model) ->
@@ -177,8 +211,13 @@ populateFields = (populate, model, req) ->
         l.push(c)
   return l
 
+hasPagination = (data) ->
+  if type(data) is 'array' and data.length
+    return data[0].__p
+  else
+    return false
+
 paginate = (model, req, results, cb) ->
-#  console.log "paginate()", req.baucis.controller.query.options, req.baucis.documents
   model.count((err, count) ->
     if !results
       results = []
@@ -201,6 +240,7 @@ paginate = (model, req, results, cb) ->
       pages = 1
 
     results.splice(0, 0,
+      __p: true
       total: count
       displayCount: results.length
       limit: limit
@@ -317,24 +357,18 @@ register = () ->
     else
       return req.query.sort
 
-  process_results = (req, res, err, results, cb) ->
+  process_results = (req, res, results, err, cb) ->
     console.log "process_results()"
-    if !err
-      send(req.user._id.toString(), results, res, req.m, ->
-        cb(true) if cb
-      )
-    else if err
-      res.status(403).send(err.message).end()
-      cb(false) if cb
-    else
-      res.status(500).end()
-      cb(false) if cb
-
+    send(req, res, {results:results, model:req.m, err:err}, ->
+      cb(!err, err) if cb
+    )
 
   app.all('/api/*', (req, res, next) ->
     console.log "app.all()", req.query, req.params
     if !_app.validUser(req)
-      res.status(403).end()
+      send(req, res, 403, ->
+        next()
+      )
     else
       next()
   )
@@ -343,7 +377,7 @@ register = () ->
     console.log "checkmodel()", req.query, req.params
 
     if !req.params.model
-      res.status(404).end()
+      send(req, res, new Error(404, 'model not found'))
       return
 
     _app.model(req.params.model.toProperCase().singularize(), req, (m, plan, c, prefix) ->
@@ -354,7 +388,7 @@ register = () ->
       if m
         next()
       else
-        res.status(404).end()
+        send(req, res, new Error(404, 'model not found'))
     )
 
   app.all('/api/:model/call/:method/:id', checkmodel)
@@ -377,25 +411,13 @@ register = () ->
               if req.query.args?
                 args = args.concat(req.query.args)
               args.push((err, data) ->
-                if err?
-                  if type(err.message) is 'number'
-                    res.status(err.message).end()
-                    return
-                  else if type(err.message) is 'string'
-                    try
-                      i = parseInt(err.message, 10)
-                      if i < 200 or i > 500
-                        res.status(i).end()
-                      else
-                        res.status(500).send(err.message).end()
-                        return
-                    catch e
-                      res.status(500).send(err.message).end()
-                      return
-                process_results(req, res, null, data, (ok) ->
-#                  if ok
-#                    next()
-                )
+                if !err
+                  process_results(req, res, data, null, (ok) ->
+                  if ok
+                    next()
+                  )
+                else
+                  send(req, res, err)
               )
 
               if req.m.schema.methods['$' + req.params.method]?
@@ -405,16 +427,18 @@ register = () ->
                 req.m.schema.statics['$' + req.params.method].apply(req.m.schema, args)
 
               else
-                res.status(404).end()
+                send(req, res, new Error(404, "method '" + req.params.method + "' not found"))
 
             else
-              res.status(404).end()
+              send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
           )
+
         else
-          res.status(403).end()
+          send(req, res, 403)
       )
+
     else
-      res.status(404).end()
+      send(req, res, new Error(404, "method name missing"))
   )
 
   app.get('/api/:model/schema', (req, res, next) ->
@@ -428,12 +452,13 @@ register = () ->
         for k of s
           if !s[k].private
             l[k] = s[k]
-        process_results(req, res, null, l, (ok) ->
-#          if ok
-#            next()
+        process_results(req, res, l, null, (ok) ->
+          if ok
+            next()
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
@@ -449,23 +474,21 @@ register = () ->
           f = paths[k]
           if !f.private
             _.deepSet(fields, k, o.get(k))
-        delete fields.id
-        delete fields._id
-        delete fields.created_at
-        delete fields.updated_at
-        process_results(req, res, null, [fields], (ok) ->
-#          if ok
-#            next()
+        fields = req.m.filter(fields, {keep: [], remove: ['id', '_id'], mustExists: true})
+        process_results(req, res, fields, null, (ok) ->
+          if ok
+            next()
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
   app.get('/api/:model/:id', (req, res, next) ->
     console.log "app.get()", req.query, req.params
     if !req.params.id
-      res.status(404).end()
+      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
       return
 
     req.user.can('read', req.m.modelName, null, (can) ->
@@ -474,13 +497,14 @@ register = () ->
         process_select(req, q)
         process_populate(req, q)
         q.exec((err, results) ->
-          process_results(req, res, err, results, (ok) ->
+          process_results(req, res, results, err, (ok) ->
             if ok
               next()
           )
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
@@ -498,14 +522,15 @@ register = () ->
         process_skip(req, q)
         q.exec((err, results) ->
           paginate(req.m, req, results, (results) ->
-            process_results(req, res, err, results, (ok) ->
+            process_results(req, res, results, err, (ok) ->
               if ok
                 next()
             )
           )
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
@@ -513,56 +538,38 @@ register = () ->
     console.log "app.put()", req.query, req.body, req.params
 
     if !req.params.id
-      res.status(404).end()
+      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
       return
 
     req.user.can('write', req.m.modelName, null, (can) ->
       if can
         doc = req.body
-        if type(doc) is 'array'
-          if doc.length
-            doc = doc[0]
-          else
-            doc = {}
+        if type(doc) is 'array' and doc.length
+          doc = doc[0]
+        else
+          doc = {}
 
-#        # remove extra fields and/or invalid fields
-#        s = req.m.schema
-#        for k in _.keys(doc)
-#          if !s.path(k)
-#            delete doc[k]
+        doc = req.m.filter(doc, {keep: ['_id'], remove: ['created_at', 'updated_at', '__v', 'owner_id'], mustExists: true})
 
-        doc = req.m.filter(doc, {remove: ['_id'], mustExists: true}, 'readOnly,private')
-
+        _conditions = { _id: req.params.id }
         if _app.hasOwner(req.m)
-          doc.owner_id = req.user._id
+          _conditions.owner_id = req.user.id
 
-        console.log "after filter", doc
-
-        q = req.m.findOne(
-          _id: req.params.id
-          owner_id: req.user.id if _app.hasOwner(req.m)
-        )
-        process_select(req, q)
-        process_populate(req, q)
-
-        console.log "update", q
-
-        q.update(doc, (err, rowCount, results) ->
-          console.log ">>> app.put", err, rowCount, results
-          if !err
-            req.m.findById(req.params.id, (err, results) ->
-              process_results(req, res, err, results, (ok) ->
-                if ok
-                  next()
-              )
+        req.m.update(_conditions, doc, (err, rowCount, status) ->
+          console.log ">>> app.put", rowCount, status, err
+          q = req.m.findById(req.params.id)
+          process_select(req, q)
+          process_populate(req, q)
+          q.exec((err, results) ->
+            process_results(req, res, results, err, (ok) ->
+              if ok
+                next()
             )
-          else if err
-            res.status(403).send(err.message).end()
-          else
-            res.status(500).end()
+          )
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
@@ -570,33 +577,32 @@ register = () ->
     console.log "app.post()", req.query, req.params
 
     doc = req.body
-    if type(doc) is 'array'
-      if doc.length
-        doc = doc[0]
-      else
-        doc = {}
+    if type(doc) is 'array' and doc.length
+      doc = doc[0]
+    else
+      doc = {}
 
     req.user.can('create', req.m.modelName, [doc], (can) ->
       if can
-        console.log "before", doc
+        doc = req.m.filter(doc, {keep: [], remove: ['id', '_id', 'created_at', 'updated_at', '__v', 'owner_id'], mustExists: true})
 
-        doc = req.m.filter(doc, {mustExists: true}, 'readOnly private')
+        if _app.hasOwner(req.m)
+          doc.owner_id = req.user.id
 
-        delete doc.id
-        delete doc._id
-        delete doc.created_at
-        delete doc.updated_at
-
-        console.log "after", doc
-
-        req.m.create(doc, (err, results) ->
-          process_results(req, res, err, results, (ok) ->
-            if ok
-              next()
+        req.m.create(doc, (err, doc) ->
+          q = req.m.findById(doc._id)
+          process_select(req, q)
+          process_populate(req, q)
+          q.exec((err, results) ->
+            process_results(req, res, results, err, (ok) ->
+              if ok
+                next()
+            )
           )
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 
@@ -604,7 +610,7 @@ register = () ->
     console.log "app.delete()", req.query, req.params
 
     if !req.params.id
-      res.status(404).end()
+      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
       return
 
     req.user.can('delete', req.m.modelName, null, (can) ->
@@ -614,13 +620,14 @@ register = () ->
           owner_id: req.user.id if _app.hasOwner(req.m)
         q = req.m.where(qo)
         q.remove((err, results) ->
-          process_results(req, res, err, results, (ok) ->
+          process_results(req, res, results, err, (ok) ->
             if ok
               next()
           )
         )
+
       else
-        res.status(403).end()
+        send(req, res, 403)
     )
   )
 

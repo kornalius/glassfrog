@@ -143,7 +143,7 @@ angular.module('layoutAttributes', [])
         element.removeAttr('shadow')
         input = dynForm.getFieldDOM(element)
         if input.tagName != 'input'
-          if typeof field.shadow is 'number'
+          if type(field.shadow) is 'number'
             i = field.shadow
           else
             i = 1

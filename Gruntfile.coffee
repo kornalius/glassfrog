@@ -240,6 +240,11 @@ module.exports = (grunt) ->
           cwd: 'server/config/'
           src: '*'
           dest: server_out_dev + 'config/'
+        ,
+          expand: true
+          cwd: 'server/components'
+          src: '*.hbs'
+          dest: server_out_dev + 'components'
         ]
 
       server_prod:
@@ -253,6 +258,11 @@ module.exports = (grunt) ->
           cwd: 'server/config/'
           src: '*'
           dest: server_out + 'config/'
+        ,
+          expand: true
+          cwd: 'server/components'
+          src: '*.hbs'
+          dest: server_out + 'components'
         ]
 
     concat:
@@ -635,6 +645,10 @@ module.exports = (grunt) ->
       server_jade:
         files: ['server/**/*.jade']
         tasks: ['copy:server_dev', 'reload']
+
+      server_handlebars:
+        files: ['server/**/*.hbs']
+        tasks: ['copy:server_dev', 'express:dev', 'reload']
 
       global_coffee:
         files: ['scripts/**/*.coffee']

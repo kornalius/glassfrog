@@ -4,7 +4,7 @@ GlobalClass =
   modules: { rows: [] }
 
   findNode: (m, n, idOnly) ->
-    if typeof n is 'string'
+    if type(n) is 'string'
       n = n.toLowerCase()
       if !m
         for m in GlobalClass.modules.rows
@@ -34,7 +34,7 @@ GlobalClass =
     return l
 
   findModule: (m, idOnly) ->
-    if typeof m is 'string'
+    if type(m) is 'string'
       m = m.toLowerCase()
       if @modules and @modules.rows
         for mm in @modules.rows
@@ -47,7 +47,7 @@ GlobalClass =
       return null
 
   findComponent: (c, idOnly) ->
-    if typeof c is 'string'
+    if type(c) is 'string'
       c = c.toLowerCase()
       for cc in @components
         if (idOnly? and cc.id and cc.id() == c) or (!idOnly? and ((cc.id and cc.id() == c) or (cc.name and cc.name.toLowerCase() == c)))
@@ -59,7 +59,7 @@ GlobalClass =
       return null
 
   findComponentsOfKind: (type) ->
-    if typeof type is 'string'
+    if type(type) is 'string'
       t = type
     else
       t = type.getName()
@@ -104,18 +104,23 @@ GlobalClass =
       return syntax
 
   enumToList: (l, node, asObject, multi) ->
+
     if !multi
+#      if asObject
+#        nl = [{label: '', value: ''}]
+#      else
       nl = ['']
     else
       nl = []
+
     for i in [0..l.length - 1]
       ii = l[i]
-      if ii and typeof ii is 'string'
+      if ii and type(ii) is 'string'
         if ii.startsWith('#')
           nl = nl.concat(@findComponentsOfKind(ii.substr(1)).map((c) -> if asObject then {label: c.displayName(), value: c.id(), link: true} else c.displayName()))
 
         else if ii.toLowerCase() == '@module'
-          nl = nl.concat(@modules.rows.map((m) -> if asObject then {label: m.displayName(), value: m.id(), link: true} else m.displayName()))
+          nl = nl.concat(@modules.rows.map((m) -> if asObject then {label: m.varName(), value: m.id(), link: true} else m.varName()))
 
         else if ii.startsWith('@@@') and node?
           nl = nl.concat(node.childrenOfKind(ii.substr(3), true).map((n) -> if asObject then {label: n.varName(), value: n.id(), link: true} else n.varName()))
@@ -129,8 +134,18 @@ GlobalClass =
         else
           nl.push(if asObject then {label: ii, value: ii} else ii)
 
-    if nl.length == 1
+    if nl.length == 1 and !multi
       nl = []
+
+    id = null
+    name = null
+    if node
+      if node.id
+        id = node.id()
+      if node.varName
+        name = node.varName()
+
+    _.remove(nl, (n) -> (n.value and n.value in [id, name]) or (n in [id, name]))
 
     return nl
 
@@ -143,18 +158,31 @@ GlobalClass =
     if window? and angular?
       $http = angular.injector(['ng']).invoke(['$http', ($http) ->
         $http.get('/api/components')
-        .success((data, status) ->
-          if data
-            require(['vc_component'], (VCComponent) ->
-              that.components = data
-              for c in that.components
-                VCComponent.make(c)
-              console.log "Loaded {0} components".format(data.length)
-              cb(data) if cb
-            )
+        .success((result, status) ->
+          if result and result.length
+            info = result[0]
+            that.status = info.status
+            that.err = info.err
+            if that.status == 'ok'
+              result.shift()
+              data = result
+              require(['vc_component'], (VCComponent) ->
+                that.components = data
+                for c in that.components
+                  VCComponent.make(c)
+                console.log "Loaded {0} components".format(data.length)
+                cb(data) if cb
+              )
+
+            else
+              console.log "Error loading components", status
+              cb(null) if cb
+
           else
+            console.log "Error loading components", status
             cb(null) if cb
         )
+
         .error((data, status) ->
           console.log "Error loading components", status
           cb(null) if cb
@@ -175,6 +203,24 @@ GlobalClass =
           console.log "Error loading components", err
           cb(null) if cb
       )
+
+  isValidId: (s) ->
+    return s and type(s) is 'string' and s.match(/^[0-9a-fA-F]{24}$/)
+
+  isValidVC: (n) ->
+    return n and n.$data
+
+  isValidNode: (n) ->
+    return @isValidVC(n) and n.$data.isNode
+
+  isValidArg: (n) ->
+    return @isValidVC(n) and n.$data.isArg
+
+  isValidComponent: (n) ->
+    return @isValidVC(n) and n.$data.isComponent
+
+  isValidModule: (n) ->
+    return @isValidVC(n) and n.$data.isModule
 
 
 if define?

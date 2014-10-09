@@ -4,6 +4,7 @@ mongoose = require("mongoose")
 async = require('async')
 
 app.get("/api/components", (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.can('read', 'Component', null, (ok) ->
       if ok
@@ -16,25 +17,31 @@ app.get("/api/components", (req, res) ->
                 if e.code and e.code.server
                   delete e.code.server
                   c.extra = jsonToString(e)
-            res.send(components).end()
+            endpoints.send(req, res, {results:components, model:mongoose.model('Component'), asArray:true})
+
           else
-            res.status(403).end()
+            endpoints.send(req, res, new Error(404, 'no components found'))
         )
+
       else
-        res.status(403).end()
+        endpoints.send(req, res, 403)
     )
+
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
-app.put("/api/components", (req, res) ->
-  res.status(403).end()
+app.put("/api/component", (req, res) ->
+  endpoints = require('../endpoints')
+  endpoints.send(req, res, 403)
 )
 
-app.post("/api/components", (req, res) ->
-  res.status(403).end()
+app.post("/api/component", (req, res) ->
+  endpoints = require('../endpoints')
+  endpoints.send(req, res, 403)
 )
 
-app.delete("/api/components", (req, res) ->
-  res.status(403).end()
+app.delete("/api/component", (req, res) ->
+  endpoints = require('../endpoints')
+  endpoints.send(req, res, 403)
 )

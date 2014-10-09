@@ -33,123 +33,23 @@ module.exports = [
 #            e.attr('style', s + 'font-weight: bold; ')
 
       server: (node, user) ->
-        Handlebars.compile('
-            {{#if encryptedFields}}
-              var encryptedPlugin = mongooseEncrypted.plugins.encryptedPlugin;\n
-            {{/if}}
-
-            {{#if passwordFields}}
-              var passwordPlugin = require("../mongoose_plugins/mongoose-password");\n
-            {{/if}}
-
-            {{#if addressFields}}
-              var addressPlugin = require("../mongoose_plugins/mongoose-address");\n
-            {{/if}}
-
-            {{#if commentsFields}}
-              var commentsPlugin = require("../mongoose_plugins/mongoose-comments");\n
-            {{/if}}
-
-            {{#if likesFields}}
-              var historyPlugin = require("../mongoose_plugins/mongoose-likes");\n
-            {{/if}}
-
-            {{#if orderFields}}
-              var orderPlugin = require("../mongoose_plugins/mongoose-order");\n
-            {{/if}}
-
-            {{#if personFields}}
-              var personPlugin = require("../mongoose_plugins/mongoose-person");\n
-            {{/if}}
-
-            {{#if pictureFields}}
-              var picturePlugin = require("../mongoose_plugins/mongoose-picture");\n
-            {{/if}}
-
-            {{#if softDeleteFields}}
-              var soft_delete = require("mongoose-softdelete");\n
-            {{/if}}
-
-            {{#if fullTextFields}}
-              var searchPlugin = require("mongoose-search-plugin");\n
-            {{/if}}
-
-            {{#if extendSchema}}
-              var {{schema}} = {{extendSchema}}.extend({\n
-            {{else}}
-              var {{schema}} = mongoose.Schema({\n
-            {{/if}}
-              {{{generate_nodes node user "Field" ",\n"}}}
-            \n}
-            {{#if extendSchema}}
-              , { discriminatorKey : "_type" }
-            {{/if}}
-            );\n\n
-
-            {{schema}}.plugin(timestampPlugin);\n
-
-            {{#if encryptedFields}}
-              {{schema}}.plugin(encryptedPlugin);\n
-            {{/if}}
-
-            {{#if passwordFields}}
-              {{schema}}.plugin(passwordPlugin);\n
-            {{/if}}
-
-            {{#if addressFields}}
-              {{schema}}.plugin(addressPlugin);\n
-            {{/if}}
-
-            {{#if commentsFields}}
-              {{schema}}.plugin(commentsPlugin);\n
-            {{/if}}
-
-            {{#if likesFields}}
-              {{schema}}.plugin(likesPlugin);\n
-            {{/if}}
-
-            {{#if orderFields}}
-              {{schema}}.plugin(orderPlugin);\n
-            {{/if}}
-
-            {{#if personFields}}
-              {{schema}}.plugin(personPlugin);\n
-            {{/if}}
-
-            {{#if pictureFields}}
-              {{schema}}.plugin(picturePlugin);\n
-            {{/if}}
-
-            {{#if softDeleteFields}}
-              {{schema}}.plugin(soft_delete);\n
-            {{/if}}
-
-            {{#if fullTextFields}}
-              {{schema}}.plugin(searchPlugin, { fields: ["{{fullTextFields}}"] });
-            {{/if}}
-
-            {{{generate_nodes node user "Schema.Method" "\n"}}}
-
-            {{{generate_nodes node user "Schema.Static" "\n"}}}
-
-            module.exports.{{schema}} = {{schema}}\n
-       ')(
+        Handlebars.compile('{{> schema_server}}')(
           component: @
           node: node
           schema: node.getClassName() + 'Schema'
-          encryptedFields: node.childrenOfKind("Field.Encrypted", true)
-          passwordFields: node.childrenOfKind("Field.Password", true)
-          addressFields: node.childrenOfKind("Schema.Address", true)
-          commentsFields: node.childrenOfKind("Schema.Comments", true)
-          likesFields: node.childrenOfKind("Schema.Likes", true)
-          orderFields: node.childrenOfKind("Schema.Order", true)
-          personFields: node.childrenOfKind("Schema.Person", true)
-          pictureFields: node.childrenOfKind("Schema.Picture", true)
-          softDeleteFields: node.childrenOfKind("Schema.SoftDelete", true)
+          encryptedFields: node.childrenOfKind("Field").filter((n) -> n.is("options", "encrypted"))
+          passwordFields: node.childrenOfKind("Field").filter((n) -> n.is("options", "password"))
+          fullTextFields: node.childrenOfKind("Field").filter((n) -> n.is("options", "fulltextsearch")).map((n) -> "'" + n.getParent().displayName() + "'").join(', ')
+          addressFields: node.childrenOfKind("Schema.Address")
+          commentsFields: node.childrenOfKind("Schema.Comments")
+          likesFields: node.childrenOfKind("Schema.Likes")
+          orderFields: node.childrenOfKind("Schema.Order")
+          personFields: node.childrenOfKind("Schema.Person")
+          pictureFields: node.childrenOfKind("Schema.Picture")
+          softDeleteFields: node.childrenOfKind("Schema.SoftDelete")
           moduleRefFields: node.childrenOfKind('ModuleRef')
-          fullTextFields: node.childrenOfKind("Field.FullTextSearch", true).map((n) -> if n.getParent() then n.getParent().displayName() else '').join('", ')
           extendSchema: ->
-            v = node.getArg('extend').getValue()
+            v = node.getArg('extend').displayValue()
             if v
               return v.camelize(true) + 'Schema'
             else
@@ -169,7 +69,7 @@ module.exports = [
       server: (node, user) ->
         Handlebars.compile('
           {{schema}}.methods.{{name}} = function({{{args}}}) {\n
-            {{{generate_nodes node client user "*" "\n"}}}
+            {{{generate_nodes node false user "*" "\n"}}}
           };\n
         ')(
           component: @
@@ -192,7 +92,7 @@ module.exports = [
       server: (node, user) ->
         Handlebars.compile('
           {{schema}}.statics.{{name}} = function({{{args}}}) {\n
-            {{{generate_nodes node user "*" "\n"}}}
+            {{{generate_nodes node false user "*" "\n"}}}
           };\n
         ')(
           component: @

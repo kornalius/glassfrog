@@ -102,11 +102,12 @@ if !window?
         l.push(util.inspect(a, {depth: 2, colors: true}).replace(/\s+/g,' ').replace(/\n/g,''))
 #        l.push(serialize(a))
       else
-        l.push(a)
+        l.push(if a? then a else '{red}undefined{reset}')
     t = l.join(' ')
     for c in ['blue', 'red', 'green', 'cyan', 'yellow', 'magenta', 'bgGray', 'bgRed', 'bgGreen', 'bgYellow', 'bgBlue', 'bgMagenta', 'bgCyan', 'white', 'black', 'bold', 'italic', 'underline', 'reset']
-      t = t.replace('{' + c + '}', ansi[c], 'gim')
-    util.puts "{0} [{1}.{2}:{3}] {4}".format(ansi.reset + ansi.blue + new Moment().format('h:m:s.S') + ansi.reset, ansi.cyan + ansi.underline + __file__, __ext__ + ansi.yellow, __line__ + ansi.reset, t)
+      while t.toLowerCase().indexOf('{' + c + '}') != -1
+        t = t.replace('{' + c + '}', ansi[c], 'gi')
+    util.puts "{0} [{1}.{2}:{3}] {4}".format(ansi.reset + ansi.blue + new Moment().format('hh:mm:ss.S') + ansi.reset, ansi.cyan + ansi.underline + __file__, __ext__ + ansi.yellow, __line__ + ansi.reset, t)
 
   Object.defineProperty(global, '__stack__',
     get: ->

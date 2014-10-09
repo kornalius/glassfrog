@@ -17,7 +17,6 @@ Handlebars.registerHelper('generate_nodes', (o, client, user, componentType, del
   return new Handlebars.SafeString(d.join(delimiter))
 )
 
-
 ModuleClass =
 
 #  @name
@@ -47,7 +46,7 @@ ModuleClass =
     m.prevGenerate = null
 
     if m.extra
-      if typeof m.extra is 'string'
+      if type(m.extra) is 'string'
         m.$data._json = stringToJson(m.extra)
       else
         m.$data._json = _.cloneDeep(m.extra)
@@ -106,7 +105,8 @@ ModuleClass =
       @extra
 
     m.setExtra = (e) ->
-      if typeof e is 'string'
+      console.log "setExtra()", e
+      if type(e) is 'string'
         @extra = e
       else
         ne = {}
@@ -197,6 +197,9 @@ ModuleClass =
         @delState('m')
         @getRoot().foreachChild((n) ->
           n.delState('m')
+          args = n.getArgs()
+          for k of args
+            args[k].delState('m')
         , true)
 
     m.setConfigNode = (cb) ->

@@ -2,31 +2,16 @@ module.exports = ((schema, options) ->
 
   toJSON = schema.methods.toJSON
 
-  filter = schema.statics.filter = (doc, options, type) ->
-#    args = Array.prototype.slice.call(arguments, 1)
+  schema.methods.toJSON = () ->
+    args = Array.prototype.concat.apply(this, arguments)
+    return filter.apply(this.constructor, args)
 
-    types = type.split(',')
 
-    if !options
-      options = {}
+  filter = schema.statics.filter = (doc, options) ->
 
-    options = _.extend({}, DEFAULT_OPTIONS, options)
-
-    if !options.ignore
-      options.ignore = []
-    if !options.remove
-      options.remove = []
-
-    if 'readOnly' in types
-      options.remove = _.union(['_id', 'created_at', 'update_at'], DEFAULT_OPTIONS.remove, options.remove)
-
-    if 'private' in types
-      options.ignore = _.union(['id'], DEFAULT_OPTIONS.ignore, options.ignore)
-
-    if type?
-      paths = getPaths(type, schema, options)
-    else
-      paths = []
+    options = _.extend({}, DEFAULT_OPTIONS, (if options then options else {}))
+    options.keep = _.union({}, DEFAULT_OPTIONS.keep, (if options.keep then options.keep else []))
+    options.remove = _.union({}, DEFAULT_OPTIONS.remove, (if options.remove then options.remove else []))
 
     if !doc and toJSON
       obj = toJSON.apply(doc, options)
@@ -35,21 +20,8 @@ module.exports = ((schema, options) ->
     else
       obj = doc
 
-    keep = options.keep
-    remove = options.remove
-
-    if keep
-      return nestedOmit(obj, _.omit(paths, keep), options)
-
-    else if remove
-      return nestedOmit(obj, toPaths(_.isArray(remove) ? remove : [remove]), options)
-
-    return nestedOmit(obj, paths, options)
-
-  schema.methods.toJSON = () ->
-    args = Array.prototype.concat.apply(this, arguments)
-    args.push('private')
-    return filter.apply(this.constructor, args)
+#    console.log doc, getPathsToRemove(schema, options)
+    return nestedOmit(obj, getPathsToRemove(schema, options), options)
 )
 
 nestedOmit = (obj, paths, options) ->
@@ -72,44 +44,45 @@ nestedOmit = (obj, paths, options) ->
 
   , {})
 
-toPaths = (arr) ->
-  return _.reduce(arr, (memo, v) ->
-    memo[v] = true
-    return memo
-  , {})
+#toPaths = (arr) ->
+#  return _.reduce(arr, (memo, v) ->
+#    memo[v] = true
+#    return memo
+#  , {})
 
-getPaths = (type, schema, options) ->
+getPathsToRemove = (schema, options) ->
   return _.reduce(schema.tree, (memo, node, path) ->
-    memo[path] = isPath(type, options, node, path)
+    memo[path] = shouldRemovePath(node, path, options)
     return memo
   , {})
 
-isPath = (type, options, node, path) ->
+shouldRemovePath = (node, path, options) ->
   if !node
     return false
 
   if node instanceof Array
     f = _.first(node)
     if f and f.tree
-      return getPaths(type, f, {})
+      return getPathsToRemove(f, options)
     else
-      return isPath(type, options, f, path)
+      return shouldRemovePath(f, path, options)
 
   else if _.isObject(node) and !node.type and !node.getters and global.type(node) != 'function'
-    o = getPaths(type, { tree: node }, {})
+    o = getPathsToRemove({ tree: node }, options)
     return (if _.isEmpty(o) then false else o)
 
-  else if _.contains(options.ignore, path)
-    return false
-
   else
-    for t in type.split(' ')
-      if node[t] == true
-        return true
-    return path[0] == options.prefix
+    if path and _.contains(options.remove, path)
+      return true
+    else if path and _.contains(options.keep, path)
+      return false
+    else if path and path.startsWith(options.prefix)
+      return true
+    else
+      return false
 
 DEFAULT_OPTIONS =
   prefix: '_'
-  ignore: []
+  keep: ['_id', '__v']
   remove: ['id']
-  virtuals: true
+  mustExists: false

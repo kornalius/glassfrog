@@ -32,6 +32,7 @@ LocalStrategy = require('passport-local').Strategy
 helmet = require('helmet')
 csrf = require('csurf')
 util = require('util')
+sanitizer = require('sanitizer')
 
 global.serialize = require('serialize-js')
 
@@ -76,7 +77,7 @@ validUser = (req) ->
 exports.validUser = validUser
 
 userInfo = (req) ->
-  return mongoose.model('User').filter(req.user, {}, 'private')
+  return mongoose.model('User').filter(req.user, {}, 'read')
 exports.userInfo = userInfo
 
 model = (name, req, cb) ->
@@ -315,8 +316,24 @@ app.use((req, res, next) ->
   res.cookie('XSRF-TOKEN', token)
   res.locals.csrftoken = token
 
+  if req.params?
+    for k of req.params
+      req.params[k] = sanitizer.sanitize(req.params[k])
+
+  if req.query?
+    for k of req.query
+      req.query[k] = sanitizer.sanitize(req.query[k])
+
+  if req.body?
+    s = jsonToString(req.body)
+    req.body = stringToJson(sanitizer.sanitize(s))
+
   if mongoose.model('Log')?
-    mongoose.model('Log').log(mongoose.model('Log').LOG_REQUEST, null, req.method, req.ip, req.url)
+    if req.user
+      id = req.user._id.toString()
+    else
+      id = 'N/A'
+    mongoose.model('Log').log(id, mongoose.model('Log').LOG_REQUEST, null, req.method, req.ip, req.url)
 
   if req.user and !req.user.cache
     req.user.createRequestVars(req, ->
@@ -405,24 +422,6 @@ secure.secureMethods(exports, {configurable: false})
 
 console.log "Setting global routes..."
 
-app.all('*', (req, res, next) ->
-  sanitizer = require('sanitizer')
-
-  if req.params?
-    for k of req.params
-      req.params[k] = sanitizer.sanitize(req.params[k])
-
-  if req.query?
-    for k of req.query
-      req.query[k] = sanitizer.sanitize(req.query[k])
-
-  if req.body?
-    s = jsonToString(req.body)
-    req.body = stringToJson(sanitizer.sanitize(s))
-
-  next()
-)
-
 app.get('/', (req, res, next) ->
   if validUser(req)
     res.redirect("/app")
@@ -435,7 +434,7 @@ app.get('/', (req, res, next) ->
   next()
 )
 
-user = require('./routes/user')
+user = require('./routes/user_pre')
 
 app.get('/app', user.ensureAuthenticated, (req, res, next) ->
   res.render('app',
@@ -447,20 +446,41 @@ app.get('/app', user.ensureAuthenticated, (req, res, next) ->
   next()
 )
 
-console.log "Registering routes..."
-
 routes_paths = __dirname + '/routes'
+exports.routes_paths = routes_paths
+
+console.log "Registering pre routes..."
+
 fs.readdirSync(routes_paths).forEach((file) ->
-  if path.extname(file) == '.js'
+  ext = path.extname(file)
+  if ext == '.js' and path.basename(file, ext).endsWith('_pre')
     console.log "Loading route {0}...".format(file)
     require(routes_paths + '/' + file)
 )
-exports.routes_paths = routes_paths
 
 console.log "Registering endpoints..."
 
 endpoints = require('./endpoints')
 endpoints.register()
+
+console.log "Registering post routes..."
+
+fs.readdirSync(routes_paths).forEach((file) ->
+  ext = path.extname(file)
+  if ext == '.js' and path.basename(file, ext).endsWith('_post')
+    console.log "Loading route {0}...".format(file)
+    require(routes_paths + '/' + file)
+)
+
+console.log "Registering Handlebars partials..."
+
+fs.readdirSync(__dirname + '/components').forEach((file) ->
+  ext = path.extname(file)
+  if ext == '.hbs'
+    console.log "Loading partial {0}...".format(file)
+    s = fs.readFileSync(__dirname + '/components/' + file).toString()
+    Handlebars.registerPartial(path.basename(file, ext), s)
+)
 
 console.log "Connecting to MongoDB server..."
 

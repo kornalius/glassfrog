@@ -11,9 +11,9 @@ module.exports = ((schema, options) ->
   schema.method(
     at: (index, cb) ->
       i = []
-      if typeof index is 'number'
+      if type(index) is 'number'
         i = [index]
-      else if typeof index is 'array'
+      else if type(index) is 'array'
         i = index
 
       if i.length

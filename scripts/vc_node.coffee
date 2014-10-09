@@ -1,6 +1,6 @@
 NodeClass =
 
-#  id
+#  _id
 #  name
 #  icon
 #  color
@@ -186,11 +186,14 @@ NodeClass =
         if type(@[k]) != 'function' and k != 'nodes' and k != '$data' and k != '$$hashKey'
           o[k] = _.cloneDeep(@[k])
 
-      if @hasArgs()
+      args = @getArgs()
+      if args
         o.args = {}
-        args = n.getArgs()
         for k of args
-          o.args[k] = args[k].getValue()
+          v = args[k].getValue()
+          if v and v.$data and v.id
+            v = v.id()
+          o.args[k] = v
 
 #      console.log "plainObject()", @, o
 
@@ -449,7 +452,7 @@ NodeClass =
       @nodes = []
 
       if nodes
-        if typeof nodes is 'string'
+        if type(nodes) is 'string'
           @nodes = stringToJson(nodes)
           @setModified(true)
           p = @getParent()
@@ -515,10 +518,10 @@ NodeClass =
       else
         return false
 
-    n.getEnum = () ->
+    n.getEnum = (asObject) ->
       cc = @getComponent()
       if cc
-        return cc.getEnum()
+        return cc.getEnum(@, asObject)
       else
         return []
 
@@ -632,7 +635,7 @@ NodeClass =
         return ""
 
     n.hasArgs = () ->
-      return Object.keys(@getArgs()).length
+      return _.keys(@getArgs()).length
 
     n.getArg = (name) ->
       return @getArgs()[name]
@@ -644,12 +647,26 @@ NodeClass =
       else
         return null
 
+    n.getArgDisplayValue = (name) ->
+      a = @getArg(name)
+      if a
+        return a.displayValue()
+      else
+        return null
+
     n.getArgValueOrDefault = (name) ->
       a = @getArg(name)
       if a
         return a.getValueOrDefault()
       else
         return null
+
+    n.is = (name, option) ->
+      a = @getArg(name)
+      if a
+        return a.is(option)
+      else
+        return false
 
     n.setArg = (name, value) ->
       a = @getArg(name)
@@ -677,17 +694,23 @@ NodeClass =
         c = @getComponent()
         if c
           cargs = c.getArgs()
-          for k of cargs
-            ca = cargs[k]
-            if @args and @args[k]?
-              v = @args[k]
-            else
-              v = ca.getDefault()
-            a = {}
-            NodeClass.VCArg.setData(k, a, @)
-            if v?
-              a.value = v
-            na[k] = a
+          if cargs
+            for k of cargs
+              ca = cargs[k]
+              if @args and @args[k]?
+                v = @args[k]
+              else
+                v = ca.getDefault()
+              a = {}
+              NodeClass.VCArg.setData(k, a, @)
+              if v?
+                a.value = v
+                if NodeClass.VCGlobal.isValidId(v)
+                  n = NodeClass.VCGlobal.find(v)
+                  if n
+                    a.addState('l')
+                    a.$data._link = n
+              na[k] = a
         if @$data
           @$data._args = na
         return na
@@ -832,10 +855,8 @@ NodeClass =
       return false
 
     n.foreachChild = (f, recursive) ->
-      for c in @children()
+      for c in @children(recursive)
         f(c)
-        if recursive
-          c.foreachChild(f, true)
 
     n.hasErrors = () ->
       return false

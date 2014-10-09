@@ -150,19 +150,20 @@ angular.module('ui.selectize', [])
           selectize.setValue(newValue)
           selectize.refreshItems()
 
-      ngModel.$parsers.push((value) ->
-        return (if value then value.split(options.delimiter) else [])
-      )
+      if options.maxItems?
+        ngModel.$parsers.push((value) ->
+          return (if value then value.split(options.delimiter) else [])
+        )
 
-      ngModel.$formatters.push((values) ->
-        if values?
-          if type(values) is 'string'
-            return values
-          else if values instanceof Array
-            return values.join(options.delimiter)
-          else
-            return ""
-      )
+        ngModel.$formatters.push((values) ->
+          if values?
+            if type(values) is 'string'
+              return values
+            else if values instanceof Array
+              return values.join(options.delimiter)
+            else
+              return ""
+        )
 ])
 
 #.directive('selectize', [

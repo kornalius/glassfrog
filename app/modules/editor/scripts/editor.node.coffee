@@ -156,17 +156,17 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     hasEnum: (n) ->
       n.hasEnum()
 
-    getEnum: (n) ->
+    getEnum: (n, asObject) ->
       l = []
       x = 0
-      for nn in n.getEnum()
+      for nn in n.getEnum(asObject)
         if nn and nn.$data and nn.$data.isNode
           l.push({ id: nn.id(), text: nn.getPath(true) })
         else if nn and nn.$data and nn.$data.isComponent
           l.push({ id: nn.id(), text: nn.name })
         else if nn and nn.$data and nn.$data.isModule
           l.push({ id: nn.id(), text: nn.name })
-        else if typeof nn is 'string'
+        else if type(nn) is 'string'
           l.push({ id: x++, text: nn })
       return l
 
@@ -456,14 +456,14 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.hasEnum = (n) ->
       EditorNode.hasEnum(n)
 
-    $scope.getEnum = (n) ->
-      EditorNode.getEnum(n)
+    $scope.getEnum = (n, asObject) ->
+      EditorNode.getEnum(n, asObject)
 
     $scope.hasMulti = (n) ->
       EditorNode.hasMulti(n)
 
-    $scope.getMulti = (n) ->
-      EditorNode.getMulti(n)
+    $scope.getMulti = (n, asObject) ->
+      EditorNode.getMulti(n, asObject)
 
     $scope.edit = (n) ->
       EditorNode.edit(n)
@@ -522,8 +522,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
             VCGlobal.modules.update(m, (result, err) ->
               if !err
                 VCModule.make(result)
-                m.setModified(false)
-#                Editor.editModule(result, cb)
+                Editor.editModule(result, cb)
               else
                 cb(null) if cb
             )
@@ -598,11 +597,9 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.$watch('a.value', (newValue, oldValue) ->
       if !_.isEqual(newValue, oldValue)
-        if $scope.a.hasEnum() and type(newValue) is 'array' and newValue.length == 1
-          newValue = newValue[0]
-#        if type(newValue) is 'array'
-#          newValue = null
+        console.log "$watch a.value", newValue, oldValue
         $scope.a.setValue(newValue)
+        $scope.a.setModified(true)
     )
 
 ])

@@ -178,86 +178,116 @@ app.get("/forgot", (req, res) ->
 )
 
 app.get("/loggedin", (req, res) ->
-  res.send(if _app.validUser(req) then [1] else [0]).end()
+  endpoints = require('../endpoints')
+  if _app.validUser(req)
+    endpoints.send(req, res)
+  else
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/can', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req) and req.params.action? and req.params.subject?
     req.user.can(req.params.action, req.params.subject, null, (ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/isadmin', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.isAdmin((ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/isactive', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.isActive((ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/isDisabled', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.isDisabled((ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/islockedout', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.isLockedOut((ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/ispaidplan', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req)
     req.user.isPaidPlan((ok) ->
-      res.send(if ok then [1] else [0]).end()
+      if ok
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/getdata', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req) and req.params.key?
     req.user.can('read', 'User', null, (ok) ->
       if !ok
         res.status(403).end()
       else
-        res.send([req.user.getData(req.params.key)]).end()
+        endpoints.send(req, res, {results:req.user.getData(req.params.key), model:mongoose.model('User')})
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 app.get('/api/user/setdata', (req, res) ->
+  endpoints = require('../endpoints')
   if _app.validUser(req) and req.params.key? and req.params.value?
     req.user.can('write', 'User', null, (ok) ->
-      if !ok
-        res.status(403).end()
-      else
+      if ok
         req.user.setData(req.params.key, req.params.value)
-        res.send([1]).end()
+        endpoints.send(req, res)
+      else
+        endpoints.send(req, res, 403)
     )
   else
-    res.status(403).end()
+    endpoints.send(req, res, 403)
 )
 
 secure.secureMethods(exports, {configurable: false})

@@ -65,16 +65,21 @@ ArgClass =
       if t == 'icon'
         return ''
       else
-        return @getValue()
+        @toString()
 
     a.getValue = () ->
       if @isLink()
-        n = @getLink()
-        if n
-          return n.displayName()
-      v = @value
+        v = @getLink()
+      else
+        v = @value
+      return v
+
+    a.toString = () ->
+      v = @getValue()
       t = type(v)
-      if t is 'boolean'
+      if v and v.$data and v.displayName
+        return v.displayName()
+      else if t is 'boolean'
         return (if v then 'true' else 'false')
       else if t is 'number'
         return (if Number.isNaN(v) then '0' else v.toString())
@@ -102,43 +107,39 @@ ArgClass =
       return v
 
     a.is = (value) ->
-      _.contains(@getValue().toLowerCase().split(', '), value.toLowerCase())
+      _.contains(@getValue().map((v) -> v.toLowerCase()), value.toLowerCase())
 
     a.isLink = () ->
-      @hasOption('l')
+      @hasState('l')
 
     a.getLink = () ->
       if @isLink()
-        if @$data and !@$data._link and @value
-          n = ArgClass.VCGlobal.find(@value, true)
-          if n and n.$data
-            @$data._link = n
         return (if @$data and @$data._link then @$data._link else null)
       else
         return null
 
     a.setLink = (n) ->
-      if !n and @$data
-        @delOption('l')
-        @$data._link = null
-        delete @value
-        @setModified(true)
-        return true
-      else
-        n = ArgClass.VCGlobal.find(n)
-        if n and @$data and n != @$data._link
-          @addOption('l')
-          @value = n.id()
-          @$data._link = n
+      if @$data
+        if !n
+          @delState('l')
+          @$data._link = null
+          delete @value
           @setModified(true)
           return true
         else
-          return false
+          n = ArgClass.VCGlobal.find(n)
+          if n and @$data and n != @$data._link
+            @addState('l')
+            @value = n.id()
+            @$data._link = n
+            @setModified(true)
+            return true
+      return false
 
     a.setValue = (value) ->
       if value and value.$data?
         @setLink(value)
-      else if value and type(value) is 'string' and value.match(/^[0-9a-fA-F]{24}$/)
+      else if ArgClass.VCGlobal.isValidId(value)
         @setLink(value)
       else
         if @isLink()
@@ -186,18 +187,10 @@ ArgClass =
       return @getNode()
 
     a.getNode = () ->
-      if @$data
-        n = @$data._node
-      else
-        n = null
-      if !n
-        n = ArgClass.VCGlobal.findNode(@node)
-        @$data._node = n
-      return n
+      @$data._node
 
     a.setNode = (n) ->
       n = ArgClass.VCGlobal.findNode(@module(), n)
-      @node = n._id
       @$data._node = n
       @setModified(true)
 
@@ -259,38 +252,56 @@ ArgClass =
           @$data._states = @$data._states.substr(0, i) + @$data._states.substr(i + 1)
 
     a.hasEnum = () ->
-      @getEnum().length
-
-    a.getEnum = (asObject) ->
-      if @$data._node
-        ad = @$data._node.getArgDef(@name)
+      node = @getNode()
+      if node
+        ad = node.getArgDef(@name)
         if ad
-          e = ad.getEnum(asObject)
+          return ad.hasEnum()
+
+      else if @enum
+        return true
+
+      c = @getComponent()
+      if c
+        return c.hasEnum()
+      else
+        return false
+
+    a.getEnum = (node, asObject) ->
+      if type(node) is 'boolean'
+        asObject = node
+        node = null
+
+      if @getNode()
+        ad = @getNode().getArgDef(@name)
+        if ad
+          e = ad.getEnum(node, asObject)
           if e and e.length
             return e
 
       else if @enum
-        return ArgClass.VCGlobal.enumToList(@enum, @$data._node, asObject)
+        return ArgClass.VCGlobal.enumToList(@enum, node, asObject)
 
       c = @getComponent()
       if c
-        return c.getEnum()
+        return c.getEnum(node, asObject)
       else
         return []
 
     a.hasMulti = () ->
-      @getMulti().length
+      @getMulti(false).length
 
     a.getMulti = (asObject) ->
-      if @$data._node
-        ad = @$data._node.getArgDef(@name)
+      node = @getNode()
+      if node
+        ad = node.getArgDef(@name)
         if ad
-          m = ad.getMulti(asObject)
+          m = ad.getMulti(node, asObject)
           if m and m.length
             return m
 
       else if @multi
-        return ArgClass.VCGlobal.enumToList(@multi, @$data._node, asObject, true)
+        return ArgClass.VCGlobal.enumToList(@multi, node, asObject, true)
 
       return []
 

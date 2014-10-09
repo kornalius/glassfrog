@@ -139,7 +139,7 @@ setTimeout( ->
         f.extra.accepts = naccepts
 
       if f.extra.code
-        if typeof f.extra.code != 'string'
+        if type(f.extra.code) != 'string'
           nc = {}
           for k of f.extra.code
             nc[k] = f.extra.code[k].toString()

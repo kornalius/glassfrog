@@ -37,7 +37,7 @@ ComponentClass =
     c.$data.isComponent = true
 
     if c.extra?
-      if typeof c.extra is 'string'
+      if type(c.extra) is 'string'
         c.$data._json = stringToJson(c.extra)
       else
         c.$data._json = _.cloneDeep(c.extra)
@@ -207,21 +207,32 @@ ComponentClass =
       @getInherit() != null
 
     c.hasEnum = () ->
-      @getEnum().length
-
-    c.getEnum = () ->
       l = []
       e = @$data and @$data._json.enum
       if e
-        if typeof e is 'string'
+        if type(e) is 'string'
           l = e.split(',')
         else if e instanceof Array
           l = e
       else
         i = @getInherit()
         if i
-          l = i.getEnum()
-      return ComponentClass.VCGlobal.enumToList(l)
+          return i.hasEnum()
+      return l and l.length
+
+    c.getEnum = (node, asObject) ->
+      l = []
+      e = @$data and @$data._json.enum
+      if e
+        if type(e) is 'string'
+          l = e.split(',')
+        else if e instanceof Array
+          l = e
+      else
+        i = @getInherit()
+        if i
+          l = i.getEnum(node, asObject)
+      return ComponentClass.VCGlobal.enumToList(l, node, asObject)
 
     c.hasArgs = () ->
       if @$data and @$data._json.args
@@ -339,7 +350,7 @@ ComponentClass =
         else
           if @$data and @$data._json.defaults
             for i in @$data._json.defaults
-              if typeof i is 'string'
+              if type(i) is 'string'
                 cc = ComponentClass.VCGlobal.findComponent(i)
                 if cc
                   ni = { name: i, component: cc, args: {} }

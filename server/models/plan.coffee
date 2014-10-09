@@ -182,64 +182,65 @@ module.exports = mongoose.model('Plan', PlanSchema)
 setTimeout( ->
   data = [
     name: 'Free'
-    desc: ''
+    desc: 'Free plan'
     price: 0.00
     limits:
       records: 100
       fieldSize: 1024
-      projects: 1
+      modules: 1
       schemas: 2
       fields: 10
   ,
     name: 'Home'
-    desc: ''
+    desc: 'Home plan'
     price: 9.99
     limits:
       records: 10000
       fieldSize: -1
-      projects: 5
+      modules: 5
       schemas: 5
       fields: 25
   ,
     name: 'Freelancer'
-    desc: ''
+    desc: 'Freelancer module'
     price: 19.99
     limits:
       records: 100000
       fieldSize: -1
-      projects: 10
+      modules: 10
       schemas: 10
       fields: 100
       options: 'l'
   ,
     name: 'Startup'
-    desc: ''
+    desc: 'Startup plan'
     price: 49.99
     limits:
       records: 100000
       fieldSize: -1
-      projects: 10
+      modules: 10
       schemas: 10
       fields: 100
       options: 'c'
   ,
     name: 'Business'
-    desc: ''
+    desc: 'Business plan'
     price: 99.99
     limits:
       records: 1000000
       fieldSize: -1
-      projects: -1
+      modules: -1
       schemas: 25
       fields: -1
       options: 'cd'
   ,
     name: 'Unlimited'
-    desc: ''
+    desc: 'Unlimited plan'
     price: 399.99
     limits:
       records: -1
-      projects: -1
+      fieldSize: -1
+      modules: -1
       schemas: -1
       fields: -1
       options: 'cde'

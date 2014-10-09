@@ -21,8 +21,8 @@ module.exports = [
     args:
       'options':
         desc: 'Specify options for the field'
-        multi: ['Required', 'ReadOnly', 'Private', 'Encrypted', 'Indexed', 'Populated', 'Selected', 'Trimmed', 'FullTextSearch']
-        default: ['Selected']
+        multi: ['Required', 'ReadOnly', 'Private', 'Encrypted', 'Indexed', 'Populated', 'Unselected', 'Trimmed', 'FullTextSearch', 'Password']
+        default: []
     code:
       render: (node) ->
         if node
@@ -32,32 +32,19 @@ module.exports = [
               c.render(node)
 
       server: (node, user) ->
-        Handlebars.compile('
-          "{{name}}": {\n
-            {{generate_nodes node user "Field.Type,Field.Attribute,Field.Validator" ",\n"}}
-            index: {{index}},\n
-            required: {{required}},\n
-            private: {{private}},\n
-            readOnly: {{readonly}},\n
-            select: {{select}},\n
-            populate: {{populate}},\n
-            trim: {{trim}},\n
-            fullTextSearch: {{fulltextsearch}},\n
-            encrypt: {{encrypt}}\n
-          }
-        ')(
+        Handlebars.compile('{{> field_server}}')(
           component: @
           node: node
           name: node.varName()
-          index: (if node.getArg('options').is('indexed') then 'true' else 'false')
-          required: (if node.getArg('options').is('required') then 'true' else 'false')
-          private: (if node.getArg('options').is('private') then 'true' else 'false')
-          readonly: (if node.getArg('options').is('readonly') then 'true' else 'false')
-          select: (if node.getArg('options').is('selected') then 'true' else 'false')
-          populate: (if node.getArg('options').is('populated') then 'true' else 'false')
-          trim: (if node.getArg('options').is('trimmed') then 'true' else 'false')
-          fulltextsearch: (if node.getArg('options').is('fulltextsearch') then 'true' else 'false')
-          encrypt: (if node.getArg('options').is('encrypted') then 'true' else 'false')
+          index: (if node.is('options', 'indexed') then 'true' else 'false')
+          required: (if node.is('options', 'required') then 'true' else 'false')
+          private: (if node.is('options', 'private') then 'true' else 'false')
+          readonly: (if node.is('options', 'readonly') then 'true' else 'false')
+          select: (if node.is('options', 'unselected') then 'false' else 'true')
+          populate: (if node.is('options', 'populated') then 'true' else 'false')
+          trim: (if node.is('options', 'trimmed') then 'true' else 'false')
+          password: (if node.is('options', 'password') then 'true' else 'false')
+          encrypt: (if node.is('options', 'encrypted') then 'true' else 'false')
         )
 ,
 

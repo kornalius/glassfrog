@@ -42,7 +42,7 @@ module.exports = [
             var mongooseVersion = require("../mongoose_plugins/mongoose-version")();\n
             var schemaExtend = require("mongoose-schema-extend");\n
             \n
-            {{{generate_nodes node user "Schema" "\n"}}}
+            {{{generate_nodes node false user "Schema" "\n"}}}
             \n
             exports.schemas = [{{schemas}}]\n
             exports.queries = [{{queries}}]\n
@@ -185,7 +185,7 @@ module.exports = [
       client: (node) ->
         Handlebars.compile('
           function {{name}} ({{{args}}}) {\n
-            {{{generate_nodes true node null "*" "\n"}}}
+            {{{generate_nodes node true null "*" "\n"}}}
           };\n
         ')(
           component: @
@@ -197,7 +197,7 @@ module.exports = [
       server: (node, user) ->
         Handlebars.compile('
           function {{name}} ({{{args}}}) {\n
-            {{{generate_nodes false node user "*" "\n"}}}
+            {{{generate_nodes node false user "*" "\n"}}}
           };\n
         ')(
           component: @

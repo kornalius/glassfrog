@@ -13,6 +13,17 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       selfLink: 'self.link'
     )
 
+#    RestangularProvider.addResponseInterceptor((data, operation, what) ->
+#      console.log data, operation, what
+#      if operation == 'getList'
+#        return data.results
+#      return data
+#    )
+
+#    RestangularProvider.setErrorInterceptor((response, deferred, responseHandler) ->
+#      return true
+#    )
+
 ])
 
 .factory('Rest', [
@@ -28,16 +39,16 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
     Rest = (modelName, url) ->
       @modelName = modelName.toLowerCase().singularize()
       @url = url
-      @l = 10
-      @sk = 0
-      @q = null
-      @sort = ['_id']
-      @s = null
-      @p = null
       @rows = null
-      @total = 0
-      @display = 0
-      @pages = 1
+      @l = 10 #limit
+      @sk = 0 #skip
+      @q = null #query
+      @sort = ['_id']
+      @s = null #select
+      @p = null #populate
+      @total = 0 #total rows in table
+      @display = 0 #count of rows received
+      @pages = 1 #number of pages
       @first = 1
       @last = 1
       @prev = 1
@@ -48,7 +59,8 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       @nextPage = 1
       @rest = null
       @schema = {}
-
+      @status = null
+      @err = null
       return @
 
     Rest.prototype =
@@ -117,6 +129,18 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         that.p = p
         that.sort = sort
 
+        that.total = 1
+        that.display = 1
+        that.pages = 1
+        that.firstPage = 1
+        that.lastPage = 1
+        that.prevPage = 1
+        that.nextPage = 1
+        that.first = 1
+        that.last = 1
+        that.prev = 1
+        that.next = 1
+
         if that.url?
           that.rest = Restangular.allUrl(that.modelName, that.url)
           query = {}
@@ -126,41 +150,44 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         that.fetchTimeout = $timeout( ->
           p = that.rest.getList(query).then((result) ->
-            info = result[0]
-            if info.total? and info.displayCount? and info.pages?
-              that.total = info.total
-              that.display = info.displayCount
-              that.page = info.page
-              that.pages = info.pages
-              that.page = info.page
-              that.firstPage = info.firstPage
-              that.lastPage = info.lastPage
-              that.prevPage = info.prevPage
-              that.nextPage = info.nextPage
-              that.first = info.first
-              that.last = info.last
-              that.prev = info.prev
-              that.next = info.next
-              result.shift()
+            if result and result.length
+              info = result[0]
+              that.status = info.status
+              that.err = info.err
+
+              if info.status == 'ok'
+                if info.__p
+                  that.total = info.total
+                  that.display = info.displayCount
+                  that.page = info.page
+                  that.pages = info.pages
+                  that.page = info.page
+                  that.firstPage = info.firstPage
+                  that.lastPage = info.lastPage
+                  that.prevPage = info.prevPage
+                  that.nextPage = info.nextPage
+                  that.first = info.first
+                  that.last = info.last
+                  that.prev = info.prev
+                  that.next = info.next
+
+                result.shift()
+
+                that.rows = result
+                console.log "Rest find end...", that
+                cb(result, null) if cb
+
+              else
+                if info.err
+                  err = new Error(info.err.code, info.err.message)
+                else
+                  err = new Error(500)
+                console.log "Rest find end with error...", that, err
+                cb(null, err) if cb
+
             else
-              that.total = result.length
-              that.display = result.length
-              that.page = 1
-              that.pages = 1
-              that.firstPage = 1
-              that.lastPage = 1
-              that.prevPage = 1
-              that.nextPage = 1
-              that.first = 1
-              that.last = 1
-              that.prev = 1
-              that.next = 1
-
-            that.rows = result
-
-            console.log "Rest find end...", that
-
-            cb(result, null) if cb
+              console.log "Rest find end with error...", that, "no result provided from server"
+              cb(null, new Error('no result provided from server')) if cb
 
           , (err) ->
             console.log "Rest find end with error...", that, err
@@ -173,6 +200,18 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       findById: (_id, cb) ->
         that = @
 
+        that.total = 1
+        that.display = 1
+        that.pages = 1
+        that.firstPage = 1
+        that.lastPage = 1
+        that.prevPage = 1
+        that.nextPage = 1
+        that.first = 1
+        that.last = 1
+        that.prev = 1
+        that.next = 1
+
         console.log "Rest findById start...", that
 
         if that.url?
@@ -183,22 +222,27 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           query = {s: that.s, p: that.p}
 
         p = that.rest.get(query).then((result) ->
-          that.total = 1
-          that.display = 1
-          that.pages = 1
-          that.firstPage = 1
-          that.lastPage = 1
-          that.prevPage = 1
-          that.nextPage = 1
-          that.first = 1
-          that.last = 1
-          that.prev = 1
-          that.next = 1
-          that.rows = [result]
+          if result
+            that.status = result.status
+            that.err = result.err
+            delete result.status
+            delete result.err
+            if that.status == 'ok'
+              that.rows = [result]
+              console.log "Rest findById end...", that
+              cb(result, null) if cb
 
-          console.log "Rest findById end...", that
+            else
+              if that.err
+                err = new Error(that.err.code, that.err.message)
+              else
+                err = new Error(500)
+              console.log "Rest findById end with error...", that, err
+              cb(null, err) if cb
 
-          cb(result, null) if cb
+          else
+            console.log "Rest update end with error...", that, "no result provided from server"
+            cb(null, new Error('no result provided from server')) if cb
 
         , (err) ->
           console.log "Rest findById end with error...", that, err
@@ -226,13 +270,31 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           that.rows = []
 
         if temp
-          p = $http.get('/api/{0}/defaults'.format(that.modelName)).success((defaults) ->
-            if type(defaults) is 'array' and defaults.length
-              defaults = defaults[0]
-            Restangular.restangularizeElement('', defaults, that.modelName, false)
-            that.rows.push(defaults)
-            console.log "Rest create temp end...", that, defaults
-            cb(defaults, null) if cb
+          p = $http.get('/api/{0}/defaults'.format(that.modelName)).success((result) ->
+            if result
+              that.status = result.status
+              that.err = result.err
+              delete result.status
+              delete result.err
+              if that.status == 'ok'
+                defaults = result
+                Restangular.restangularizeElement('', defaults, that.modelName, false)
+                that.rows.push(defaults)
+                console.log "Rest create temp end...", that, defaults
+                cb(defaults, null) if cb
+
+              else
+                if that.err
+                  err = new Error(that.err.code, that.err.message)
+                else
+                  err = new Error(500)
+                console.log "Rest create end with error...", that, err
+                cb(null, err) if cb
+
+            else
+              console.log "Rest create end with error...", that, "no result provided from server"
+              cb(null, new Error('no result provided from server')) if cb
+
           ).error((err) ->
             console.log "Rest create temp end with error...", that, err
             cb(null, null) if cb
@@ -242,18 +304,36 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
           if that.rest.post?
             p = that.rest.post(row).then((result) ->
-              if type(result) is 'array' and result.length ==  2
-                result = result[1]
-              that.rows.push(result)
-              console.log "Rest create end...", that, result
-              cb(result, null) if cb
+              if result
+                that.status = result.status
+                that.err = result.err
+                delete result.status
+                delete result.err
+                if that.status == 'ok'
+                  that.rows.push(result)
+                  console.log "Rest create end...", that, result
+                  cb(result, null) if cb
+
+                else
+                  if that.err
+                    err = new Error(that.err.code, that.err.message)
+                  else
+                    err = new Error(500)
+                  console.log "Rest create end with error...", that, err
+                  cb(null, err) if cb
+
+              else
+                console.log "Rest create end with error...", that, "no result provided from server"
+                cb(null, new Error('no result provided from server')) if cb
+
             , (err) ->
               console.log "Rest create end with error...", that, err
               cb(null, err) if cb
             )
+
           else
-            console.log "Rest create end with error...", that, "no post() method"
-            cb(null, null) if cb
+            console.log "Rest create end with error...", that, "no post method found"
+            cb(null, new Error('no post method found')) if cb
 
 
       update: (row, cb) ->
@@ -267,23 +347,43 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         if row.save?
           p = row.save().then((result) ->
-            x = that.findRowIndexById(result._id.toString())
-            if x != -1
-              if that.rows[x].plain?
-                r = that.rows[x].plain()
+            if result
+              that.status = result.status
+              that.err = result.err
+              delete result.status
+              delete result.err
+              if that.status == 'ok'
+                x = that.findRowIndexById(result._id.toString())
+                if x != -1
+                  if that.rows[x].plain?
+                    r = that.rows[x].plain()
+                  else
+                    r = that.rows[x]
+                  for k of r
+                    that.rows[x][k] = result[k]
+                console.log "Rest update end...", that, result
+                cb(that.rows[x], null) if cb
+
               else
-                r = that.rows[x]
-              for k of r
-                that.rows[x][k] = result[k]
-            console.log "Rest update end...", that, result
-            cb(that.rows[x], null) if cb
+                if that.err
+                  err = new Error(that.err.code, that.err.message)
+                else
+                  err = new Error(500)
+                console.log "Rest update end with error...", that, err
+                cb(null, err) if cb
+
+            else
+              console.log "Rest update end with error...", that, row, "no result provided from server"
+              cb(null, new Error('no result provided from server')) if cb
+
           , (err) ->
             console.log "Rest update end with error...", that, row, err
             cb(null, err) if cb
           )
+
         else
-          console.log "Rest update end with error...", that, row, "no save() method"
-          cb(null, null) if cb
+          console.log "Rest update end with error...", that, row, "no save method found"
+          cb(null, new Error('no save method found')) if cb
 
 
       remove: (row, cb) ->
@@ -295,24 +395,41 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         console.log "Rest remove start...", that, row
 
-        _id = row._id
-        if row.remove? and row._id?
+        if row.remove?
+          _id = row._id
           p = row.remove().then((result) ->
-            x = that.findRowIndexById(_id.toString())
-            if x != -1
-              that.rows.splice(x)
-            console.log "Rest remove end...", that, result
-            cb(result, null) if cb
+            if result
+              that.status = result.status
+              that.err = result.err
+              delete result.status
+              delete result.err
+              if that.status == 'ok'
+                x = that.findRowIndexById(_id.toString())
+                if x != -1
+                  that.rows.splice(x)
+                console.log "Rest remove end...", that, r.results
+                cb(_id.toString(), null) if cb
+
+              else
+                if that.err
+                  err = new Error(that.err.code, that.err.message)
+                else
+                  err = new Error(500)
+                console.log "Rest remove end with error...", that, err
+                cb(null, err) if cb
+
+            else
+              console.log "Rest remove end with error...", that, row, "no result provided from server"
+              cb(null, new Error('no result provided from server')) if cb
+
           , (err) ->
-            x = that.findRowIndexById(_id.toString())
-            if x != -1
-              that.rows.splice(x)
             console.log "Rest remove end with error...", that, _id, err
-            cb(null, null) if cb
+            cb(null, err) if cb
           )
+
         else
-          console.log "Rest remove end with error...", that, _id, "no remove() method"
-          cb(null, err) if cb
+          console.log "Rest remove end with error...", that, _id, "no remove method found"
+          cb(null, new Error('no remove method found')) if cb
 
 
       getSchema: (cb) ->
@@ -326,20 +443,38 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           else
             that.rest = Restangular.one(that.modelName)
 
-        p = $http.get('/api/{0}/schema'.format(that.modelName)).success((schema) ->
-          if type(schema) is 'array' and schema.length
-            schema = schema[0]
-          p = []
-          for k of schema
-            if k != 'id'
-              p.push(k)
-          schema.paths = p
-          that.schema = schema
-          console.log "Rest schema end...", that, schema
-          cb(schema, null) if cb
+        p = $http.get('/api/{0}/schema'.format(that.modelName)).success((result) ->
+          if result
+            that.status = result.status
+            that.err = result.err
+            delete result.status
+            delete result.err
+            if that.status == 'ok'
+              schema = result
+              p = []
+              for k of schema
+                if k != 'id'
+                  p.push(k)
+              schema.paths = p
+              that.schema = schema
+              console.log "Rest schema end...", that, schema
+              cb(schema, null) if cb
+
+            else
+              if that.err
+                err = new Error(that.err.code, that.err.message)
+              else
+                err = new Error(500)
+              console.log "Rest schema end with error...", that, err
+              cb(null, err) if cb
+
+          else
+            console.log "Rest schema end with error...", that, row, "no result provided from server"
+            cb(null, new Error('no result provided from server')) if cb
+
         ).error((err) ->
           console.log "Rest schema end with error...", that, err
-          cb(null, null) if cb
+          cb(null, err) if cb
         )
 
 

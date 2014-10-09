@@ -43,7 +43,7 @@ RoleSchema.plugin(filterPlugin)
 RoleSchema.method(
 
   allRules: (model, actions, cb) ->
-    if typeof actions is 'string'
+    if type(actions) is 'string'
       actions = actions.split(',')
     that = @
     results = []
@@ -112,7 +112,7 @@ RoleSchema.method(
     )
 
   addRule: (subject, actions, owned, cb) ->
-    if typeof actions is 'string'
+    if type(actions) is 'string'
       actions = actions.split(',')
     for a in actions
       ok = false
@@ -158,7 +158,7 @@ RoleSchema.method(
     )
 
   ruleMatch: (rule, subject, actions) ->
-    if typeof actions is 'string'
+    if type(actions) is 'string'
       actions = actions.split(',')
     if rule.subject == subject.toLowerCase()
       if actions
