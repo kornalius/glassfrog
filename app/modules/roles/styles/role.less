@@ -1,0 +1,169 @@
+@import "/bower_components/bootstrap/less/variables.less";
+@import "/bower_components/bootstrap/less/mixins.less";
+
+@repository-color: @control-color;
+@repository-width: 400px;
+@repository-height: 175px;
+
+.repository-card {
+  height: @repository-height;
+  min-height: @repository-height;
+  max-height: @repository-height;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  background: white;
+  cursor: default !important;
+  border-radius: @border-radius-base;
+  box-shadow: 2px 2px 5px rgba(80, 80, 80, 0.25);
+}
+
+.repository-card-inside-col {
+  padding: 4px;
+}
+
+.repository-card-inside {
+  margin-left: 10px;
+}
+
+.repository-color-col {
+  position: absolute;
+  border-radius: @border-radius-base 0px 0px @border-radius-base;
+  height: @repository-height;
+  width: 10px !important;
+}
+
+.repository-title-row {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.repository-icon-col {
+  vertical-align: middle;
+  text-align: center;
+}
+
+.repository-icon {
+  color: @icon-color;
+  font-size: large;
+}
+
+.repository-label-col {
+  vertical-align: middle;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.repository-label {
+  font-size: small;
+  font-weight: bold;
+  color: @text-color;
+}
+
+.repository-version-col {
+  vertical-align: middle;
+  text-align: right;
+}
+
+.repository-version {
+  font-size: small;
+  color: @dark-purple-color;
+}
+
+.repository-info-row {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.repository-creator-col {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.repository-creator {
+  font-size: x-small;
+  color: @icon-color;
+}
+
+.repository-date-col {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  text-align: right;
+}
+
+.repository-date {
+  font-size: x-small;
+  color: @icon-color;
+}
+
+.repository-desc-row {
+}
+
+.repository-desc-col {
+}
+
+.repository-desc {
+  overflow: hidden;
+  font-size: small;
+  font-style: italic;
+  color: @blue-color;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
+  min-height: 64px !important;
+  max-height: 64px !important;
+  height: 64px !important;
+}
+
+.repository-tags-row {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.repository-tags-col {
+  vertical-align: middle;
+}
+
+.repository-tags {
+}
+
+.repository-tag {
+  display: inline-table;
+  font-size: x-small;
+  margin-right: 2px;
+}
+
+.repository-buttons-row {
+  vertical-align: middle;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.repository-installs-col {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.repository-installs {
+  font-size: x-small;
+  color: @icon-color;
+
+  > button {
+    padding: 0px;
+  }
+}
+
+.repository-buttons-col {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.repository-button {
+  > button {
+  }
+}

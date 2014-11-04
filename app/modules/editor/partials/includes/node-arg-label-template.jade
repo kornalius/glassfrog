@@ -1,5 +1,0 @@
-td.node-arg-label-col(id="{{a.domId('label-col')}}", name="{{a.domName('label-col')}}", ng-click="edit(a, $event); $event.stopPropagation();", class="node-arg-label-{{a.getInputType()}}-col")
-
-  .node-arg-label(id="{{a.domId('label')}}", name="{{a.domName('label')}}", ng-show="!isEditing(a)", ng-class="a.getLabelClass()", ng-style="a.getLabelStyles()") {{a.displayValue()}}
-
-  .node-arg-input-col(ng-if="isEditing(a)", class="node-arg-input-{{a.getInputType()}}-col", ng-include="'/partials/node-arg-input-' + a.getInputType() + '-template.html'")

@@ -1,0 +1,37 @@
+.blog-post(ng-model="row")
+
+  .blog-post-header
+    .blog-post-title
+      h4.blog-post-title {{row.title}}
+
+    .text-muted
+      span.cic.cic-user32 &nbsp;
+      span.blog-post-author {{row.author}}
+
+      span.cic.cic-calendar &nbsp;
+      span.blog-post-date {{row.created_at | amCalendar}}
+
+  hr(style="margin: 4px 0px;")
+
+  .blog-post-body
+    .blog-post-content(marked="row.content")
+
+  hr(style="margin: 4px 0px;")
+
+  .blog-post-footer
+    .blog-post-likes
+      button.btn.btn-sm.btn-link.blog-post-like(type="button", ng-if="!row.liked", ng-click="like(row._id)")
+        span.cic.cic-heart6 &nbsp;{{row.totalLikes}}
+
+      button.btn.btn-sm.btn-link.blog-post-like(ng-if="row.liked", ng-click="dislike(row._id)")
+        span.cic.cic-heart23 &nbsp;{{row.totalLikes}}
+
+    .blog-post-tags
+      button.btn.btn-xs.btn-default.blog-post-tag(ng-repeat="t in row.tags")
+        span.text-muted {{t}}
+
+  hr(style="margin: 4px 0px;")
+
+  div(ng-repeat="comment in row.comments")
+    | {{comment.author}}
+    | {{comment.message}}

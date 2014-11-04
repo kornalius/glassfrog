@@ -4,7 +4,7 @@ div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName
   div(ng-init="subformInit()")
 
     .panel-subform
-      .panel.panel-default(container="form.container")
+      .panel.panel-info(container="form.container")
         .panel-heading.accordion-toggle.collapsed(data-toggle="collapse", data-target="#{{$parent.fields[fi].domId('input', $index)}}")
           .panel-title
             | {{$parent.fields[fi].label}}...
@@ -12,6 +12,9 @@ div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName
         .panel-collapse.collapse(id="{{$parent.fields[fi].domId('input', $index)}}")
           .panel-body
             .container-fluid
+              .row
+                include subform_head
+
               .row-fluid
                 div(ng-if="angular.isArray($parent.row[$parent.fn])")
                   ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in $parent.row[$parent.fn] track by $index", novalidate)
@@ -22,4 +25,7 @@ div(ng-controller="dynFormCtrl", ng-init="fi = {%fieldIndex%}; fn = '{%fieldName
                     // <row>
 
               .row-fluid
+
+              .row
+                include subform_foot
 
