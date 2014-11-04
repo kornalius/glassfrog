@@ -48,10 +48,10 @@ angular.module('layoutAttributes', [])
           input.removeAttr('icon')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon")
-          element.find('span').append("<button class='btn btn-default'><i class=\"cic cic-" + field.icon + "\"></i></button>")
+          element.find('span').append("<button class='btn btn-default'><i class=\"cic " + field.icon + "\"/></button>")
         else
           element.removeAttr('icon')
-          element.prepend("<i class=\"cic cic-" + field.icon + "\"/>&nbsp;")
+          element.prepend("<span class=\"cic cic-" + field.icon + "\"/>&nbsp;")
 
     break:
       type: 'layout'

@@ -2,7 +2,6 @@ mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 ownable = require('mongoose-ownable')
 async = require('async')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 TestSchema = mongoose.Schema(
   value:
@@ -41,7 +40,9 @@ TestSchema = mongoose.Schema(
 
 TestSchema.plugin(timestamps)
 TestSchema.plugin(ownable)
-TestSchema.plugin(filterPlugin)
+
+#TestSchema.set('toObject', {virtuals: true})
+#TestSchema.set('toJSON', {virtuals: true})
 
 TestSchema.method(
 )

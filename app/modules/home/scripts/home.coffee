@@ -20,6 +20,7 @@ angular.module('home', ['app'])
         url:'/home'
         icon: 'cic-home3'
         templateUrl: '/partials/home.html'
+        controller: 'HomeCtrl'
         sidebarHidden: true
         data:
           ncyBreadcrumbLabel: '<i class="cic cic-home3"/>'

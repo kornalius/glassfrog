@@ -23,7 +23,7 @@
             span.text-muted.cic.cic-refresh
 
         li
-          button.btn.btn-default.navbar-btn(type="button", ng-click="schema()")
+          button.btn.btn-default.navbar-btn(type="button", ng-click="getSchema()")
             span.text-muted.cic.cic-uniF002
 
         li
@@ -53,9 +53,9 @@
 
 .row.nodes#editor-content-main(ng-click="clearSelection()", perfect-scrollbar)
 
-  #editor-nodes-root
+  #editor-nodes-root(ng-cloak)
 
-    .nodes-tree-root(ui-tree="treeOptions", data-drag-delay="300", ng-cloak)
+    .nodes-tree-root(ui-tree="treeOptions", data-drag-delay="300")
 
       ol.nodes-tree(ng-model="rootNodes", id="tree-nodes-root", ui-tree-nodes="")
 

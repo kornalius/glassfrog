@@ -1,6 +1,6 @@
 module.exports = [
 
-  name: 'Databases'
+  name: 'Database.Category'
   desc: 'Database classes'
   extra:
     display: 'Database'

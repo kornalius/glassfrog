@@ -2,6 +2,14 @@ validations = require('composed-validations')
 ccValidator = require('cv-credit-card')(validations)
 
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  payment = path + 'payment'
+
   schema.add(
     payment:
       kind:
@@ -42,66 +50,63 @@ module.exports = ((schema, options) ->
           label: 'Transaction Amount'
           readOnly: true
           private: true
-  )
+  , path)
 
   if options && options.index
-    schema.path('payment').index(options.index)
+    schema.path(payment).index(options.index)
 
-  schema.set('toObject', {virtuals: true})
-  schema.set('toJSON', {virtuals: true})
-
-  schema.virtual('amount').get( ->
-    return (if @isTransaction then @payment.transaction.amount else 0.00)
+  schema.virtual(payment + '.amount').get( ->
+    return (if @get(payment).isTransaction then @get(payment + '.transaction.amount') else 0.00)
   )
 
-  schema.virtual('isTransaction').get( ->
-      @payment.transaction.date?
+  schema.virtual(payment + '.isTransaction').get( ->
+      @get(payment + '.transaction.date')?
   )
 
-  schema.virtual('isCreditCard').get( ->
-    @payment.kind in ['Visa', 'Master Card', 'American Express', 'Diners Club']
+  schema.virtual(payment + '.isCreditCard').get( ->
+    @get(payment + '.kind') in ['Visa', 'Master Card', 'American Express', 'Diners Club']
   )
 
-  schema.virtual('isPaypal').get( ->
-    @payment.kind == 'Paypal'
+  schema.virtual(payment + '.isPaypal').get( ->
+    @get(payment + '.kind') == 'Paypal'
   )
 
-  schema.virtual('isCheck').get( ->
-    @payment.kind == 'Check'
+  schema.virtual(payment + '.isCheck').get( ->
+    @get(payment + '.kind') == 'Check'
   )
 
-  schema.virtual('isCash').get( ->
-    @payment.kind == 'Cash'
+  schema.virtual(payment + '.isCash').get( ->
+    @get(payment + '.kind') == 'Cash'
   )
 
-  schema.virtual('isDebit').get( ->
-    @payment.kind == 'Debit'
+  schema.virtual(payment + '.isDebit').get( ->
+    @get(payment + '.kind') == 'Debit'
   )
 
-  schema.virtual('isGoogleWallet').get( ->
-    @payment.kind == 'Google Wallet'
+  schema.virtual(payment + '.isGoogleWallet').get( ->
+    @get(payment + '.kind') == 'Google Wallet'
   )
 
-  schema.virtual('isStripe').get( ->
-    @payment.kind == 'Stripe'
+  schema.virtual(payment + '.isStripe').get( ->
+    @get(payment + '.kind') == 'Stripe'
   )
 
   schema.method(
 
     obfuscateCreditCard: () ->
-      cc = @payment.number
+      cc = @get(payment + '.number')
       return '****-****-****-' + cc.slice(cc.length - 4, cc.length)
 
     isValidCreditCardNumber: () ->
-      cc = @payment.number
+      cc = @get(payment + '.number')
       validator = ccValidator({accepts: ['visa_master', 'amex']});
       return validator.test(cc) != false
 
     displayString: ->
-      if @isCreditCard()
-        "{0} owner: {1} #: {2} exp. date: {3}".format(@payment.kind.toProperCase(), @payment.owner, @obfuscateCreditCard(@payment.number), @payment.date)
-      else if @is_paypal()
-        "paypal: {0}".format(@payment.number)
+      if @get(payment).isCreditCard()
+        "{0} owner: {1} #: {2} exp. date: {3}".format(@get(payment + '.kind').toProperCase(), @get(payment + '.owner'), @obfuscateCreditCard(@get(payment + '.number')), @get(payment + '.date'))
+      else if @get(payment).is_paypal()
+        "paypal: {0}".format(@get(payment + '.number'))
       else
         ""
   )

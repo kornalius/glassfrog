@@ -19,6 +19,9 @@
       "available": "modules disponibles",
       "installed": "modules installés"
     },
+    "blog": {
+      "main": "blogue"
+    },
     "user": {
       "profile": "profile",
       "invoices": "factures"

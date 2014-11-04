@@ -24,7 +24,7 @@ angular.module('repository.installed', ['dynamicForm', 'editor'])
         gridpart_md: 3
         gridpart_sm: 2
         gridpart_xs: 1
-        layout: {type: 'grid', style: 'form-inline', include: 'repository-card-template'}
+        layout: {type: 'grid', style: 'form-inline'}
 
         fields: [
           fieldname: 'name'
@@ -104,6 +104,28 @@ angular.module('repository.installed', ['dynamicForm', 'editor'])
                 a.canPublish = false
                 a.canUnpublish = true
                 globals.showMessage("Module '" + a.name + "' was published successfully", 'success')
+                cb(true) if cb
+            )
+            .error((data, status) ->
+              globals.showMessage(data, 'danger')
+              cb(false) if cb
+            )
+        )
+
+    $scope.publishUpdate = (_id, cb) ->
+      a = $scope.installed.findRowById(_id)
+      if a
+        console.log "publishUpdate()", _id
+        dynModal.yesNoModal({title:'Publish Update...', caption:'Are you sure you want to publish an update for this module \'' + a.name + '\'?'}, (ok) ->
+          if ok
+            $http.get("/api/module/call/publishupdate/" + _id)
+            .success((ok) ->
+              if ok
+                a.published = true
+                a.canPublish = false
+                a.canPublishUpdate = false
+                a.canUnpublish = true
+                globals.showMessage("Repository '" + a.name + "' was updated successfully", 'success')
                 cb(true) if cb
             )
             .error((data, status) ->

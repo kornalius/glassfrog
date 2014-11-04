@@ -145,7 +145,7 @@ ItemSchema.method(
           pl = []
           if sales
             for s in sales
-              for l in s.lines
+              for l in s._lines
                 if l.qty
                   pl.push(l)
           cb(pl) if cb
@@ -175,7 +175,7 @@ ItemSchema.method(
           pl = []
           if sales
             for s in sales
-              for l in s.lines
+              for l in s._lines
                 if l.qty
                   pl.push(l)
           cb(pl) if cb
@@ -205,7 +205,7 @@ ItemSchema.method(
           pl = []
           if sales
             for s in sales
-              for l in s.lines
+              for l in s._lines
                 if l.qty
                   pl.push(l)
           cb(pl) if cb
@@ -236,7 +236,7 @@ ItemSchema.method(
           pl = []
           if purchases
             for s in purchases
-              for l in s.lines
+              for l in s._lines
                 if l.received_full
                   pl.push(l)
           cb(pl) if cb
@@ -267,7 +267,7 @@ ItemSchema.method(
           pl = []
           if purchases
             for s in purchases
-              for l in s.lines
+              for l in s._lines
                 if !l.received_full
                   pl.push(l)
           cb(pl) if cb

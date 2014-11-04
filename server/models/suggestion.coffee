@@ -1,6 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 SuggestionSchema = mongoose.Schema(
 
@@ -35,6 +34,8 @@ SuggestionSchema = mongoose.Schema(
 )
 
 SuggestionSchema.plugin(timestamps)
-SuggestionSchema.plugin(filterPlugin)
+
+#SuggestionSchema.set('toObject', {virtuals: true})
+#SuggestionSchema.set('toJSON', {virtuals: true})
 
 module.exports = mongoose.model('Suggestion', SuggestionSchema)

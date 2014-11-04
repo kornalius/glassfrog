@@ -3,8 +3,9 @@ angular.module('iconspickerAttributes', [])
 .factory('iconspickerAttributes', [
   'dynForm'
   '$http'
+  '$timeout'
 
-  (dynForm, $http) ->
+  (dynForm, $http, $timeout) ->
 
     iconspicker:
       type: 'validator'
@@ -25,6 +26,10 @@ angular.module('iconspickerAttributes', [])
 #              showFooter: true
 #              searchInFooter: true
               mustAccept: false
+            ).on('iconpickerShown', (e) ->
+              p = e.iconpickerInstance.popover.find('.iconpicker-items')
+              p.scrollTop(0)
+              p.scrollTop(p.find('.iconpicker-item.iconpicker-selected').position().top - (p.height() / 2))
             )
         )
 

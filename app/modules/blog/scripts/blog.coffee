@@ -1,92 +1,38 @@
 'use strict'
 
-angular.module('dashboard', ['app', 'dashboard.models', 'dashboard.lineChart', 'dashboard.barChart', 'dashboard.pieChart', 'dashboard.topNChart'])
+angular.module('blog', ['app'])
 
-.controller('DashboardCtrl', [
+.controller('BlogCtrl', [
   '$scope'
   '$rootScope'
   'Globals'
-  '$interval'
-  '$window'
-  'DashboardRestModel'
+  'Rest'
+  'dynForm'
 
-($scope, $rootScope, globals, $interval, $window, DashboardRestModel) ->
+  ($scope, $rootScope, globals, Rest, dynForm) ->
 
-  $scope.dashboardOptions =
-    widgetButtons: true
+    $scope.title = "Half Full Glass"
+    $scope.description = "Glassfrog's official blog"
 
-    widgetDefinitions: [
+    $scope.posts = new Rest('blog')
+    $scope.posts.find({l: 10, p: 'comments', sort: '-created_at'}, ->
+      blogForm =
+        name: "blogForm"
+        layout: {type: 'grid', style: "form-inline"}
 
-      name: 'Line'
-      title: 'Line Chart'
-      directive: 'dashboard-line-chart'
-      dataModelType: DashboardRestModel
-      dataAttrName: 'data'
-      dataModelArgs:
-        limit: 50
-        interval: 5000
-        valueField: '@total'
-        type: 'count'
-        model: 'test'
-      storage: $window.localStorage
-      storageId: 'rest-line-chart'
-      style:
-        width: '33%'
-    ,
+        fields: [
+          fieldname: 'title'
+          label: 'Blog'
+          type: 'include'
+          template: '/partials/blog-post-template.html'
+          controller: 'BlogCtrl'
+        ]
 
-      name: 'Bar'
-      title: 'Bar Chart'
-      directive: 'dashboard-bar-chart'
-      dataModelType: DashboardRestModel
-      dataAttrName: 'data'
-      dataModelArgs:
-        limit: 50
-        interval: 5000
-        valueField: '@total'
-        type: 'count'
-        model: 'test'
-      storage: $window.localStorage
-      storageId: 'rest-bar-chart'
-      style:
-        width: '33%'
-    ,
+      dynForm.build($scope, blogForm, $scope.posts, '#blogpost')
+    )
 
-      name: 'Pie'
-      title: 'Pie Chart'
-      directive: 'dashboard-pie-chart'
-      dataModelType: DashboardRestModel
-      dataAttrName: 'data'
-      dataModelArgs:
-        limit: 50
-        interval: 5000
-        type: 'list'
-        model: 'test'
-      storage: $window.localStorage
-      storageId: 'rest-pie-chart'
-      style:
-        width: '33%'
-    ,
-
-      name: 'TopN'
-      title: 'TopN List'
-      directive: 'dashboard-top-n-chart'
-      dataModelType: DashboardRestModel
-      dataAttrName: 'data'
-      dataModelArgs:
-        limit: 5
-        interval: 5000
-        type: 'top'
-        model: 'test'
-      storage: $window.localStorage
-      storageId: 'rest-topN-chart'
-      style:
-        width: '33%'
-
-    ]
-
-    defaultWidgets: [
-    ]
-
+    $scope.like = () ->
+      console.log "ok"
 ])
 
 .config([
@@ -95,16 +41,21 @@ angular.module('dashboard', ['app', 'dashboard.models', 'dashboard.lineChart', '
   ($stateProvider) ->
 
     $stateProvider
-      .state('dashboard',
+      .state('blog',
         abstract: true
-        url:'/dashboard'
-        templateUrl: '/partials/dashboard.html'
+        url:'/blog'
+        templateUrl: '/partials/blog.html'
       )
 
-      .state('dashboard.main',
+      .state('blog.main',
         url:''
-        icon: 'cic-dashboard2'
+        icon: 'cic-pen3'
         data:
-          ncyBreadcrumbLabel: 'Dashboard'
+          root: 'blog'
+          ncyBreadcrumbLabel: 'Blog'
+        views:
+          main:
+            templateUrl: '/partials/blog.main.html'
+            controller: 'BlogCtrl'
       )
 ])

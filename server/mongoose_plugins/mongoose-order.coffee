@@ -1,12 +1,20 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  order = path + '_order'
+
   schema.add(
     _order:
       type: Number
       default: 1
-  )
+  , path)
 
   if options && options.index
-    schema.path('_order').index(options.index)
+    schema.path(order).index(options.index)
 
   schema.method(
     at: (index, cb) ->
@@ -17,19 +25,29 @@ module.exports = ((schema, options) ->
         i = index
 
       if i.length
-        @model.find({ _order: {$in: i} }).exec((err, indexes) ->
+        f = {}
+        f[order] = {$in: i}
+        @model.find(f).exec((err, indexes) ->
           cb(indexes) if cb
         )
       else
         cb(null) if cb
 
     insert: (index, count, cb) ->
-      @model.update({ _order: {$gte: index} }, {$inc: { _order: count }}, {multi:true}).exec((err) ->
+      c = {}
+      c[order] = {$gte: index}
+      a = {$inc: {}}
+      a['$inc'][order] = count
+      @model.update(c, a, {multi:true}).exec((err) ->
         cb() if cb
       )
 
     delete: (index, count, cb) ->
-      @model.update({ _order: {$gte: index} }, {$dec: { _order: count }}, {multi:true}).exec((err) ->
+      c = {}
+      c[order] = {$gte: index}
+      a = {$dec: {}}
+      a['$dec'][order] = count
+      @model.update(c, a, {multi:true}).exec((err) ->
         cb() if cb
       )
 
@@ -37,8 +55,12 @@ module.exports = ((schema, options) ->
       that = @
       at([from, to], (err, ids) ->
         if !err and ids.length == 2
-          that.model.update(ids[0].id, {$set: {_order: to}})
-          that.model.update(ids[1].id, {$set: {_order: from}})
+          t = {$set: {}}
+          t['$set'][order] = to
+          f = {$set: {}}
+          f['$set'][order] = from
+          that.model.update(ids[0].id, t)
+          that.model.update(ids[1].id, f)
         cb() if cb
       )
 
@@ -48,8 +70,8 @@ module.exports = ((schema, options) ->
         po = 1000000
         if records
           for r in records
-            if r._order < po
-              po = r._order
+            if r[order] < po
+              po = r[order]
               p = r
         cb(p) if cb
       )
@@ -60,8 +82,8 @@ module.exports = ((schema, options) ->
         po = 0
         if records
           for r in records
-            if r._order < @node._order and r._order > po
-              po = r._order
+            if r[order] < @[order] and r[order] > po
+              po = r[order]
               p = r
         cb(p) if cb
       )
@@ -72,8 +94,8 @@ module.exports = ((schema, options) ->
         po = 1000000
         if records
           for r in records
-            if r._order > @node._order and r._order < po
-              po = r._order
+            if r[order] > @[order] and r[order] < po
+              po = r[order]
               p = r
         cb(p) if cb
       )
@@ -84,8 +106,8 @@ module.exports = ((schema, options) ->
         po = 0
         if records
           for r in records
-            if r._order > po
-              po = r._order
+            if r[order] > po
+              po = r[order]
               p = r
         cb(p) if cb
       )

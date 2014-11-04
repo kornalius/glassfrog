@@ -43,7 +43,7 @@ ComponentClass =
         c.$data._json = _.cloneDeep(c.extra)
 
       code = c.$data._json.code
-      if code?
+      if code
         for k of code
           try
             c.$data._code[k] = eval('(' + code[k] + ')')
@@ -132,13 +132,14 @@ ComponentClass =
           cmps = components
         else
           cmps = ComponentClass.VCGlobal.components
-        for cc in cmps
-          if cc != @ and cc.isVisible()
-            if cc.isInCategory(n) and l.indexOf(cc) == -1
-              l.push(cc)
-              if cc.isCategory()
-#                debugger
-                cc.$data._components = cc.getComponents(cmps)
+        if cmps
+          for cc in cmps
+            if cc != @ and cc.isVisible()
+              if cc.isInCategory(n) and l.indexOf(cc) == -1
+                l.push(cc)
+                if cc.isCategory()
+  #                debugger
+                  cc.$data._components = cc.getComponents(cmps)
       return l
 
     c.getDesc = () ->
@@ -195,7 +196,7 @@ ComponentClass =
       @kindOf('Object')
 
     c.isRef = () ->
-      @kindOf('ObjectRef')
+      @kindOf('Object.Ref')
 
     c.isProperty = () ->
       @kindOf('Property')
@@ -220,7 +221,7 @@ ComponentClass =
           return i.hasEnum()
       return l and l.length
 
-    c.getEnum = (node, asObject) ->
+    c.getEnum = (node, asObject, cb) ->
       l = []
       e = @$data and @$data._json.enum
       if e
@@ -232,7 +233,7 @@ ComponentClass =
         i = @getInherit()
         if i
           l = i.getEnum(node, asObject)
-      return ComponentClass.VCGlobal.enumToList(l, node, asObject)
+      return ComponentClass.VCGlobal.enumToList(l, node, asObject, cb)
 
     c.hasArgs = () ->
       if @$data and @$data._json.args
@@ -247,30 +248,27 @@ ComponentClass =
 
     c.getArgs = () ->
       if @$data and @$data._args
-        return @$data._args
+        na = @$data._args
       else
         if @$data and @$data._json.args
           na = {}
-          if @$data and @$data._json.args
-            for k of @$data._json.args
-              a = _.cloneDeep(@$data._json.args[k])
-              ComponentClass.VCArg.setData(k, a, null)
-              na[k] = a
-          if @$data
-            @$data._args = na
-          return na
-        else
-          i = @getInherit()
-          if i
-            return i.getArgs()
+          for k of @$data._json.args
+            a = _.cloneDeep(@$data._json.args[k])
+            ComponentClass.VCArg.setData(k, a, null)
+            na[k] = a
+          @$data._args = _.clone(na)
+      i = @getInherit()
+      if i
+        na = _.extend({}, na, i.getArgs())
+      return na
 
     c.argToString = (a, user) ->
-      if type(a) is 'string'
-        a = @getArg(a)
       if a
-        return a.getName()
-      else
-        return ""
+        if type(a) is 'string'
+          a = @getArg(a)
+        if a
+          return a.getName()
+      return ""
 
     c.argsToString = (user) ->
       d = []
@@ -278,10 +276,12 @@ ComponentClass =
         d.push(@argToString(a, user))
       return d.join(', ')
 
-    c.argsToArray = () ->
+    c.argsToArray = (display) ->
       d = []
-      for k of @getArgs()
-        d.push(@getArgs()[k])
+      aa = @getArgs()
+      for k of aa
+        if !display or aa[k].shouldDisplay()
+          d.push(aa[k])
       return d
 
     c.getAccepts = () ->
@@ -309,30 +309,43 @@ ComponentClass =
             l = l.concat(i.getInheritedAccepts())
         else
           l.push(a)
+      if @$data and !@$data._json.accepts  # inherits by default if no accepts[] defined
+        i = @getInherit()
+        if i
+          l = i.getInheritedAccepts()
       return l
 
     c.doAccept = (node, cc) ->
       cc = ComponentClass.VCGlobal.findComponent(cc)
       if cc
+#        console.log "accepts", @name, @getInheritedAccepts().map((i) -> (if i.component then i.component.name else ''))
         for a in @getInheritedAccepts()
           if a.component
             if a.strict
               ok = (a.component.getName() == cc.getName()) or (!a.component and !node)
             else
               ok = cc.kindOf(a.component.name) or (!a.component and !node)
+
             if ok
+#              console.log "a", a.component.getName(), "strict", a.strict, "reject", a.reject, "multi", a.multi, "unique", a.unique
               if a.reject
-                continue
-              ch = node.childrenOfKind(a.component.name)
-              if ok and ch.length
-                if !a.multi
-                  ok = false
-                else if a.unique
-                  ccn = cc.getName()
-                  for n in ch
-                    if n.getComponent().getName() == ccn
-                      ok = false
-                      break
+                ok = false
+#                console.log "reject"
+              else
+                ch = node.childrenOfKind(a.component.name)
+                if ch and ch.length
+#                  console.log "ch", ch.map((n) -> n.getComponent().getName())
+                  if !a.multi
+                    ok = false
+#                    console.log "!multi"
+                  else if a.unique
+                    ccn = cc.getName()
+#                    console.log "unique", ccn
+                    for n in ch
+                      if n.getComponent().getName() == ccn
+                        ok = false
+#                        console.log "!unique"
+                        break
 
             if ok
               return true
@@ -378,36 +391,31 @@ ComponentClass =
       @getDefaults().length
 
     c.isLocked = () ->
-      if @hasOption('!')
+      @hasOption('!')
+#      if @hasOption('!')
+#        return true
+#      else
+#        i = @getInherit()
+#        if i
+#          return i.isLocked()
+#        else
+#          return false
+
+    c.isSystem = () ->
+      if @hasOption('s')
         return true
       else
         i = @getInherit()
         if i
-          return i.isLocked()
+          return i.isSystem()
         else
           return false
 
     c.isVisible = () ->
       !@hasOption('h')
-#      if !@hasOption('h')
-#        return true
-#      else
-#        i = @getInherit()
-#        if i
-#          return i.isVisible()
-#        else
-#          return false
 
     c.isFolder = () ->
       @hasOption('f')
-#      if @hasOption('f')
-#        return true
-#      else
-#        i = @getInherit()
-#        if i
-#          return i.isFolder()
-#        else
-#          return false
 
     c.isParentIcons = () ->
       if @hasOption('p')
@@ -419,18 +427,26 @@ ComponentClass =
         else
           return false
 
-    c.canEdit = () ->
-      return !@isLocked()
+    c.kinds = () ->
+      k = []
+      i = @getInherit()
+      if i
+        k = k.concat(i.kinds())
+      k.push(@getName())
+      return k
 
     c.kindOf = (name) ->
-      if name instanceof Array
-        for n in name
-          if @kindOf(n)
-            return true
-        return false
-      else
-        i = @getInherit()
-        return @getName() == name.toLowerCase() or i?.kindOf(name)
+      if name
+        if name instanceof Array
+          for n in name
+            if @kindOf(n)
+              return true
+        else
+          if name.length and name[0] == '!'
+            return !_.contains(@kinds(), name.substr(1).toLowerCase())
+          else
+            return _.contains(@kinds(), name.toLowerCase())
+      return false
 
     c.isLink = () ->
       @hasOption('l')
@@ -516,63 +532,60 @@ ComponentClass =
         else
           return false
 
-    c.code = (name) ->
+    c.code = (codetype, stage) ->
       if @$data and @$data._code
-        names = name.split(',')
-        for n in names
-          if @$data._code[n]
-            return @$data._code[n]
+        if stage
+          stage = "_" + stage.toLowerCase()
+        else
+          stage = ''
+        ct = codetype
+        if ct and (codetype == 'server' or codetype == 'client')
+          ct += ',client_server'
+        codes = []
+        for n in ct.split(',')
+          if @$data._code[n + stage]
+            codes.push(@$data._code[n + stage])
+        if codes.length > 1
+          return codes
+        else if codes.length
+          return codes[0]
+
       i = @getInherit()
       if i
-        return i.code(name)
-      else
-        return null
+        return i.code(codetype, stage)
 
-    c.hasCode = (name) ->
-      @code(name) != null
+      return null
 
-    c.renderCode = () ->
-      @code("render")
-
-    c.hasRenderCode = () ->
-      @renderCode() != null
+    c.hasCode = (codetype, stage) ->
+      @code(codetype, stage) != null
 
     c.render = (node) ->
-      r = @renderCode()
-      if r
+      c = @code('render')
+      if c
         that = @
         window.setTimeout(->
-          r.call(that, node)
+          c.apply(that, [node])
         )
 
-    c.hasClientCode = () ->
-      @clientCode() != null
+    c.generateCode = (out, node, codetype, user, stage, args) ->
+      if stage and type(stage) is 'array'
+        args = stage
+        stage = null
 
-    c.clientCode = () ->
-      @code("client,both")
+      if !args
+        args = []
 
-    c.hasServerCode = () ->
-      @serverCode() != null
-
-    c.serverCode = () ->
-      @code("server,both")
-
-    c.generateCode = (node, client, user) ->
-      s = ""
-      if client
-        g = @clientCode()
-        if g
-          s = g.call(@, node)
-      else
-        g = @serverCode()
-        if g
-          s = g.call(@, node, user)
-      if !s
-        s = ''
-      return s
+      codes = @code(codetype, stage)
+      if codes
+        if type(codes) != 'array'
+          codes = [codes]
+        if node.id
+          out.append "/*{0}*/".format(node.id())
+        for c in codes
+          c.apply(@, [out, node, user].concat(args))
 
     c.newContext = () ->
-      return @kindOf(['Object', 'ObjectRef'])
+      return @kindOf(['Object', 'Object.Ref'])
 
     c.domName = (type) ->
       if !type?
@@ -599,21 +612,19 @@ ComponentClass =
       return null
 
     c.setDefaults = (node) ->
-      if @hasDefaults()
-        for d in @getDefaults()
-          if d.value?
-            _name = d.value
-          else
-            _name = null
-          nn = d.component.add(_name, node, module)
-          if nn and d.args
-            for k in Object.keys(d.args)
-              nn.setArg(k, d.args[k])
+      for d in @getDefaults()
+        if d.value?
+          _name = d.value
+        else
+          _name = null
+        nn = d.component.add(_name, node, module)
+        if nn and d.args
+          for k in _.keys(d.args)
+            nn.setArg(k, d.args[k])
 
       if @hasArgs()
-        for a in @argsToArray()
+        for a in @argsToArray(false)
           node.setArg(a.getName(), a.getDefault())
-
 
     c.newNode = (name, parent, module, args) ->
       if !name?
@@ -636,7 +647,7 @@ ComponentClass =
       @setDefaults(n)
 
       if args
-        for k in Object.keys(args)
+        for k in _.keys(args)
           n.setArg(k, args[k])
 
       n.setNew(true)
@@ -663,7 +674,7 @@ ComponentClass =
           c =
             name: n.id()
             extra:
-              category: 'ObjectsRef'
+              category: 'Object.Ref'
               options: 'l'
               inherit: (if n.getComponent() then n.getComponent().name + 'Ref' else "")
           @make(c)
@@ -671,14 +682,14 @@ ComponentClass =
 
     if @VCGlobal.modules.rows
       for m in @VCGlobal.modules.rows
-#          if m.$data and (!selected or (selected.getComponent() and selected.getComponent().doAccept(selected, 'ModuleRef')))
+#          if m.$data and (!selected or (selected.getComponent() and selected.getComponent().doAccept(selected, 'Module.Ref')))
         if m.$data
           c =
             name: m.id()
             extra:
-              category: 'ModulesRef'
+              category: 'Module.Ref.Category'
               options: 'l'
-              inherit: 'ModuleRef'
+              inherit: 'Module.Ref'
           @make(c)
           l.push(c)
 

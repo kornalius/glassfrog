@@ -1,9 +1,18 @@
 module.exports = [
 
+  name: 'Statement.Category'
+  desc: 'Statement'
+  extra:
+    display: 'Statement'
+    options: 'c'
+    icon: 'cic-cmd2'
+    color: 'orange'
+,
+
   name: 'Statement'
   desc: 'Statement'
   extra:
-    options: 'cp'
+    options: 'h!'
     icon: 'cic-cmd2'
     color: 'orange'
 ,
@@ -11,7 +20,7 @@ module.exports = [
   name: 'Condition'
   desc: 'Conditional execution'
   extra:
-    category: 'Statement'
+    category: 'Statement.Category'
     options: 'p'
     inherit: 'Statement'
     icon: 'cic-flow-cascade'
@@ -50,7 +59,6 @@ module.exports = [
   desc: 'If lesser or equal'
   extra:
     display: 'If lesser or equal'
-    category: 'Statement'
     inherit: 'Condition'
     icon: 'cic-smaller'
 ,
@@ -75,7 +83,6 @@ module.exports = [
   desc: 'Loop until condition'
   extra:
     display: 'Loop until'
-    category: 'Statement'
     options: 'p'
     inherit: 'Statement'
     accepts: ['Statement+']

@@ -30,9 +30,6 @@ module.exports = [
 #        component: 'String'
 #        default: 'myroute'
 #    code:
-#      server: (node, user) ->
-#          Handlebars.compile('
-#
-#          ')()
+#      server: (out, node, user) ->
 
 ]

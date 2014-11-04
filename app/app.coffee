@@ -9,6 +9,7 @@ require.config(
 
 moduleNames = [
   'home'
+  'blog'
   'todo'
   'view1'
   'view2'
@@ -81,6 +82,7 @@ app = angular.module('app', [
   'nvd3ChartDirectives'
   'ui.dashboard'
   'pagination.services'
+  'querybuilder.services'
   'ncy-angular-breadcrumb'
   'hc.marked'
 
@@ -116,8 +118,6 @@ app = angular.module('app', [
   ($rootScope, globals) ->
     globals.modules = modules
     $rootScope.globals = globals
-
-    Swag.registerHelpers(Handlebars)
 
 #    $rootScope.$on('$locationChangeSuccess', () ->
 #      console.log "$locationChangeSuccess"

@@ -1,11 +1,11 @@
 module.exports = [
 
-  name: 'Fields'
-  desc: 'Fields'
+  name: 'Field.Category'
+  desc: 'Field'
   extra:
     display: 'Field'
     options: 'c'
-    category: 'Databases'
+    category: 'Database.Category'
     icon: 'cic-uniF6CA'
     color: 'pink'
 ,
@@ -13,7 +13,7 @@ module.exports = [
   name: 'Field'
   desc: 'Field definition'
   extra:
-    category: 'Fields'
+    category: 'Field.Category'
     inherit: 'Object'
     accepts: ['Color', 'Font+', 'Field.Type', 'Field.Attribute+', 'Field.Validator+']
     icon: 'cic-uniF6CA'
@@ -21,45 +21,47 @@ module.exports = [
     args:
       'options':
         desc: 'Specify options for the field'
-        multi: ['Required', 'ReadOnly', 'Private', 'Encrypted', 'Indexed', 'Populated', 'Unselected', 'Trimmed', 'FullTextSearch', 'Password']
+        multi: ['Required', 'ReadOnly', 'Private', 'Indexed', 'Populated', 'Unselected']
         default: []
     code:
       render: (node) ->
         if node
           for n in node.children()
             c = n.getComponent()
-            if c and c.hasRenderCode()
+            if c
               c.render(node)
 
-      server: (node, user) ->
-        Handlebars.compile('{{> field_server}}')(
-          component: @
-          node: node
-          name: node.varName()
-          index: (if node.is('options', 'indexed') then 'true' else 'false')
-          required: (if node.is('options', 'required') then 'true' else 'false')
-          private: (if node.is('options', 'private') then 'true' else 'false')
-          readonly: (if node.is('options', 'readonly') then 'true' else 'false')
-          select: (if node.is('options', 'unselected') then 'false' else 'true')
-          populate: (if node.is('options', 'populated') then 'true' else 'false')
-          trim: (if node.is('options', 'trimmed') then 'true' else 'false')
-          password: (if node.is('options', 'password') then 'true' else 'false')
-          encrypt: (if node.is('options', 'encrypted') then 'true' else 'false')
+      server: (out, node, user) ->
+        out.jsonBlock("'{0}':".format(node.varName()), (out) ->
+          out.nodes node, 'server', user, 'Field.Type,Field.Attribute,Field.Validator'
+          if node.is('options', 'indexed')
+            out.line "index: true"
+          if node.is('options', 'required')
+            out.line "required: true"
+          if node.is('options', 'private')
+            out.line "'private': true"
+          if node.is('options', 'readonly')
+            out.line "readOnly: true"
+          if node.is('options', 'unselected')
+            out.line "select: false"
+          if node.is('options', 'populated')
+            out.line "populate: true"
         )
 ,
 
-  name: 'FieldRef'
+  name: 'Field.Ref'
   desc: 'Field reference'
   extra:
     options: 'h!'
-    inherit: 'ObjectRef'
+    inherit: 'Object.Ref'
     icon: 'cic-uniF6CA'
 ,
 
-  name: 'Field.Types'
+  name: 'Field.Type.Category'
   desc: 'Field data types'
   extra:
-    category: 'Fields'
+    display: 'Type'
+    category: 'Field.Category'
     options: 'c'
     color: 'lightpink'
     icon: 'cic-type2'
@@ -68,14 +70,14 @@ module.exports = [
   name: 'Field.Type'
   desc: 'Field data type'
   extra:
-    category: 'Field.Types'
+    category: 'Field.Type.Category'
     inherit: 'Object'
     options: 'hp!'
     color: 'lightpink'
     icon: 'cic-type2'
     code:
-      server: (node, user) ->
-        Handlebars.compile('type: {{type}}')({type: node.displayName()})
+      server: (out, node, user) ->
+        out.line 'type: {0}'.format(node.displayName())
 ,
 
   name: 'Field.Text'
@@ -84,8 +86,8 @@ module.exports = [
     icon: 'cic-uniF4E8'
     inherit: 'Field.Type'
     code:
-      both: (node, user) ->
-        return 'type: String'
+      client_server: (out, node, user) ->
+        out.line 'type: String'
 ,
 
   name: 'Field.Number'
@@ -122,8 +124,8 @@ module.exports = [
     icon: 'cic-coupon'
     inherit: 'Field.Type'
     code:
-      both: (node, user) ->
-        return 'type: mongoosePercent'
+      client_server: (out, node, user) ->
+        out.line 'type: mongoosePercent'
 ,
 
   name: 'Field.Email'
@@ -131,6 +133,74 @@ module.exports = [
   extra:
     icon: 'cic-email22'
     inherit: 'Field.Type'
+,
+
+  name: 'Field.Encrypted'
+  desc: 'Encrypt field'
+  extra:
+    icon: 'cic-security2'
+    inherit: 'Field.Type'
+    args:
+      'method':
+        component: 'Literal.String'
+        enum: ['pbkdf2', 'bcrypt']
+        default: 'pbkdf2'
+      'iterations':
+        'when': (node) ->
+          node.argIsEqual('method', 'pbkdf2')
+        component: 'Literal.Number'
+        default: 4096
+      'keyLength':
+        'when': (node) ->
+          node.argIsEqual('method', 'pbkdf2')
+        component: 'Literal.Number'
+        default: 32
+      'saltLength':
+        'when': (node) ->
+          node.argIsEqual('method', 'pbkdf2')
+        component: 'Literal.Number'
+        default: 64
+      'saltRounds':
+        'when': (node) ->
+          node.argIsEqual('method', 'bcrypt')
+        component: 'Literal.Number'
+        default: 10
+      'seedLength':
+        'when': (node) ->
+          node.argIsEqual('method', 'bcrypt')
+        component: 'Literal.Number'
+        default: 20
+    code:
+      client_server: (out, node, user) ->
+        method = node.getArgValueOrDefault('method')
+        out.list(null, ',', null, (out) ->
+          out.line "type: mongoose.SchemaTypes.Encrypted"
+          out.line "method: '{0}'".format(method)
+          out.jsonBlock("encryptOptions:", (out) ->
+            if method == 'pbkdf2'
+              out.line "iterations: {0}".format(node.getArg('iterations'))
+              out.line "keyLength: {0}".format(node.getArg('keyLength'))
+              out.line "saltLength: {0}".format(node.getArg('saltLength'))
+            else if method == 'bcrypt'
+              out.line "saltRounds: {0}".format(node.getArg('saltRounds'))
+              out.line "seedLength: {0}".format(node.getArg('seedLength'))
+          )
+        )
+,
+
+  name: 'Field.Reference'
+  desc: 'Field referencing another field'
+  extra:
+    icon: 'cic-link42'
+    inherit: 'Field.Type'
+    args:
+      'schema':
+        component: 'Literal.String'
+        enum: ['User', 'Module', 'Repository', '@Schema']
+    code:
+      client_server: (out, node, user) ->
+        out.line "type: mongoose.SchemaTypes.ObjectId,"
+        out.line "ref: '{0}'".format(node.getArgValue('schema'))
 ,
 
 #  name: 'Field.Validators'
@@ -151,103 +221,65 @@ module.exports = [
 #    icon: 'cic-check'
 #    color: 'red'
 #,
-#
-#  name: 'Field.Required'
-#  desc: 'Required'
-#  extra:
-#    icon: 'cic-spam2'
-#    inherit: 'Field.Validator'
-#    code:
-#      both: (node, user) ->
-#        Handlebars.compile('required: true')({})
-#,
-#
-#  name: 'Field.ReadOnly'
-#  desc: 'Read-only'
-#  extra:
-#    icon: 'cic-lock32'
-#    inherit: 'Field.Validator'
-#    code:
-#      both: (node, user) ->
-#        Handlebars.compile('readOnly: true')({})
-#,
 
-  name: 'Field.Attributes'
+  name: 'Field.Attribute.Category'
   desc: 'Field Attributes'
   extra:
-    category: 'Fields'
+    display: 'Attribute'
+    category: 'Field.Category'
     options: 'c'
     icon: 'cic-tools'
+    color: 'gray'
 ,
 
   name: 'Field.Attribute'
   desc: 'Field attribute'
   extra:
-    category: 'Field.Attributes'
+    category: 'Field.Attribute.Category'
     inherit: 'Object'
     options: 'hp!'
     icon: 'cic-tools'
 ,
 
-#  name: 'Field.Encrypted'
-#  desc: 'Encrypt field'
-#  extra:
-#    icon: 'cic-security2'
-#    inherit: 'Field.Attribute'
-#    code:
-#      both: (node, user) ->
-#        return 'encrypted: true'
-#,
-#
-#  name: 'Field.Index'
-#  desc: 'Indexed field'
-#  extra:
-#    icon: 'cic-uniF6CD'
-#    inherit: 'Field.Attribute'
-#    code:
-#      both: (node, user) ->
-#        return 'index: true'
-#,
-#
-#  name: 'Field.Populate'
-#  desc: 'Populate field'
-#  extra:
-#    icon: 'cic-document-fill'
-#    inherit: 'Field.Attribute'
-#    code:
-#      both: (node, user) ->
-#        return 'populate: true'
-#,
-#
-#  name: 'Field.Trim'
-#  desc: 'Always trim field value before storing in document.'
-#  extra:
-#    icon: 'cic-cut2'
-#    inherit: 'Field.Attribute'
-#    code:
-#      both: (node, user) ->
-#        return 'trim: true'
-#,
-#
-#  name: 'Field.Private'
-#  desc: 'Private field. Will not be transmitted to the client side.'
-#  extra:
-#    icon: 'cic-eye-close'
-#    inherit: 'Field.Attribute'
-#    code:
-#      both: (node, user) ->
-#        Handlebars.compile('private: true')({})
-#,
-#
-#  name: 'Field.FullTextSearch'
-#  desc: 'Mark this field has being able to be full text searchable.'
-#  extra:
-#    icon: 'cic-eye-zoom-in'
-#    inherit: 'Field.Attribute'
-#    code:
-#      generate: (node, user) ->
-#        return null
-#,
+  name: 'Field.FullTextSearch'
+  desc: 'Mark this field has being able to be full text searchable.'
+  extra:
+    icon: 'cic-eye-open'
+    inherit: 'Field.Attribute'
+    code:
+      client_server: (out, node, user) ->
+        out.append('')
+,
+
+  name: 'Field.Trim'
+  desc: 'Always trim field value before storing in document.'
+  extra:
+    icon: 'cic-cut2'
+    inherit: 'Field.Attribute'
+    code:
+      client_server: (out, node, user) ->
+        out.line 'trim: true'
+,
+
+  name: 'Field.Uppercase'
+  desc: 'Makes sure the value is uppercase before writing to the database.'
+  extra:
+    icon: 'cic-uniF507'
+    inherit: 'Field.Attribute'
+    code:
+      client_server: (out, node, user) ->
+        out.line 'uppercase: true'
+,
+
+  name: 'Field.Lowercase'
+  desc: 'Makes sure the value is lowercase before writing to the database.'
+  extra:
+    icon: 'cic-uniF506'
+    inherit: 'Field.Attribute'
+    code:
+      client_server: (out, node, user) ->
+        out.line 'lowercase: true'
+,
 
   name: 'Field.Round'
   desc: 'Round field value before storing in document.'
@@ -259,8 +291,8 @@ module.exports = [
         component: 'Literal.Number'
         desc: 'Number of decimals'
     code:
-      both: (node, user) ->
-        Handlebars.compile('round: {{value}}')({value: node.getArgValueOrDefault('round')})
+      client_server: (out, node, user) ->
+        out.line 'round: {0}'.format(node.getArgValueOrDefault('round'))
 ,
 
   name: 'Field.Label'
@@ -269,7 +301,7 @@ module.exports = [
     icon: 'cic-font3'
     inherit: 'Field.Attribute'
     code:
-      both: (node, user) ->
-        Handlebars.compile('label: \'{{caption}}\'')({caption: node.getName()})
+      client_server: (out, node, user) ->
+        out.line 'label: \'{0}\''.format(node.getName())
 
 ]

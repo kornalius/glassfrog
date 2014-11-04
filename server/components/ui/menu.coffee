@@ -1,10 +1,10 @@
 module.exports = [
 
-  name: 'Menus'
+  name: 'Menu.Category'
   desc: 'Menu controls'
   extra:
     display: 'Menu'
-    category: 'UIs'
+    inherit: 'Page'
     options: 'c'
     icon: 'cic-dropmenu'
     color: 'lightpurple'
@@ -14,7 +14,7 @@ module.exports = [
   desc: 'Navigation menu bar'
   extra:
     display: 'Menu Bar'
-    category: 'Menus'
+    category: 'Menu.Category'
     inherit: 'UI'
     options: '!'
     icon: 'cic-dropmenu'
@@ -26,7 +26,7 @@ module.exports = [
   desc: 'Menu item'
   extra:
     display: 'Menu Item'
-    category: 'Menus'
+    category: 'Menu.Category'
     inherit: 'UI'
     icon: 'cic-menu2'
     accepts: ['Icon+', 'Label+']

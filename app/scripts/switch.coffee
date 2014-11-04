@@ -29,7 +29,7 @@ angular.module('switch.services', ['app', 'app.globals'])
           field = $parse(attrs.field)(scope)
         else
           field =
-            options: {}
+            config: {}
 
 #      ctrl.$render = ->
 #        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
@@ -52,7 +52,7 @@ angular.module('switch.services', ['app', 'app.globals'])
           )
         )
 
-        o = angular.extend({ show_labels: false, width: 40, height: 16, button_width: 20 }, field.options)
+        o = angular.extend({ show_labels: false, width: 40, height: 16, button_width: 20 }, field.config)
 
         $timeout( ->
           element.switchButton(o)

@@ -1,5 +1,4 @@
 mongoose = require("mongoose")
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 GeoSchema = mongoose.Schema(
   code:
@@ -67,7 +66,8 @@ GeoSchema = mongoose.Schema(
   readOnly: true
 )
 
-GeoSchema.plugin(filterPlugin)
+#GeoSchema.set('toObject', {virtuals: true})
+#GeoSchema.set('toJSON', {virtuals: true})
 
 module.exports = mongoose.model('Geo', GeoSchema)
 

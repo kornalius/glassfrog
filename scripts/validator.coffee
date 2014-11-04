@@ -122,12 +122,13 @@ _validateField = (assure, field) ->
   if field.matches
     assure.me(field.fieldname).matches(field.matches)
 
-  for k of patterns
-    if field[k]? and assure.object and assure.object[field.fieldname]?
-      e = assure.me(field.fieldname).matches(patterns[k].pattern)
-      if e and e.errors
-        for ee in e.errors
-          ee.message = patterns[k].msg
+  if patterns
+    for k of patterns
+      if field[k]? and assure.object and assure.object[field.fieldname]?
+        e = assure.me(field.fieldname).matches(patterns[k].pattern)
+        if e and e.errors
+          for ee in e.errors
+            ee.message = patterns[k].msg
 
   return if assure.errors.length then assure.errors else null
 
@@ -141,30 +142,31 @@ vd =
     else
       i = 0
 
-    if assurance
+    if assurance and rows and fields
       for r in rows
         if r
           for f in fields
             if f.fieldname?
               l = f.fieldname.split('.')
               rr = r
-              for ff in l
-                assure = assurance.restart(rr)
-                if assure
-                  nf =  _.extend({}, f, {fieldname: ff})
-                  e = _validateField(assure, nf)
-                  if e
-                    for ee in e
-                      errors.push(
-                        idx: i
-                        field: f.fieldname
-                        value: rr[ff]
-                        message: ee.message
-                        type: ee.type
-                      )
-                  assure.end()
-                rr = rr[ff]
-      i++
+              if l
+                for ff in l
+                  assure = assurance.restart(rr)
+                  if assure
+                    nf =  _.extend({}, f, {fieldname: ff})
+                    e = _validateField(assure, nf)
+                    if e
+                      for ee in e
+                        errors.push(
+                          idx: i
+                          field: f.fieldname
+                          value: rr[ff]
+                          message: ee.message
+                          type: ee.type
+                        )
+                    assure.end()
+                  rr = rr[ff]
+        i++
 
     return if errors.length then errors else null
 

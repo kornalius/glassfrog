@@ -1,22 +1,3 @@
-Handlebars.registerHelper('generate_nodes', (o, client, user, componentType, delimiter) ->
-  if !delimiter?
-    delimiter = '\n'
-  if o.$data?.isModule
-    r = o.getRoot()
-  else
-    r = o
-  if componentType == '*'
-    nodes = r.children()
-  else
-    nodes = r.childrenOfKind(componentType.split(','))
-  d = []
-  for n in nodes
-    s = n.generateCode(client, user)
-    if s and s.length
-      d.push(s)
-  return new Handlebars.SafeString(d.join(delimiter))
-)
-
 ModuleClass =
 
 #  @name
@@ -42,7 +23,6 @@ ModuleClass =
     m.$data._states = ''
     m.$data._json = {}
     m.$data.isModule = true
-    m.$data._syntax = null
     m.prevGenerate = null
 
     if m.extra
@@ -72,14 +52,38 @@ ModuleClass =
     m.getName = () ->
       return (if @name then @name.toLowerCase() else "")
 
-    m.getDesc = () ->
-      return (if @desc then @desc else "")
+    m.varName = () ->
+      return @displayName().camelize(false)
+
+    m.getClassName = () ->
+      return @varName().camelize(true)
 
     m.displayName = () ->
       if @name
         return @name
       else
         return "Untitled"
+
+    m.setName = (name) ->
+      if @name != name
+        @name = name
+        @setModified(true)
+
+    m.getDesc = () ->
+      return (if @desc then @desc else "")
+
+    m.setDesc = (desc) ->
+      if @desc != desc
+        @desc = desc
+        @setModified(true)
+
+    m.getReadme = () ->
+      return (if @readme then @readme else "")
+
+    m.setReadme = (readme) ->
+      if @readme != readme
+        @readme = readme
+        @setModified(true)
 
     m.getRoot = () ->
       if @$data and !@$data._json.root
@@ -105,7 +109,6 @@ ModuleClass =
       @extra
 
     m.setExtra = (e) ->
-      console.log "setExtra()", e
       if type(e) is 'string'
         @extra = e
       else
@@ -207,15 +210,14 @@ ModuleClass =
         c = @getRoot().childrenOfKind(['Module.Config'])
         if c and c.length
           c = c[0]
-          that = @
-          require(['VersionClass'], (VersionClass) ->
-#            console.log "setConfigNode()", mod, c, c.name
-            c.name = that.name
-            c.getArg('icon').value = that.icon
-            c.getArg('desc').value = that.desc
-            c.getArg('version').value = (new VersionClass(that.version)).versionString()
-            cb() if cb
-          )
+          c.name = @name
+          c.setArg('icon', @getIcon())
+          c.setArg('color', @getColor())
+          c.setArg('desc', @getDesc())
+          c.setArg('readme', @getReadme())
+          c.setArg('tags', _.clone(@getTags()))
+          c.setArg('version', @versionString())
+          cb() if cb
         else
           cb() if cb
 
@@ -224,14 +226,13 @@ ModuleClass =
         c = @getRoot().childrenOfKind(['Module.Config'])
         if c and c.length
           c = c[0]
-          that = @
-          require(['VersionClass'], (VersionClass) ->
-#            console.log "setConfig()", c, c.name
-            that.name = c.name
-            that.icon = c.getArg('icon').getValueOrDefault()
-            that.desc = c.getArg('desc').getValueOrDefault()
-            that.version = new VersionClass(c.getArg('version').getValueOrDefault())
-          )
+          @setName(c.name)
+          @setColor(c.getArgValueOrDefault('color'))
+          @setIcon(c.getArgValueOrDefault('icon'))
+          @setDesc(c.getArgValueOrDefault('desc'))
+          @setReadme(c.getArgValueOrDefault('readme'))
+          @setTags(c.getArgValueOrDefault('tags'))
+          @setVersion(c.getArgValueOrDefault('version'))
 
     m.getIcon = () ->
       if @icon
@@ -239,20 +240,50 @@ ModuleClass =
       else
         return 'cic-ruler3'
 
+    m.setIcon = (icon) ->
+      if @icon != icon
+        @icon = icon
+        @setModified(true)
+
     m.getColor = () ->
       if @color
         return @color
       else
         return null
 
-    m.versionString = () ->
-      new ModuleClass.VersionClass(@version).versionString()
+    m.setColor = (color) ->
+      if type(color) is 'tinycolor'
+        color = color.toHex8String()
+      if !_.isEqual(@color, color)
+        @color = _.clone(color)
+        @setModified(true)
 
-    m.setVersion = (str) ->
-      that = @
-      require(['VersionClass'], (VersionClass) ->
-        that.version = new VersionClass(str)
-      )
+    m.versionString = () ->
+      @getVersion().versionString()
+
+    m.getVersion = () ->
+      new ModuleClass.VersionClass(@version)
+
+    m.setVersion = (version) ->
+      v = new ModuleClass.VersionClass(version)
+      if @getVersion().compareTo(v) != 0
+        @version = v.versionString()
+        @setModified(true)
+
+    m.getTags = () ->
+      if !@tags
+        @tags = []
+      if @tags.indexOf('module') == -1
+        @tags.push('module')
+      return @tags
+
+    m.setTags = (tags) ->
+      if type(tags) is 'string'
+        tags = tags.split(',')
+      tags.map((t) -> t.toLowerCase())
+      if !_.isEqual(@tags, tags)
+        @tags = _.clone(tags)
+        @setModified(true)
 
     m.foreachNode = (f, recursive) ->
       for c in @getNodes(recursive)
@@ -292,24 +323,31 @@ ModuleClass =
       l = []
       r = @getRoot()
       if r
-        links = r.childrenAsLinks()
-        for n in links
+        for n in r.childrenAsLinks()
           m = n.module()
           if m and l.indexOf(m) == -1
             l.push(m)
       return l
 
-    m.generateCode = (client, user) ->
-      s = "'use strict';\n\n"
-
+    m.generateCode = (codetype, user) ->
       r = @getRoot()
       if r
-        ss = r.generateCode(client, user)
+        out = new StringBuilder()
+
+        r.generateCode(out, codetype, user, 'init')
+        if !out.error()
+          r.generateCode(out, codetype, user)
+          if !out.error()
+            r.generateCode(out, codetype, user, 'shut')
+
+        ss = out.toString()
         if !ss.endsWith('\n')
           ss += '\n'
-        s += ss
 
-      return ModuleClass.handleSyntax(s)
+      if out.error()
+        return { code: ss, error: out.error() }
+      else
+        return ModuleClass.handleSyntax(@, ss)
 
     m.edit = (cb) ->
       that = @
@@ -320,17 +358,26 @@ ModuleClass =
         )
       , (err) ->
         if !err
-          that.addState('e')
           if window?
-            window.setTimeout( ->
+            window.setTimeout(->
               that.setConfigNode(->
+                for mm in ModuleClass.VCGlobal.modules.rows
+                  mm.delState('e')
                 that.setModified(mod)
+                that.addState('e')
                 cb(true) if cb
               )
             )
+          else
+            cb(false) if cb
         else
           cb(false) if cb
       )
+
+    m.clearSyntax = () ->
+      for n in @getNodes(true)
+        if n.$data
+          n.$data._error = null
 
     m.plainObject = () ->
       o = {}
@@ -350,10 +397,67 @@ ModuleClass =
         )
       cb(true) if cb
 
+    m.showSyntaxError = (error) ->
+      if error.message
+        ll = error.message.split('\n')
+      else
+        ll = []
+
+      if window? and angular?
+        if error.messageHtml
+          ll = error.messageHtml.split('\n')
+        angular.injector(['app.globals']).invoke(['Globals', (globals) ->
+          globals.showMessage(ll.join('\n'), 'error', (if error.name then error.name else 'Error'), 'cic cic-spam3 large', false, '600px')
+        ])
+#        angular.injector(['editor']).get('Editor').
+      else
+        len = _.max(_.pluck(ll, 'length'))
+        console.log ''
+        console.log _.str.pad('', len, '―')
+        for l in ll
+          console.log l
+        console.log _.str.pad('', len, '―')
+        console.log ''
+
+    m.syntaxError = (error, lines) ->
+      ll = []
+      llh = ['<pre style="background: none; border: none; white-space: nowrap;">']
+
+      error.desc = error.toString()
+
+      if error.loc
+        el = error.loc.line
+        min = Math.max(0, el - 3)
+        max = Math.max(0, el + 3)
+        for l in [min..max]
+          if l == el
+            if error._id
+              n = ModuleClass.VCGlobal.findNode(@, error._id, true)
+            else
+              n = null
+            msg = _.str.pad('', lines[l].indexOf('| ') + 2 + error.loc.column, '·') + '▲  ' + error + ' #' + error._id + (if n then ' ["{0}" <{1}>]'.format(n.pathname(true, true), n.getComponent().displayName()) else '')
+            llh.push('<span style="border-radius: 2px; background-color: #d9534f; color: #f5f5f5;">' + msg.replace(/\s/g, '&nbsp;') + '</span>')
+            ll.push(msg)
+          llh.push(lines[l].replace(/\s/g, '&nbsp;'))
+          ll.push(lines[l])
+
+      llh.push('</pre>')
+
+      error.message = ll.join('\n')
+      error.messageHtml = llh.join('<br>')
+
+      if ll.length
+        @showSyntaxError(error)
+
+      return ll
+
+    hasRepo: () ->
+      @repo
+
 
   make: (m) ->
     @setData(m)
-    if m.$data._json.root
+    if m.$data._json.root and m.$data._json.root.nodes
       for n in m.$data._json.root.nodes
         ModuleClass.VCNode.make(n, m.$data._json.root, m)
 
@@ -389,54 +493,23 @@ ModuleClass =
       return scope
     return null
 
-  handleSyntax: (s) ->
+  handleSyntax: (m, s) ->
     syntax = null
 
-    codeStr = js_beautify(s, {indent_size: 2})
+    codeStr = js_beautify(s, {indent_size: 2, max_preserve_newlines: 2, keep_array_indentation: true, brace_style: 'collapse', e4x: true})
     syntax = @VCGlobal.checkSyntax(codeStr)
-#    if !@$data._syntax
-#      @$data._syntax = { client: null, server: null }
-#    if client
-#      @$data._syntax.client = syntax
-#    else
-#      @$data._syntax.server = syntax
 
-    lines = syntax.code.split('\n')
-    for i in [0..lines.length - 1]
-      console.log i + 1, lines[i]
+    console.log ""
+    console.log ""
+    lines = syntax.code.toSourceCode().split('\n')
+    for l in lines
+      console.log l
+    console.log ""
+    console.log ""
 
     if syntax.error
+      m.syntaxError(syntax.error, lines)
 
-      ll = []
-      if syntax.error.loc
-        min = Math.max(0, syntax.error.loc.line - 5)
-        for l in [min..syntax.error.loc.line - 1]
-          ll.push(_.str.lpad('{0}'.format(l), 4) + '. ' + lines[l])
-        ss = _.str.pad("", syntax.error.loc.column + 6) + '^'
-      else
-        ss = null
-
-      console.log ''
-      console.log "SYNTAX ERROR:", syntax.error
-      console.log ll.join('\n')
-      if ss
-        console.log ss
-      console.log ''
-
-      if window? and PNotify
-        notice = new PNotify(
-          title: 'Syntax Error'
-          text: '<pre style="background: none; border: none">' + ll.join('\n') + '\n' + ss + '\n<span class="label-danger", style="color: white;">' + syntax.error + '</span></pre>'
-          icon: 'cic cic-spam3'
-          type: 'error'
-          hide: false
-          width: "500px"
-          buttons:
-            sticker: false
-        )
-#            notice.get().click(->
-#              notice.remove()
-#            )
     return syntax
 
 #  evalCode: (code) ->

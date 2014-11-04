@@ -1,4 +1,12 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  history = path + 'history'
+
   schema.add(
     history: [
       date:
@@ -25,15 +33,15 @@ module.exports = ((schema, options) ->
         readOnly: true
         populate: true
     ]
-  )
+  , path)
 
   if options && options.index
-    schema.path('history').index(options.index)
+    schema.path(history).index(options.index)
 
   schema.static(
 
     log: (user_id, action, comment) ->
-      @history.push(
+      @get(history).push(
         user: user_id
         date: new Date()
         action: action

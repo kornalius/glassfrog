@@ -17,6 +17,7 @@ angular.module('view2', ['app'])
     .state('view2',
       url:'/view2'
       templateUrl: '/partials/view2.html'
+      controller: 'View2Ctrl'
       sidebarHidden: true
       data:
         ncyBreadcrumbLabel: 'View2'

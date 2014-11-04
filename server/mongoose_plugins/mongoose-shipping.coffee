@@ -1,7 +1,13 @@
-User = require('../../models/user')
-moment = require('moment')
 
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  shipping = path + 'shipping'
+
   schema.add(
     shipping:
       service:
@@ -24,6 +30,6 @@ module.exports = ((schema, options) ->
       estimated_arrival:
         type: Date
         label: 'Estimated Arrival Date'
-  )
+  , path)
 
 )

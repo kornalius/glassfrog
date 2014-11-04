@@ -1,5 +1,7 @@
 module.exports = (grunt) ->
 
+  _ = require('lodash')
+
   out_dev = "_public/"
   server_out_dev = "_server/"
   tmp_dev = "_tmp/"
@@ -76,7 +78,7 @@ module.exports = (grunt) ->
       server_prod:
         options:
           join: true
-          sourceMap: true
+#          sourceMap: true
         files: [
           expand: true
           cwd: 'scripts/'
@@ -120,6 +122,9 @@ module.exports = (grunt) ->
         ,
           src: 'app/scripts/pagination.jade'
           dest: out_dev + 'partials/pagination.html'
+        ,
+          src: 'app/scripts/querybuilder.jade'
+          dest: out_dev + 'partials/querybuilder.html'
         ]
         options:
           pretty: true
@@ -139,6 +144,9 @@ module.exports = (grunt) ->
         ,
           src: 'app/scripts/pagination.jade'
           dest: out + 'partials/pagination.html'
+        ,
+          src: 'app/scripts/querybuilder.jade'
+          dest: out + 'partials/querybuilder.html'
         ]
 
       devDynForm:
@@ -197,9 +205,6 @@ module.exports = (grunt) ->
         ,
           src: 'node_modules/humanize-plus/public/src/humanize.js'
           dest: out_dev + 'js/humanize.js'
-        ,
-          src: 'bower_components/safejson/dist/safejson.js'
-          dest: out_dev + 'js/safejson.js'
         ]
 
       prod:
@@ -276,13 +281,10 @@ module.exports = (grunt) ->
 #            'node_modules/lodash-prototype/lodash-prototype.js'
             'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/handlebars/dist/handlebars.js'
-            'node_modules/swag/lib/swag.js'
             'node_modules/js-beautify/js/lib/beautify.js'
             'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
-            'bower_components/safejson/dist/safejson.js'
             'bower_components/moment/moment.js'
             'bower_components/moment/lang/en_ca.js'
             'bower_components/moment/lang/fr.js'
@@ -301,7 +303,7 @@ module.exports = (grunt) ->
             'bower_components/ng-table/ng-table.js'
             'bower_components/angular-ui/build/angular-ui.js'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js'
-            'bower_components/jQuery-Mask-Plugin/jquery.mask.js'
+            'bower_components/jquery-maskedinput/dist/jquery.maskedinput.js'
             'bower_components/angular-webstorage/angular-webstorage.js'
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
             'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
@@ -340,6 +342,10 @@ module.exports = (grunt) ->
             'bower_components/angular-pageslide-directive/dist/angular-pageslide-directive.js'
             'bower_components/perfect-scrollbar/src/perfect-scrollbar.js'
             'bower_components/angular-perfect-scrollbar/src/angular-perfect-scrollbar.js'
+            'bower_components/tv4/tv4.js'
+            'bower_components/objectpath/lib/ObjectPath.js'
+            'bower_components/angular-schema-form/dist/schema-form.js'
+            'bower_components/angular-schema-form/dist/bootstrap-decorator.min.js'
             'node_modules/diff/diff.js'
             'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
@@ -355,12 +361,9 @@ module.exports = (grunt) ->
 #            'node_modules/lodash-prototype/lodash-prototype.js'
             'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/handlebars/dist/handlebars.js'
-            'node_modules/swag/lib/swag.js'
             'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.js'
             'bower_components/jquery-ui/ui/jquery-ui.js'
-            'bower_components/safejson/dist/safejson.js'
             'bower_components/moment/moment.js'
             'bower_components/tinycolor/tinycolor.js'
             'bower_components/bootstrap/dist/js/bootstrap.js'
@@ -430,13 +433,10 @@ module.exports = (grunt) ->
 #            'node_modules/lodash-prototype/lodash-prototype.js'
             'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/handlebars/dist/handlebars.min.js'
-            'node_modules/swag/lib/swag.min.js'
             'node_modules/js-beautify/js/lib/beautify.js'
             'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/minified/jquery-ui.min.js'
-            'bower_components/safejson/dist/safejson.min.js'
             'bower_components/moment/min/moment-with-langs.min.js'
             'bower_components/bootstrap/dist/js/bootstrap.min.js'
             'bower_components/angular/angular.min.js'
@@ -452,7 +452,7 @@ module.exports = (grunt) ->
             'bower_components/ng-table/ng-table.min.js'
             'bower_components/angular-ui/build/angular-ui.min.js'
             'bower_components/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js'
-            'bower_components/jQuery-Mask-Plugin/jquery.mask.min.js'
+            'bower_components/jquery-maskedinput/dist/jquery.maskedinput.min.js'
             'bower_components/angular-webstorage/angular-webstorage.js'
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
             'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'
@@ -491,6 +491,10 @@ module.exports = (grunt) ->
             'bower_components/angular-pageslide-directive/dist/angular-pageslide-directive.min.js'
             'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.js'
             'bower_components/angular-perfect-scrollbar/src/angular-perfect-scrollbar.js'
+            'bower_components/tv4/tv4.js'
+            'bower_components/objectpath/lib/ObjectPath.js'
+            'bower_components/angular-schema-form/dist/schema-form.min.js'
+            'bower_components/angular-schema-form/dist/bootstrap-decorator.min.js'
             'node_modules/diff/diff.js'
             'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
@@ -506,12 +510,9 @@ module.exports = (grunt) ->
 #            'node_modules/lodash-prototype/lodash-prototype.js'
             'node_modules/sugar/release/sugar-full.development.js'
             'bower_components/traverse/traverse.js'
-            'node_modules/handlebars/dist/handlebars.min.js'
-            'node_modules/swag/lib/swag.min.js'
             'node_modules/circular-json/build/circular-json.js'
             'bower_components/jquery/dist/jquery.min.js'
             'bower_components/jquery-ui/ui/jquery-ui.min.js'
-            'bower_components/safejson/dist/safejson.min.js'
             'bower_components/moment/moment-with-langs.min.js'
             'bower_components/tinycolor/tinycolor.js'
             'bower_components/bootstrap/dist/js/bootstrap.min.js'
@@ -601,7 +602,7 @@ module.exports = (grunt) ->
 
       gruntfile:
         files: ['Gruntfile.coffee']
-        tasks: ['default']
+        tasks: (if grunt.cli.tasks.length then grunt.cli.tasks else ['default'])
         options:
           interrupt: true
           reload: true
@@ -645,10 +646,6 @@ module.exports = (grunt) ->
       server_jade:
         files: ['server/**/*.jade']
         tasks: ['copy:server_dev', 'reload']
-
-      server_handlebars:
-        files: ['server/**/*.hbs']
-        tasks: ['copy:server_dev', 'express:dev', 'reload']
 
       global_coffee:
         files: ['scripts/**/*.coffee']
@@ -743,6 +740,21 @@ module.exports = (grunt) ->
 #    , 500)
 #    grunt.task.run('curl')
   )
+
+
+  # no server configuration adjustments
+  if grunt.option('noserver')
+
+    grunt.config('coffee.dev.options.sourceMap', true)
+    grunt.config('coffee.server_dev.options.sourceMap', true)
+    grunt.config('watch.options.livereload', false)
+
+    for k of grunt.config('watch')
+      c = grunt.config('watch.' + k)
+      if c.tasks
+        grunt.config('watch.' + k + '.tasks', _.filter(c.tasks, (t) -> t != 'express:dev' and t != 'reload'))
+        console.log grunt.config('watch.' + k + '.tasks')
+
 
   #  Default task(s).
   grunt.registerTask('default', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'express:dev', 'reload', 'watch'])

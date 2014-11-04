@@ -25,11 +25,20 @@ class VersionClass
     m = s.match(/^v?(?:([0-9]+)(?:\.([0-9]+)(?:\.([0-9]+))([abr]|rc)?))$/)
     if m
       if m.length >= 2
-        @major = m[1]
+        try
+          @major = parseInt(m[1], 10)
+        catch
+          @major = 0
       if m.length >= 3
-        @minor = m[2]
+        try
+          @minor = parseInt(m[2], 10)
+        catch
+          @minor = 0
       if m.length >= 4
-        @build = m[3]
+        try
+          @build = parseInt(m[3], 10)
+        catch
+          @build = 0
       if m.length >= 5
         @maintenance = m[4]
     return @
@@ -138,6 +147,7 @@ class VersionClass
 
 
   @validate: (s) ->
+    s = new VersionClass(s).versionString()
     return /^v?(?:([0-9]+)(?:\.([0-9]+)(?:\.([0-9]+))([abr]|rc)?))$/.test(s)
 
 

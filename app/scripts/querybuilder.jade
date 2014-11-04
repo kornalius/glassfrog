@@ -1,0 +1,40 @@
+.alert.query-alert-group(ng-show="group != null")
+
+  .form-inline
+
+    select.form-control.input-sm(ng-model="group.operator", ng-options="op for op in operators")
+
+    button.btn.btn-sm.btn-success(ng-click="addCondition()", style="margin-left: 3px")
+      span.cic.cic-plus-sign &nbsp;
+      | Condition
+
+    button.btn.btn-sm.btn-success(ng-click="addGroup()", style="margin-left: 3px")
+      span.cic.cic-plus-sign &nbsp;
+      | Group
+
+    button.btn.btn-sm.btn-danger(ng-click="removeGroup()", style="margin-left: 3px")
+      span.cic.cic-minus-sign &nbsp;
+      | Group
+
+  .query-group-conditions
+
+    .query-condition(ng-repeat="rule in group.rules track by $index")
+
+      div(ng-switch="rule.hasOwnProperty('group')")
+
+        div(ng-switch-when="true")
+
+          query-builder(group="rule.group", model="model")
+
+        div(ng-switch-default="ng-switch-default")
+
+          .form-inline
+
+            select.form-control.input-sm(ng-model="rule.field", ng-options="f for f in fields")
+            select.form-control.input-sm(ng-model="rule.condition", ng-options="c for c in conditions", style="margin-left: 5px")
+
+            input.form-control.input-sm(ng-model="rule.data", style="margin-left: 5px; width: 25%;", type="text")
+
+            button.btn.btn-xs.btn-danger(ng-click="removeCondition($index)", style="margin-left: 3px")
+              span.cic.cic-minus-sign
+

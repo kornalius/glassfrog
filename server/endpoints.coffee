@@ -15,46 +15,31 @@ class AccessError extends mongoose.Error
     Error.captureStacklog(@, arguments.callee)
     @name = 'AccessError'
 
-processJSON = (o) ->
-  if o.toJSON
-    j = o.toJSON()
-  else
-    try
-      j = o
-    catch e
-      j = {}
-      console.log e
-  return j
-
-__send = (res, data, err, asArray) ->
-  s = {status: (if !err then 'ok' else 'error')}
+__send = (res, data, err) ->
+  s = {'$s': (if !err then 'ok' else 'error')}
   if err
     if type(err) is 'number'
       err = new Error(err)
-    s.err = {code: err.code, message: err.message}
+    s['$e'] = {code: err.code, msg: err.message}
 
-  if asArray
-    if type(data) != 'array'
-      data = [s, data]
-    else if hasPagination(data)
+  if data instanceof Array
+    if hasPagination(data)
       data[0] = _.extend({}, data[0], s)
+    else if data.length == 1
+      data = _.extend({}, data[0], s)
     else
       data.splice(0, 0, s)
   else
-    if type(data) == 'array' and data.length == 1
-      data = data[0]
     data = _.extend({}, data, s)
-
-  res.setHeader('content-type', 'application/json')
-#  res.setHeader('X-Total-Count', 0)
 
   res.json(data)
 
-send = (req, res, options, cb) ->
+exports.send = send = (options, req, res, next) ->
+#  console.log "send()", options
   results = null
   model = null
   err = null
-  asArray = false
+  plain = false
 
   if options
     if type(options) is 'number'
@@ -65,169 +50,398 @@ send = (req, res, options, cb) ->
       results = options.results
       model = options.model
       err = options.err
-      asArray = options.asArray
+      plain = options.plain
 
   if !results
     results = {}
 
-  if model
-    if type(results) != 'array'
-      results = [results]
-    l = []
-    user_id = req.user._id.toString()
-    async.eachSeries(results, (r, callback) ->
-      addExtraFields(user_id, r, model, (ok) ->
-        if ok
-          l.push(processJSON(r))
-        callback()
-      )
-    , (err) ->
-      if !err
-        __send(res, l, err, asArray)
-        cb(l) if cb
-      else
-        cb(err) if cb
+  if model and !plain
+    toPublicJSON(req.user, results, model.schema, {}, (json) ->
+      __send(res, json, null)
+      if next
+        next(err)
     )
   else
     __send(res, results, err)
-    cb(results) if cb
-exports.send = send
+    if next
+      next(err)
 
-populatedPaths = (r, model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.type == 'ObjectId' and f.ref and r[f] and r[f]._id?
-      l.push(f.path)
-  return l
-
-virtualPaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.type == 'virtual'
-      l.push(f.path)
-  return l
-
-selectPaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.select
-      l.push(f.path)
-  return l
-
-requiredPaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.required
-      l.push(f.path)
-  return l
-
-populatePaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.populate
-      l.push(f.path)
-  return l
-
-readOnlyPaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.readOnly
-      l.push(f.path)
-  return l
-
-privatePaths = (model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for f in paths
-    if f.private
-      l.push(f.path)
-  return l
-
-addExtraFields = (user_id, results, model, cb) ->
-  if !results
-    l = []
-  else if type(results) != 'array'
-    l = [results]
-  else
-    l = results
-  async.eachSeries(l, (r, rowCallback) ->
-    pp = populatedPaths(r, model)
-    async.eachSeries(pp, (f, fieldCallback) ->
-      addExtraFields(user_id, pp[f], model, ->
-        fieldCallback()
-      )
-    , (err) ->
-      if r.extraFields?
-        r.extraFields(user_id, ->
-          rowCallback()
-        )
-      else
-        rowCallback()
-    )
-  , (err) ->
-    cb(!err) if cb
-  )
-exports.addExtraFields = addExtraFields
-
-selectFields = (select, model) ->
-  l = []
-  paths = _app.modelPaths(model)
-  for s in select
-    if s.length and !s.startsWith('+')
-      ok = true
-      for k of paths
-        if k == s
-          ok = false
-          break
-      if ok
-        l.push(s)
-  for k of paths
-    if paths[k].private
-      l.push('-' + k)
-  return l
-
-populateFields = (populate, model, req) ->
+exports.populatedPaths = populatedPaths = (r, model) ->
   l = []
   paths = _app.modelPaths(model)
   for k of paths
     f = paths[k]
-    if !f.private and f.type == 'ObjectId' and f.ref and (f.populate or k in populate)
-      m = _app.modelSync(f.ref, req)
-      if m
-        c = { path: k }
-        ss = selectFields([], m)
-        if ss.length
-          c.select = ss.join(' ')
-        pp = populateFields([], m, req)
-        if pp.length
-          c.populate = pp
-#        c.options = {}
-        l.push(c)
+    if f.type == 'ObjectId' and f.ref and r[f] and r[f]._id?
+      l.push(k)
+#  console.log "populatedPaths()", l
+  return l
+
+exports.virtualPaths = virtualPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f.type == 'virtual'
+      l.push(k)
+#  console.log "virtualPaths()", l
+  return l
+
+exports.selectPaths = selectPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f.select
+      l.push(k)
+#  console.log "selectPaths()", l
+  return l
+
+exports.requiredPaths = requiredPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f.required
+      l.push(k)
+#  console.log "requiredPaths()", l
+  return l
+
+exports.populatePaths = populatePaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f.populate
+      l.push(k)
+#  console.log "populatePaths()", l
+  return l
+
+exports.readOnlyPaths = readOnlyPaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f.readOnly
+      l.push(k)
+#  console.log "readOnlyPaths()", l
+  return l
+
+exports.privatePaths = privatePaths = (model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  for k of paths
+    f = paths[k]
+    if f['private']
+      l.push(k)
+#  console.log "privatePaths()", l
+  return l
+
+exports.readablePaths = readablePaths = (model) ->
+  l = _.without(selectPaths(model), privatePaths(model))
+#  console.log "readablePaths()", l
+  return l
+
+exports.lockedPaths = lockedPaths = (model) ->
+  l = _.union(readOnlyPaths(model), privatePaths(model))
+#  console.log "lockedPaths()", l
+  return l
+
+exports.toPublicJSON = toPublicJSON = (user, doc, schema, _options, action, cb) ->
+#  console.log "toPublicJSON()", user, doc, schema, _options, action
+
+  if type(_options) is 'string'
+    cb = action
+    action = _options
+    _options = {}
+
+  if type(action) is 'function'
+    cb = action
+    action = 'read'
+
+  _options = _.extend({}, DEFAULT_OPTIONS, _options, (if action is 'write' then {mustExists: true} else {}))
+  _options.keep = _.union(DEFAULT_OPTIONS.keep, (if _options.keep then _options.keep else []))
+  _options.remove = _.union(DEFAULT_OPTIONS.remove, (if _options.remove then _options.remove else []))
+
+  _.extend(_options, {keep: _.union(_options.keep, readablePaths(schema))}, {remove: privatePaths(schema)})
+  if action is 'write'
+    _options.remove = _.union(_options.remove, lockedPaths(schema))
+
+  makePath = (path, k) ->
+    return (if path then path + '.' + k else k)
+
+  isPathIn = (path, arr) ->
+    last = _.last(path.split('.'))
+    for a in arr
+      if path == a
+        return true
+      else if a.startsWith('#') and last == a.substr(1)
+        return true
+    return false
+
+  isValidPath = (path) ->
+    return path and (!(isPathIn(path, _options.remove)) or (isPathIn(path, _options.keep)))
+
+#  toObj = (doc) ->
+#    if doc instanceof Array
+#      r = []
+#      for d in doc
+#        r.push(toObj(d))
+#      return r
+#    else if doc.toJSON
+#      return doc.toJSON(_options)
+#    else if doc.toObject
+#      return doc.toObject(_options)
+#    else if doc._doc
+#      return doc._doc
+#    else
+#      return doc
+
+  processFields = (doc, path, cb) ->
+    if !doc
+      cb(null) if cb
+      return
+
+    if doc._doc and doc.schema
+      s = doc.schema
+      paths = _.keys(_.extend({}, s.paths, s.virtuals))
+    else
+      s = null
+      if !(doc instanceof mongoose.Types.ObjectId)
+        paths = _.keys(doc)
+        if paths.length == 0
+          paths = null
+      else
+        paths = null
+
+    if doc instanceof Array
+      newObj = []
+#      i = 0
+      async.eachSeries(doc, (d, callback) ->
+        processFields(d, path, (r) ->
+          if r
+            newObj.push(r)
+#          i++
+          callback()
+        )
+      , (err) ->
+        cb(newObj) if cb
+      )
+
+    else if paths
+      newObj = {}
+      async.eachSeries(paths, (k, callback) ->
+        cp = makePath(path, k)
+        if isValidPath(cp)
+          processFields(doc[k], cp, (n) ->
+            if n
+              newObj[k] = n
+            callback()
+          )
+        else
+#          console.log "skipping field", cp
+          callback()
+
+      , (err) ->
+        if s and s.extraFields
+          user_id = user._id.toString()
+#          console.log "applying extraFields to", path
+          async.eachSeries(s.extraFields, (fct, callback) ->
+            fct.apply(doc, [user_id, newObj, callback])
+          , (err) ->
+            if _.keys(newObj).length == 0
+              newObj = null
+            cb(newObj) if cb
+          )
+        else
+          if _.keys(newObj).length == 0
+            newObj = null
+          cb(newObj) if cb
+      )
+
+    else
+      cb(doc) if cb
+
+
+  processFields(doc, null, (newObj) ->
+#    console.log ""
+#    console.log ">>>> newObj:", jsonToString(newObj)
+#    console.log ""
+    cb(newObj) if cb
+  )
+
+DEFAULT_OPTIONS =
+  prefix: '_'
+  keep: ['#_id', '#__v']
+  remove: ['#id']
+  mustExists: false
+  getters: true
+#  virtuals: true
+
+exports.queryFromString = queryFromString = (str, model, user, connection, prefix) ->
+  querystring = require('querystring')
+  qs = querystring.parse(str)
+
+  if !model and qs.m
+    model = app.modelSync(qs.m, user, connection, prefix)
+
+  if !model
+    return null
+
+  q = model.find(process_query(qs.q))
+  process_select(qs.s, model, q)
+  process_populate(qs.p, model, user, connection, prefix, q)
+  l = process_limit(qs.l, q)
+  process_skip(qs.sk, qs.page, l, q)
+  process_sort(qs.sort, q)
+
+  return q
+
+exports.selectFields = selectFields = (select, model) ->
+  l = []
+  paths = _app.modelPaths(model)
+  if select
+    for s in select
+      if s.length and !s.startsWith('+')
+        ok = true
+        if paths
+          for k of paths
+            if k == s
+              ok = false
+              break
+        if ok
+          l.push(s)
+  if paths
+    for k of paths
+      if paths[k].private
+        l.push('-' + k)
+  return l
+
+exports.populateFields = populateFields = (populate, model, user, connection, prefix) ->
+  l = []
+  paths = _app.modelPaths(model)
+  if paths
+    for k of paths
+      f = paths[k]
+      if !f.private and f.type == 'ObjectId' and f.ref and (f.populate or k in populate)
+        m = _app.modelSync(f.ref, user, connection, prefix)
+        if m
+          c = { path: k }
+          ss = selectFields([], m)
+          if ss.length
+            c.select = ss.join(' ')
+          pp = populateFields([], m, user, connection, prefix)
+          if pp.length
+            c.populate = pp
+  #        c.options = {}
+          l.push(c)
   return l
 
 hasPagination = (data) ->
-  if type(data) is 'array' and data.length
-    return data[0].__p
+  if data instanceof Array and data.length
+    return data[0]['$p']
   else
     return false
 
-paginate = (model, req, results, cb) ->
+hasStatus = (data) ->
+  if data instanceof Array and data.length
+    return data[0]['$s']
+  else
+    return data['$s']
+
+process_query = (str) ->
+  console.log "process_query()", jsonToString(str)
+  if str
+    try
+      qo = query.compile(query.parse(str))
+    catch e
+      console.log e
+    if !qo
+      qo = {}
+    return qo
+  else
+    return {}
+
+process_select = (str, model, q) ->
+  select = selectFields((if str then str.split(' ') else []), model).join(' ')
+  console.log "process_select()", str, select
+  if q
+    if select.length
+      q.select(select.join(' '))
+    return q
+  else
+    return select
+
+process_populate = (str, model, user, connection, prefix, q) ->
+  populate = populateFields((if str then str.split(' ') else []), model, user, connection, prefix)
+  console.log "process_populate()", str, jsonToString(populate)
+  if q
+    if populate.length
+      q.populate(populate)
+  return populate
+
+process_limit = (str, q) ->
+  i = 10
+  if str
+    try
+      i = parseInt(str, 10)
+    catch e
+      i = 0
+      console.log e
+  i = Math.abs(Math.min(MAX_LIMIT, i))
+  console.log "process_limit()", i
+  if q
+    q.limit(i)
+  return i
+
+process_skip = (str, pagestr, limit, q) ->
+  i = 0
+  if str
+    try
+      i = parseInt(str, 10)
+    catch e
+      i = 0
+      console.log e
+  else if pagestr
+    try
+      i = parseInt(pagestr, 10)
+      i = (i - 1) * limit
+    catch e
+      i = 0
+      console.log e
+  i = Math.abs(Math.min(MAX_LIMIT, i))
+  console.log "process_skip()", i
+  if q
+    q.skip(i)
+  return i
+
+process_sort = (str, q) ->
+  console.log "process_sort()", str
+  if q
+    if str
+      q.sort(str)
+  return str
+
+process_results = (results, plain, req, res, next) ->
+  console.log "process_results()", results.length
+  if type(plain) != 'boolean'
+    next = res
+    res = req
+    req = plain
+    plain = null
+  send({results:results, model:req.m, plain: (if plain then true else false)}, req, res, next)
+
+exports.paginate = paginate = (model, limit, skip, results, cb) ->
+  console.log "paginate()", results.length
   model.count((err, count) ->
     if !results
       results = []
 
-    if type(results) != 'array'
+    if !(results instanceof Array)
       results = [results]
 
     if !err
-      limit = Math.min(MAX_LIMIT, req.query.l)
-      skip = Math.min(MAX_LIMIT, req.query.sk)
+      limit = Math.min(MAX_LIMIT, limit)
+      skip = Math.min(MAX_LIMIT, skip)
       pages = Math.max(Math.ceil(count / limit), 1)
       c = Math.ceil(skip / limit)
       if c == Math.floor(skip / limit)
@@ -235,16 +449,16 @@ paginate = (model, req, results, cb) ->
       page = Math.min(pages, Math.max(c, 1))
     else
       limit = 1
-      skip = 1
+      skip = 0
       page = 1
       pages = 1
 
     results.splice(0, 0,
-      __p: true
+      '$p': true
       total: count
       displayCount: results.length
-      limit: limit
-      skip: skip
+      l: limit
+      sk: skip
       page: page
       pages: pages
       firstPage: 1
@@ -261,377 +475,329 @@ paginate = (model, req, results, cb) ->
     cb(results) if cb
   )
 
+exports.checkUser = checkUser = (req, res, next) ->
+  console.log "checkUser()", req.query, req.params
+  if !_app.validUser(req)
+    next(new Error(403))
+  else
+    next()
 
-register = () ->
-  process_query = (req) ->
-    console.log "process_query()", jsonToString(req.query.q)
-    if req.query.q
-      try
-        qo = query.compile(query.parse(req.query.q))
-      catch e
-        console.log e
-      if !qo
-        qo = {}
-      return qo
-    else
-      return {}
+exports.checkModel = checkModel = (req, res, next) ->
+  console.log "checkModel()", req.query, req.params
 
-  process_select = (req, q) ->
-    select = selectFields((if req.query.s then req.query.s.split(' ') else []), req.m)
-    console.log "process_select()", jsonToString(req.query.s), jsonToString(select)
-    req.query.s = select.join(' ')
-    if q
-      if select.length
-        q.select(select.join(' '))
-      return q
-    else
-      return select
+  if !req.params.model
+    return next(new Error(404, 'model not found'))
 
-  process_populate = (req, q) ->
-    populate = populateFields((if req.query.p then req.query.p.split(' ') else []), req.m, req)
-    console.log "process_populate()", jsonToString(req.query.p), jsonToString(populate)
-    req.query.p = populate
-    if q
-      if populate.length
-        q.populate(populate)
-      return q
-    else
-      return populate
-
-  process_limit = (req, q) ->
-    i = 10
-
-    if req.query.l
-      try
-        i = parseInt(req.query.l, 10)
-      catch e
-        i = 0
-        console.log e
-
-    i = Math.abs(Math.min(MAX_LIMIT, i))
-
-    console.log "process_limit()", i
-
-    req.query.l = i
-
-    if q
-      q.limit(i)
-      return q
-    else
-      return i
-
-  process_skip = (req, q) ->
-    i = 0
-
-    if req.query.sk
-      try
-        i = parseInt(req.query.sk, 10)
-      catch e
-        i = 0
-        console.log e
-
-    else if req.query.page
-      try
-        i = parseInt((req.query.page - 1) * req.query.l, 10)
-      catch e
-        i = 0
-        console.log e
-
-    i = Math.abs(Math.min(MAX_LIMIT, i))
-
-    console.log "process_skip()", i
-
-    req.query.sk = i
-    if q
-      q.skip(i)
-      return q
-    else
-      return i
-
-  process_sort = (req, q) ->
-    console.log "process_sort()", jsonToString(req.query.sort)
-    if q
-      if req.query.sort
-        q.sort(req.query.sort)
-      return q
-    else
-      return req.query.sort
-
-  process_results = (req, res, results, err, cb) ->
-    console.log "process_results()"
-    send(req, res, {results:results, model:req.m, err:err}, ->
-      cb(!err, err) if cb
-    )
-
-  app.all('/api/*', (req, res, next) ->
-    console.log "app.all()", req.query, req.params
-    if !_app.validUser(req)
-      send(req, res, 403, ->
-        next()
-      )
-    else
+  _app.model(req.params.model.singularize().toProperCase(), req, (m, plan, c, prefix) ->
+    req.m = m
+    req.plan = plan
+    req.c = c
+    req.prefix = prefix
+    if m
       next()
+
+    else
+      next(new Error(404, 'model not found'))
   )
 
-  checkmodel = (req, res, next) ->
-    console.log "checkmodel()", req.query, req.params
+exports.method = method = (req, res, next) ->
+  console.log "method()", req.query, req.params
 
-    if !req.params.model
-      send(req, res, new Error(404, 'model not found'))
-      return
-
-    _app.model(req.params.model.toProperCase().singularize(), req, (m, plan, c, prefix) ->
-      req.m = m
-      req.plan = plan
-      req.c = c
-      req.prefix = prefix
-      if m
-        next()
-      else
-        send(req, res, new Error(404, 'model not found'))
-    )
-
-  app.all('/api/:model/call/:method/:id', checkmodel)
-  app.all('/api/:model/schema', checkmodel)
-  app.all('/api/:model/defaults', checkmodel)
-  app.all('/api/:model/:id', checkmodel)
-  app.all('/api/:model', checkmodel)
-
-  app.get('/api/:model/call/:method/:id', (req, res, next) ->
-    console.log "app.call()", req.query, req.params
-
-    if req.params.method?
-      req.user.can(req.params.method, req.m.modelName, null, (can) ->
-        if can
-          req.m.findById(req.params.id, (err, r) ->
-            if r
-              args = []
-              args.push(req)
-              args.push(res)
-              if req.query.args?
-                args = args.concat(req.query.args)
-              args.push((err, data) ->
-                if !err
-                  process_results(req, res, data, null, (ok) ->
-                  if ok
-                    next()
-                  )
-                else
-                  send(req, res, err)
-              )
-
-              if req.m.schema.methods['$' + req.params.method]?
-                req.m.schema.methods['$' + req.params.method].apply(r, args)
-
-              else if req.m.schema.statics['$' + req.params.method]?
-                req.m.schema.statics['$' + req.params.method].apply(req.m.schema, args)
-
+  if req.params.method?
+    req.user.can(req.params.method, req.m.modelName, null, (can) ->
+      if can
+        req.m.findById(req.params.id, (err, r) ->
+          if r
+            args = []
+            args.push(req)
+            args.push(res)
+            args.push((err, data) ->
+              if !data
+                data = {}
+              if !err
+                send({results:[data], model:req.m, plain: true}, req, res, next)
               else
-                send(req, res, new Error(404, "method '" + req.params.method + "' not found"))
+                next(err)
+            )
+            if req.query.args?
+              args = args.concat(req.query.args)
+
+            if req.m.schema.methods['$' + req.params.method]?
+              req.m.schema.methods['$' + req.params.method].apply(r, args)
+
+            else if req.m.schema.statics['$' + req.params.method]?
+              req.m.schema.statics['$' + req.params.method].apply(req.m.schema, args)
 
             else
-              send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
-          )
+              next(new Error(404, "method '" + req.params.method + "' not found"))
 
+          else
+            next(new Error(404, "record '" + req.params.id + "' not found"))
+        )
+
+      else
+        next(new Error(403))
+    )
+
+  else
+    next(new Error(404, "method name missing"))
+
+exports.schema = schema = (req, res, next) ->
+  console.log "schema()", req.query, req.params
+
+  req.user.can('schema', req.m.modelName, null, (can) ->
+    if can
+      l = {}
+      s = _app.modelPaths(req.m)
+      if s
+        for k of s
+          if s[k].private
+            delete s[k]
+      process_results(s, req, res, next)
+    else
+      next(new Error(403))
+  )
+
+exports.defaults = defaults = (req, res, next) ->
+  console.log "defaults()", req.query, req.params
+
+  req.user.can('defaults', req.m.modelName, null, (can) ->
+    if can
+      fields = {}
+      o = new req.m()
+      paths = _app.modelPaths(req.m)
+      if paths
+        for k of paths
+          if !paths[k].private
+            _.deepSet(fields, k, o[k])
+      toPublicJSON(req.user, fields, req.m.schema, {remove: _.union(['id', '_id'], privatePaths(req.m)), mustExists: true}, (fields) ->
+        process_results(fields, true, req, res, next)
+      )
+    else
+      next(new Error(403))
+  )
+
+exports.one = one = (req, res, next) ->
+  console.log "one()", req.query, req.params
+
+  if !req.params.id
+    return next(new Error(404, "record '" + req.params.id + "' not found"))
+
+  req.user.can('read', req.m.modelName, null, (can) ->
+    if can
+      q = req.m.findById(req.params.id)
+      process_select(req.query.s, q)
+      process_populate(req.query.p, q)
+      q.exec((err, results) ->
+        if !err
+          process_results(results, req, res, next)
         else
-          send(req, res, 403)
+          next(err)
+      )
+    else
+      next(new Error(403))
+  )
+
+exports.list = list = (req, res, next) ->
+  console.log "list()", req.query, req.params
+
+  req.user.can('read', req.m.modelName, null, (can) ->
+    if can
+      qo = process_query(req.query.q)
+      q = req.m.find(qo)
+      process_select(req.query.s, q)
+      process_populate(req.query.p, q)
+      process_sort(req.query.sort, q)
+      l = process_limit(req.query.l, q)
+      sk = process_skip(req.query.sk, req.query.page, l, q)
+      q.exec((err, results) ->
+        if !err
+          paginate(req.m, l, sk, results, (results) ->
+            process_results(results, req, res, next)
+          )
+        else
+          next(err)
+      )
+    else
+      next(new Error(403))
+  )
+
+exports.update = update = (req, res, next) ->
+  console.log "update()", req.query, req.body, req.params
+
+  if !req.params.id
+    return next(new Error(404, "record '" + req.params.id + "' not found"))
+
+  req.user.can('write', req.m.modelName, null, (can) ->
+    if can
+      doc = req.body
+      if doc instanceof Array and doc.length
+        doc = doc[0]
+
+      toPublicJSON(req.user, doc, req.m.schema, {keep: ['_id'], remove: ['#id', '#_id', '#created_at', '#updated_at', '#__v', '#owner_id']}, 'write', (doc) ->
+        req.m.findById(req.params.id, (err, r) ->
+          if r
+            if _app.hasOwner(req.m) and r.owner_id != req.user._id.toString()
+              next(new Error(403))
+            else
+              r.set(doc)
+              r.save((err, s, rowCount) ->
+                console.log "done save()", err, rowCount
+                if !err
+                  q = req.m.findById(req.params.id)
+                  process_select(req.query.s, q)
+                  process_populate(req.query.p, q)
+                  q.exec((err, results) ->
+                    if !err
+                      process_results(results, req, res, next)
+                    else
+                      next(err)
+                  )
+                else
+                  next(err)
+              )
+          else
+            next(err)
+        )
       )
 
     else
-      send(req, res, new Error(404, "method name missing"))
+      next(new Error(403))
   )
 
-  app.get('/api/:model/schema', (req, res, next) ->
-    console.log "app.schema()", req.query, req.params
+exports.create = create = (req, res, next) ->
+  console.log "create()", req.query, req.params
 
-    req.user.can('schema', req.m.modelName, null, (can) ->
-      if can
-        l = {}
-        s = _app.modelPaths(req.m)
-#        console.log s
-        for k of s
-          if !s[k].private
-            l[k] = s[k]
-        process_results(req, res, l, null, (ok) ->
-          if ok
-            next()
-        )
+  doc = req.body
+  if doc instanceof Array and doc.length
+    doc = doc[0]
+  else
+    doc = {}
 
-      else
-        send(req, res, 403)
-    )
-  )
-
-  app.get('/api/:model/defaults', (req, res, next) ->
-    console.log "app.defaults()", req.query, req.params
-
-    req.user.can('defaults', req.m.modelName, null, (can) ->
-      if can
-        fields = {}
-        o = new req.m()
-        paths = _app.modelPaths(req.m)
-        for k of paths
-          f = paths[k]
-          if !f.private
-            _.deepSet(fields, k, o.get(k))
-        fields = req.m.filter(fields, {keep: [], remove: ['id', '_id'], mustExists: true})
-        process_results(req, res, fields, null, (ok) ->
-          if ok
-            next()
-        )
-
-      else
-        send(req, res, 403)
-    )
-  )
-
-  app.get('/api/:model/:id', (req, res, next) ->
-    console.log "app.get()", req.query, req.params
-    if !req.params.id
-      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
-      return
-
-    req.user.can('read', req.m.modelName, null, (can) ->
-      if can
-        q = req.m.findById(req.params.id)
-        process_select(req, q)
-        process_populate(req, q)
-        q.exec((err, results) ->
-          process_results(req, res, results, err, (ok) ->
-            if ok
-              next()
-          )
-        )
-
-      else
-        send(req, res, 403)
-    )
-  )
-
-  app.get('/api/:model', (req, res, next) ->
-    console.log "app.get()", req.query, req.params
-
-    req.user.can('read', req.m.modelName, null, (can) ->
-      if can
-        qo = process_query(req)
-        q = req.m.find(qo)
-        process_select(req, q)
-        process_populate(req, q)
-        process_sort(req, q)
-        process_limit(req, q)
-        process_skip(req, q)
-        q.exec((err, results) ->
-          paginate(req.m, req, results, (results) ->
-            process_results(req, res, results, err, (ok) ->
-              if ok
-                next()
-            )
-          )
-        )
-
-      else
-        send(req, res, 403)
-    )
-  )
-
-  app.put('/api/:model/:id', (req, res, next) ->
-    console.log "app.put()", req.query, req.body, req.params
-
-    if !req.params.id
-      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
-      return
-
-    req.user.can('write', req.m.modelName, null, (can) ->
-      if can
-        doc = req.body
-        if type(doc) is 'array' and doc.length
-          doc = doc[0]
-        else
-          doc = {}
-
-        doc = req.m.filter(doc, {keep: ['_id'], remove: ['created_at', 'updated_at', '__v', 'owner_id'], mustExists: true})
-
-        _conditions = { _id: req.params.id }
-        if _app.hasOwner(req.m)
-          _conditions.owner_id = req.user.id
-
-        req.m.update(_conditions, doc, (err, rowCount, status) ->
-          console.log ">>> app.put", rowCount, status, err
-          q = req.m.findById(req.params.id)
-          process_select(req, q)
-          process_populate(req, q)
-          q.exec((err, results) ->
-            process_results(req, res, results, err, (ok) ->
-              if ok
-                next()
-            )
-          )
-        )
-
-      else
-        send(req, res, 403)
-    )
-  )
-
-  app.post('/api/:model', (req, res, next) ->
-    console.log "app.post()", req.query, req.params
-
-    doc = req.body
-    if type(doc) is 'array' and doc.length
-      doc = doc[0]
-    else
-      doc = {}
-
-    req.user.can('create', req.m.modelName, [doc], (can) ->
-      if can
-        doc = req.m.filter(doc, {keep: [], remove: ['id', '_id', 'created_at', 'updated_at', '__v', 'owner_id'], mustExists: true})
-
+  req.user.can('create', req.m.modelName, [doc], (can) ->
+    if can
+      toPublicJSON(req.user, doc, req.m.schema, {keep: ['#_id'], remove: ['#id', '#_id', '#created_at', '#updated_at', '#__v', '#owner_id']}, 'write', (doc) ->
         if _app.hasOwner(req.m)
           doc.owner_id = req.user.id
 
         req.m.create(doc, (err, doc) ->
-          q = req.m.findById(doc._id)
-          process_select(req, q)
-          process_populate(req, q)
-          q.exec((err, results) ->
-            process_results(req, res, results, err, (ok) ->
-              if ok
-                next()
+          if !err
+            q = req.m.findById(doc._id)
+            process_select(req.query.s, q)
+            process_populate(req.query.p, q)
+            q.exec((err, results) ->
+              if !err
+                process_results(results, req, res, next)
+              else
+                next(err)
             )
-          )
+          else
+            next(err)
         )
+      )
 
-      else
-        send(req, res, 403)
-    )
+    else
+      next(new Error(403))
   )
 
-  app.delete('/api/:model/:id', (req, res, next) ->
-    console.log "app.delete()", req.query, req.params
+exports.remove = remove = (req, res, next) ->
+  console.log "app.remove()", req.query, req.params
 
-    if !req.params.id
-      send(req, res, new Error(404, "record '" + req.params.id + "' not found"))
-      return
+  if !req.params.id
+    return next(new Error(404, "record '" + req.params.id + "' not found"))
 
-    req.user.can('delete', req.m.modelName, null, (can) ->
-      if can
-        qo =
-          _id: req.params.id
-          owner_id: req.user.id if _app.hasOwner(req.m)
-        q = req.m.where(qo)
-        q.remove((err, results) ->
-          process_results(req, res, results, err, (ok) ->
-            if ok
-              next()
-          )
-        )
-
-      else
-        send(req, res, 403)
-    )
+  req.user.can('delete', req.m.modelName, null, (can) ->
+    if can
+      qo =
+        _id: req.params.id
+        owner_id: req.user.id if _app.hasOwner(req.m)
+      q = req.m.where(qo)
+      q.remove((err, results) ->
+        if !err
+          process_results(results, req, res, next)
+        else
+          next(err)
+      )
+    else
+      next(new Error(403))
   )
+
+
+exports.register = register = () ->
+
+  app.get('/api/:model/call/:method/:id', checkUser, checkModel, method, (req, res, next) -> )
+
+  app.get('/api/:model/schema', checkUser, checkModel, schema, (req, res, next) -> )
+
+  app.get('/api/:model/defaults', checkUser, checkModel, defaults, (req, res, next) -> )
+
+  app.get('/api/:model/:id', checkUser, checkModel, one, (req, res, next) -> )
+
+  app.get('/api/:model', checkUser, checkModel, list, (req, res, next) -> )
+
+  app.put('/api/:model/:id', checkUser, checkModel, update, (req, res, next) -> )
+
+  app.post('/api/:model', checkUser, checkModel, create, (req, res, next) -> )
+
+  app.delete('/api/:model/:id', checkUser, checkModel, remove, (req, res, next) -> )
 
   return
 
 
-exports.register = register
+app.use('/api', (err, req, res, next) ->
+  console.log "api error", err
+  send({err: err}, req, res, next)
+)
+
+app.param('id', (req, res, next, id) ->
+  console.log "app.param(id)", id, req.params
+
+  VCGlobal = require('./vc_global')
+  if VCGlobal.isValidId(id)
+    next()
+  else
+    next(new Error(404, 'Invalid id format'))
+)
+
+app.param('model', (req, res, next, model) ->
+  console.log "app.param(model)", model
+
+  _app.model(model.singularize().toProperCase(), req, (m, plan, c, prefix) ->
+    if m
+      req.m = m
+      req.plan = plan
+      req.c = c
+      req.prefix = prefix
+      next()
+    else
+      next(new Error(404, 'model not found'))
+  )
+)
+
+app.param('method', (req, res, next, method) ->
+  console.log "app.param(method)", method, req.params
+
+  next()
+)
+
+app.use('/api', (req, res, next) ->
+  console.log "sanitize api", req.query, req.params
+
+  sanitizeQuery = (o) ->
+    if type(o) is 'object'
+      for k of o
+        if /^\$/.test(k)
+          delete o[k]
+
+  if req.params?
+    sanitizeQuery(req.params)
+
+  if req.query?
+    sanitizeQuery(req.query)
+
+#  if req.body?
+#    s = jsonToString(req.body)
+#    req.body = stringToJson(sanitizer.sanitize(s))
+
+  next()
+)

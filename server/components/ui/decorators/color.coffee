@@ -7,7 +7,7 @@ module.exports = [
     display: 'Color'
     options: 'c'
     icon: 'cic-palette'
-    color: 'lightred'
+    color: 'lightpurple'
 ,
 
   name: 'Color'
@@ -45,23 +45,21 @@ module.exports = [
         if l and l.length
           l.addClass(color)
 
-      client: (node) ->
-        return @code("getColor").call(@)
+      client: (out, node, user) ->
+        out.append @code("getColor").call(@)
 
-      server: (node, user) ->
+      server: (out, node, user) ->
         color = @code("getColor").call(@).toName()
         p = node.getParent()
-        if p? and !client
-          if p.kindOf('Field')
-            return Handlebars.compile('color: "{{value}}"')({value: color})
-        return c
+        if p? and !client and p.kindOf('Field')
+          out.append 'color: "{0}"'.format(color)
 ,
 
   name: 'Color.RGB'
   desc: 'Color'
   extra:
     category: 'Colors'
-    inherit: 'MethodRef'
+    inherit: 'Method.Ref'
     icon: 'cic-color'
 ,
 

@@ -1,7 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 async = require('async')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 RoleSchema = mongoose.Schema(
   name:
@@ -38,7 +37,9 @@ RoleSchema = mongoose.Schema(
 )
 
 RoleSchema.plugin(timestamps)
-RoleSchema.plugin(filterPlugin)
+
+#RoleSchema.set('toObject', {virtuals: true})
+#RoleSchema.set('toJSON', {virtuals: true})
 
 RoleSchema.method(
 
@@ -205,56 +206,57 @@ RoleSchema.static(
 
 module.exports = mongoose.model('Role', RoleSchema)
 
-setTimeout( ->
-  Role = mongoose.model('Role')
+if false
+  setTimeout( ->
+    Role = mongoose.model('Role')
 
-  Role.remove({}, (err) ->
+    Role.remove({}, (err) ->
 
-    Role.create(
-      name: 'admin'
-    , (err, adminRole) ->
-#      console.log "create admin role", err, adminRole
+      Role.create(
+        name: 'admin'
+      , (err, adminRole) ->
+  #      console.log "create admin role", err, adminRole
 
-#      Make first user admin
-      mongoose.model('User').findOne({}, (err, user) ->
-        if user
-          user.roles = [adminRole._id]
-          user.save()
-      )
+  #      Make first user admin
+        mongoose.model('User').findOne({}, (err, user) ->
+          if user
+            user.roles = [adminRole._id]
+            user.save()
+        )
 
-#      Create default user role and rules
-      Role.findOne({ name: 'user' }, (err, userRole) ->
-        if !userRole
-          Role.create({ name: 'user' }, (err, userRole) ->
-            userRole.addRules([
-                subject: 'component'
-                action: 'read'
-                owned: false
-              ,
-                subject: 'invoice'
-                action: 'read'
-                owned: true
-              ,
-                subject: 'log'
-                action: 'read'
-                owned: true
-              ,
-                subject: 'node'
-                action: 'read,write,create,delete'
-                owned: true
-              ,
-                subject: 'share'
-                action: 'read,write,create,delete'
-                owned: true
-              ,
-                subject: 'user'
-                action: 'read'
-                owned: true
-              ], () ->
+  #      Create default user role and rules
+        Role.findOne({ name: 'user' }, (err, userRole) ->
+          if !userRole
+            Role.create({ name: 'user' }, (err, userRole) ->
+              userRole.addRules([
+                  subject: 'component'
+                  action: 'read'
+                  owned: false
+                ,
+                  subject: 'invoice'
+                  action: 'read'
+                  owned: true
+                ,
+                  subject: 'log'
+                  action: 'read'
+                  owned: true
+                ,
+                  subject: 'node'
+                  action: 'read,write,create,delete'
+                  owned: true
+                ,
+                  subject: 'share'
+                  action: 'read,write,create,delete'
+                  owned: true
+                ,
+                  subject: 'user'
+                  action: 'read'
+                  owned: true
+                ], () ->
+              )
             )
-          )
+        )
       )
     )
-  )
 
-, 2000)
+  , 2000)

@@ -1,10 +1,10 @@
 module.exports = [
 
-  name: 'Controls'
+  name: 'Control.Category'
   desc: 'Control to place on view'
   extra:
     display: 'Control'
-    category: 'UIs'
+    category: 'UI.Category'
     options: 'c'
     icon: 'cic-pointer'
     color: 'lightpurple'
@@ -13,7 +13,7 @@ module.exports = [
   name: 'Control'
   desc: 'Control to place on view'
   extra:
-    category: 'Controls'
+    category: 'Control.Category'
     inherit: 'UI'
     options: 'hp'
     icon: 'cic-pointer'

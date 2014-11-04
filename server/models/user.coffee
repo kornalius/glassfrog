@@ -2,18 +2,18 @@ app = require("../app")
 mongoose = require("mongoose")
 locking = require('mongoose-account-locking')
 timestamps = require('mongoose-time')()
-async = require('async')
 bcrypt = require('bcrypt')
 endpoints = require('../endpoints')
-safejson = require('safejson')
 VCModule = require('../vc_module')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
+comments = require('../mongoose_plugins/mongoose-comments')
 
 person = require('../mongoose_plugins/mongoose-person')
 password = require('../mongoose_plugins/mongoose-password')
 address = require('../mongoose_plugins/mongoose-address')
 picture = require('../mongoose_plugins/mongoose-picture')
 payment = require('../mongoose_plugins/mongoose-payment')
+roles = require('../mongoose_plugins/mongoose-roles')
+data = require('../mongoose_plugins/mongoose-data')
 
 UserSchema = mongoose.Schema(
   username:
@@ -62,19 +62,6 @@ UserSchema = mongoose.Schema(
     readOnly: true
     populate: true
 
-  data:
-    type: String
-    label: 'JSON custom data'
-
-  roles: [
-    type: mongoose.Schema.Types.ObjectId
-    ref: 'Role'
-    label: 'Roles'
-    populate: true
-    private: true
-    readOnly: true
-  ]
-
   connection:
     prefix:
       type: String
@@ -121,6 +108,9 @@ UserSchema.plugin(password)
 UserSchema.plugin(address)
 UserSchema.plugin(picture)
 UserSchema.plugin(payment)
+UserSchema.plugin(roles)
+UserSchema.plugin(data)
+UserSchema.plugin(comments)
 
 UserSchema.plugin(timestamps)
 UserSchema.plugin(locking,
@@ -130,9 +120,7 @@ UserSchema.plugin(locking,
   password = 'password'
 )
 
-UserSchema.plugin(filterPlugin)
-
-UserSchema.set('toObject', {virtuals: true})
+#UserSchema.set('toObject', {virtuals: true})
 #UserSchema.set('toJSON', {virtuals: true})
 
 UserSchema.pre('save', (next) ->
@@ -176,124 +164,6 @@ UserSchema.method(
     mongoose.model('Plan').findById(@plan, (err, plan) ->
       cb(plan) if cb
     )
-
-  allRoles: (cb) ->
-    results = []
-    @populate('roles', (err, user) ->
-      async.eachSeries(user.roles, (role, callback) ->
-        results.push(role)
-        role.allParentRoles((inherits) ->
-          if inherits
-            results = results.concat(inherits)
-          callback()
-        )
-      , (err) ->
-        cb(results) if cb
-      )
-    )
-
-  hasRole: (name, cb) ->
-    that = @
-    name = name.toLowerCase()
-    @allRoles((roles) ->
-      if roles
-        for role in roles
-          if role.name == name
-            console.log "{yellow}" + that.username, "{reset}has role{blue}", name
-            cb(role) if cb
-            return
-
-#      console.log that.username, "does not have role", name
-      cb(null) if cb
-    )
-
-  addRole: (name, cb) ->
-    that = @
-    @hasRole(name, (role) ->
-      if !role
-        mongoose.model('Role').findOne({ name: name.toLowerCase() }, (err, role) ->
-          that.roles.push(role._id)
-          that.save()
-          cb(role) if cb
-        )
-      cb(null) if cb
-    )
-
-  removeRole: (name, cb) ->
-    that = @
-    results = []
-    name = name.toLowerCase()
-    @populate('roles', (err, roles) ->
-      if roles
-        for role in roles
-          if role.name == name
-            results.push(role)
-        for role in results
-          that.roles.remove(role)
-        that.save()
-
-      cb() if cb
-    )
-
-  allRules: (subject, actions, cb) ->
-    results = []
-    @allRoles((roles) ->
-      async.eachSeries(roles, (role, callback) ->
-        role.allRules(subject, actions, (rules) ->
-          if rules
-            results = results.concat(rules)
-          callback()
-        )
-      , (err) ->
-        cb(results) if cb
-      )
-    )
-
-  hasRule: (subject, actions, cb) ->
-    @allRules(subject, actions, (rules) ->
-      cb(rules != null) if cb
-    )
-
-  hasAdmin: (roles) ->
-    for role in roles
-      if role.name == 'admin'
-        return true
-    return false
-
-  can: (actions, subject, rows, cb) ->
-    that = @
-
-    if type(actions) is 'string'
-      actions = [actions]
-
-    action_names = []
-    for action in actions
-      if action == 'schema'
-        action_names.push("read schema")
-      else if action == 'defaults'
-        action_names.push("read default values")
-      else
-        action_names.push(action)
-    action_names = action_names.join(' or ')
-
-    console.log "can {yellow}" + that.username + " {cyan}" + action_names + "{reset} from/to model {magenta}" + subject + "{reset}?"
-
-    that.hasRole('admin', (isAdmin) ->
-      if isAdmin
-        cb('admin') if cb
-      else
-        that.allRules(subject, actions, (rules) ->
-          if rules
-            rule = mongoose.model('Role').canWithRules(that, rules, rows)
-          else
-            rule = null
-          console.log "{yellow}" + that.username + "{reset} " + (if !rule then "cannot" else "can") + " {cyan}" + action_names + " {reset}from/to model {magenta}" + subject + "{reset} {blue}" +  (if rule then rule else "")
-          cb(rule) if cb
-        )
-    )
-
-  isAdmin: (cb) ->
-    @hasRole('admin', cb) if cb
 
   isActive: (cb) ->
     cb(@status == 'active') if cb
@@ -387,14 +257,14 @@ UserSchema.method(
       cb(plan, c, prefix) if cb
     )
 
-  getModelSync: (name, req) ->
+  getModelSync: (name, user, connection, prefix) ->
     m = null
     console.log "{yellow}user.getModelSync(){reset}", name
-    if req.user and req.c
-      if mongoose.modelNames().indexOf(req.prefix + name) != -1
-        m = mongoose.model(req.prefix + name)
-      if !m and req.c.modelNames().indexOf(req.prefix + name) != -1
-        m = req.c.model(req.prefix + name)
+    if user and connection
+      if mongoose.modelNames().indexOf(prefix + name) != -1
+        m = mongoose.model(prefix + name)
+      if !m and connection.modelNames().indexOf(prefix + name) != -1
+        m = connection.model(prefix + name)
     return m
 
   getModel: (name, cb) ->
@@ -415,12 +285,12 @@ UserSchema.method(
         cb(null, plan, c, prefix) if cb
     )
 
-  loadModelSync: (name, schema, req) ->
+  loadModelSync: (name, schema, user, connection, prefix) ->
     console.log "{yellow}user.loadModelSync(){reset}", name
-    m = @getModelSync(name, req)
+    m = @getModelSync(name, user, connection, prefix)
     if !m or !_.isEqual(m.schema, schema)
-      delete req.c.models[req.prefix + name]
-      m = req.c.model(req.prefix + name, schema)
+      delete connection.models[prefix + name]
+      m = connection.model(prefix + name, schema)
     return m
 
   loadModel: (name, schema, cb) ->
@@ -432,11 +302,11 @@ UserSchema.method(
       cb(m, plan, c, prefix) if cb
     )
 
-  unloadModelSync: (name, req) ->
+  unloadModelSync: (name, user, connection, prefix) ->
     console.log "{yellow}user.unloadModelSync(){reset}", name
-    m = @getModelSync(name, req)
+    m = @getModelSync(name, user, connection, prefix)
     if m
-      delete req.c.models[req.prefix + name]
+      delete connection.models[prefix + name]
     return m
 
   unloadModel: (name, cb) ->
@@ -447,12 +317,12 @@ UserSchema.method(
       cb(m != null) if cb
     )
 
-  unloadAllModelsSync: (req) ->
+  unloadAllModelsSync: (user, connection, prefix) ->
     console.log "{yellow}user.unloadAllModelsSync(){reset}"
-    if req.modules
-      for m in req.modules
+    if user.modules
+      for m in user.modules
         for s in m.schemas()
-          delete req.c.models[req.prefix + s.varName()]
+          delete connection.models[prefix + s.varName()]
 
   unloadAllModels: (cb) ->
     that = @
@@ -474,20 +344,17 @@ UserSchema.method(
 
   createRequestVars: (req, cb) ->
     that = @
-    that.modules((modules) ->
-      req.modules = (if modules then modules else [])
-      that.getConnection((plan, c, prefix) ->
-        req.c = c
-        req.plan = plan
-        req.prefix = prefix
-        console.log "createRequestVars()", "c:", req.c.name, "plan:", req.plan?.name, "prefix:", req.prefix, "modules:", req.modules?.length
-        cb() if cb
-      )
+    that.getConnection((plan, c, prefix) ->
+      req.c = c
+      req.plan = plan
+      req.prefix = prefix
+      console.log "createRequestVars()", "c:", req.c.name, "plan:", req.plan?.name, "prefix:", req.prefix
+      cb() if cb
     )
 
-  modelSync: (name, req) ->
+  modelSync: (name, user, connection, prefix) ->
     console.log "{yellow}user.fastModel(){reset}", name
-    m = @getModelSync(name, req)
+    m = @getModelSync(name, user, connection, prefix)
     if !m
       dire = require('dire')
 
@@ -498,16 +365,15 @@ UserSchema.method(
         if require('fs').existsSync(mp)
           generatedModules = dire(mp + '/', false, '.js')
       catch e
-        console.log "{error}dire error", e
+        generatedModules = []
+        console.log e
 
-      console.log generatedModules
-
-      for mm in req.modules
+      for mm in user.modules
         for s in mm.schemas()
 
           gm = generatedModules[require('sanitize-filename')(mm.id().toString())]
           if gm
-            schema = gm[req.prefix + s.varName()]
+            schema = gm[prefix + s.varName()]
             if schema
               m = mm
               break
@@ -516,7 +382,7 @@ UserSchema.method(
           break
 
       if m
-        @loadModelSync(name, schema, req)
+        @loadModelSync(name, schema, user, connection, prefix)
 
     return m
 
@@ -527,15 +393,13 @@ UserSchema.method(
       if !m
         dire = require('dire')
 
+        generatedModules = []
         try
           if require('fs').existsSync(that.modulesPath())
             generatedModules = dire(that.modulesPath() + '/', false, '.js')
-          else
-            generatedModules = []
         catch e
-          console.log "{error}dire error", e
-
-        console.log generatedModules
+          generatedModules = []
+          console.log e
 
         that.modules((modules) ->
           for mm in modules

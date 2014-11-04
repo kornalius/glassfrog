@@ -11,18 +11,37 @@ angular.module('app.globals', ['ui.router.state'])
     user: null
     modules: []
 
-    showMessage: (text, type) ->
-      icon = 'exclamation2'
-      if type == 'error'
-        icon = 'spam3'
-      else if type == 'warning' or type == 'notice'
+    showMessage: (text, type, title, icon, hide, width) ->
+      if type == 'warning' or type == 'notice'
         type = 'notice'
-        icon = 'warning3'
-      else if type == 'info'
-        icon = 'info6'
+      if !icon
+        icon = 'exclamation2'
+        if type == 'error'
+          icon = 'spam3'
+        else if type == 'warning' or type == 'notice'
+          icon = 'warning3'
+        else if type == 'info'
+          icon = 'info6'
+
       $timeout(->
-        notice = new PNotify({text: text, icon: 'cic cic-' + icon, type: type, mouse_reset: false, stack: stack, buttons: {'sticker': false}})
-        notice.get().click(-> notice.remove())
+        options =
+          type: type
+          text: text
+          mouse_reset: false
+          stack: stack
+          hide: (if hide == false then false else true)
+          width: (if width? then width else '300px')
+          buttons:
+            sticker: false
+
+        if title
+          options.title = title
+        if icon and title
+          options.icon = 'large cic cic-' + icon
+
+        notice = new PNotify(options)
+        if !hide? or hide == true
+          notice.get().click(-> notice.remove())
       , 100)
 
     isBreakpoint: (size) ->
@@ -44,16 +63,16 @@ angular.module('app.globals', ['ui.router.state'])
 
         switch errorResponse.status
           when 401
-            Globals.showMessage("Wrong usename or password", 'error')
+            Globals.showMessage("Invalid usename or password", 'error')
 
           when 403
-            Globals.showMessage("Unauthorized! You don't have the necessary permissions", 'error')
+            Globals.showMessage("You do not have the necessary permissions", 'error')
 
           when 404
             Globals.showMessage("Not found error " + errorResponse.data, 'error')
 
           when 500
-            Globals.showMessage("Server internal error: " + errorResponse.data, 'error')
+            Globals.showMessage("Internal server error: " + errorResponse.data, 'error')
 
           else
             if errorResponse.status

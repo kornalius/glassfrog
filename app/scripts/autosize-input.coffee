@@ -24,7 +24,7 @@ angular.module('autosize.services', ['app'])
         element.parent().append(tester)
 
         r = tester[0].getBoundingClientRect()
-        w = r.width + 10
+        w = r.width + 8
 
         element.css('width', w + 'px')
 

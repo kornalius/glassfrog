@@ -1,6 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 SettingSchema = mongoose.Schema(
   key:
@@ -22,7 +21,9 @@ SettingSchema = mongoose.Schema(
 )
 
 SettingSchema.plugin(timestamps)
-SettingSchema.plugin(filterPlugin)
+
+#SettingSchema.set('toObject', {virtuals: true})
+#SettingSchema.set('toJSON', {virtuals: true})
 
 SettingSchema.static(
   getValue: (key, cb) ->

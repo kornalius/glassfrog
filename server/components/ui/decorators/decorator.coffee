@@ -4,7 +4,7 @@ module.exports = [
   desc: 'Control decoration'
   extra:
     display: 'Decorator'
-    category: 'UIs'
+    category: 'UI.Category'
     options: 'c'
     icon: 'cic-brush3'
     color: 'lightpurple'

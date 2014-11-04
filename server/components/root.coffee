@@ -7,61 +7,85 @@ module.exports = [
     defaults: ['Module.Config']
     options: 'h!'
     code:
-      client: (node) ->
-        Handlebars.compile('
-          define("{{module}}", [{{join modules.paths ", "}}], function ({{join modules.vars ", "}}) {\n
-          \n});
-        ')(
-          component: @
-          node: node
-          module: node.varName()
-          modules:
-            nodes: node.linkedModules(true)
-            paths: node.linkedModules(true).map((m) -> m.modulePath(user))
-            vars: node.linkedModules(true).map((m) -> m.varName())
-        )
+      client: (out, node, user) ->
+          out.line "'use strict';"
+          out.line()
 
-      server: (node, user) ->
-        console.log node.linkedModules(true)
-        console.log node.linkedModules(true).map((m) -> m.modulePath(user))
-        console.log node.linkedModules(true).map((m) -> m.varName())
+          out.block('(function()', ')();', (out) ->
+            mod = node.module().getClassName()
+            deps = node.linkedModules(true).map((m) -> '\'' + m.getClassName() + '\'')
+            if deps.length
+              deps = ', ' + deps.join(', ')
+            ctrl = mod + 'Ctrl'
 
-        Handlebars.compile('
-          (function() {\n
-            {{#each modules.nodes}}
-              require("{{varName}}");
-            {{/each}}
-            var app = require("../app");\n
-            var mongoose = require("mongoose");\n
-            var timestampPlugin = require("mongoose-time")();\n
-            var mongooseCurrency = require("mongoose-currency").loadType(mongoose);\n
-            var mongooseSetter = require("mongoose-setter")(mongoose);\n
-            var mongoosePercent = require("../mongoose_plugins/mongoose-percent")(mongoose);\n
-            //var mongooseMoment = require("mongoose-moment")(mongoose);\n
-            var mongooseEncrypted = require("mongoose-encrypted").loadTypes(mongoose);\n
-            var mongooseVersion = require("../mongoose_plugins/mongoose-version")();\n
-            var schemaExtend = require("mongoose-schema-extend");\n
-            \n
-            {{{generate_nodes node false user "Schema" "\n"}}}
-            \n
-            exports.schemas = [{{schemas}}]\n
-            exports.queries = [{{queries}}]\n
-            exports.pages = [{{pages}}]\n
-            exports.views = [{{views}}]\n
-            \n
-          \n}).call(this);
-        ')(
-          component: @
-          node: node
-          module: node.varName()
-          schemas: node.childrenOfKind('Schema', true).map((n) -> n.varName()).join(', ')
-          queries: node.childrenOfKind('Query', true).map((n) -> n.varName()).join(', ')
-          pages: node.childrenOfKind('Page', true).map((n) -> n.varName()).join(', ')
-          views: node.childrenOfKind('View', true).map((n) -> n.varName()).join(', ')
-          modules:
-            nodes: node.linkedModules(true)
-            paths: node.linkedModules(true).map((m) -> m.modulePath(user))
-            vars: node.linkedModules(true).map((m) -> m.varName())
+            out.line "angular.module('{0}', ['app'{1}])".format(mod, deps)
+
+            out.block(".controller('{0}', ['$scope', 'Globals', 'Rest', 'dynForm', function($scope, globals, Rest, dynForm)".format(ctrl), "])", (out) ->
+            )
+
+            out.nodes node, 'client', user, "Page"
+
+            out.block(".config(['$stateProvider', function ($stateProvider)", "]);", (out) ->
+              out.group("$stateProvider", ";", (out) ->
+                out.jsonBlock(".state('{0}',".format(mod.toLowerCase()), ")", (out) ->
+                  out.line "abstract: true"
+                  out.line "url:'/{0}'".format(mod.toLowerCase())
+                  out.line "templateUrl: '/partials/{0}.html'".format(mod.toLowerCase())
+                  out.line "controller: '{0}'".format(ctrl)
+                )
+
+                for p in node.childrenOfKind('Page')
+                  out.jsonBlock(".state('{0}.{1}',".format(mod.toLowerCase(), p.varName().toLowerCase()), ")", (out) ->
+                    out.line "url:''"
+                    if p.getArgValue('icon')
+                      out.line "icon: {0}".format(p.getArgValue('icon'))
+                    out.jsonBlock("data:", (out) ->
+                      out.line "root: '{0}'".format(mod.toLowerCase())
+                      out.line "ncyBreadcrumbLabel: '{0}'".format(mod.humanize())
+                    )
+                    out.jsonBlock("views:", (out) ->
+                      for v in p.childrenOfKind('View')
+                        out.jsonBlock("{0}_{1}:".format(p.varName().toLowerCase(), v.varName().toLowerCase()), (out) ->
+                          out.line "templateUrl: '{0}_{1}_{2}.html'".format(mod.toLowerCase(), p.varName().toLowerCase(), v.varName().toLowerCase())
+                          out.line "controller: '{0}{1}{2}Ctrl'".format(mod, p.getClassName(), v.getClassName())
+                        )
+                    )
+                  )
+              )
+            )
+
+#        out.block("define('{0}', [{1}], function ({2})".format(node.module().varName(), node.linkedModules(true).map((m) -> m.varName().join(', ')), node.linkedModules(true).map((m) -> m.varName()).join(', ')), (out) ->
+#            out.nodes node, 'client', user, "Page"
+#          )
+
+         )
+
+      server: (out, node, user) ->
+        out.line "'use strict';"
+        out.line()
+
+        out.block("(function()", ").call(this);", (out) ->
+          for m in node.linkedModules(true)
+            out.line "require('{0}');".format(m.varName())
+
+          out.line "var app = require('../app');"
+          out.line "var mongoose = require('mongoose');"
+          out.line "var timestampPlugin = require('mongoose-time')();"
+          out.line "var mongooseCurrency = require('mongoose-currency').loadType(mongoose);"
+          out.line "var mongooseSetter = require('mongoose-setter')(mongoose);"
+          out.line "var mongoosePercent = require('../mongoose_plugins/mongoose-percent')(mongoose);"
+          out.line "// var mongooseMoment = require('mongoose-moment')(mongoose);"
+          out.line "var mongooseEncrypted = require('mongoose-encrypted').loadTypes(mongoose);"
+          out.line "var mongooseVersion = require('../mongoose_plugins/mongoose-version')();"
+          out.line "var schemaExtend = require('mongoose-schema-extend');"
+          out.line()
+          out.nodes node, 'server', user, "Schema"
+          out.line()
+          out.line "exports.schemas = [{0}]".format(node.childrenOfKind('Schema', true).map((n) -> n.varName()).join(', '))
+          out.line "exports.queries = [{0}]".format(node.childrenOfKind('Query', true).map((n) -> n.varName()).join(', '))
+          out.line "exports.pages = [{0}]".format(node.childrenOfKind('Page', true).map((n) -> n.varName()).join(', '))
+          out.line "exports.views = [{0}]".format(node.childrenOfKind('View', true).map((n) -> n.varName()).join(', '))
+          out.line "exports.forms = [{0}]".format(node.childrenOfKind('Form', true).map((n) -> n.varName()).join(', '))
         )
 ,
 
@@ -76,9 +100,13 @@ module.exports = [
   extra:
     accepts: ['Module.Argument++']
     icon: 'cic-cog22'
-    options: '!'
+    options: 's'
     color: 'lightgreen'
     args:
+      'color':
+        label: 'color'
+        desc: 'Module color'
+        component: 'Literal.Color'
       'icon':
         desc: 'Module version'
         component: 'Literal.Icon'
@@ -87,20 +115,19 @@ module.exports = [
         label: 'description'
         desc: 'Module description'
         component: 'Literal.String'
+      'tags':
+        label: 'tags'
+        desc: 'Module tags'
+        component: 'Literal.String'
+        default: ['module']
+        options: 't'
       'version':
         desc: 'Module version'
         component: 'Literal.String'
-        default: '1.0.0'
+        default: '0.0.1a'
 ,
 
-  name: 'Module.Argument'
-  desc: 'Module argument'
-  extra:
-    inherit: 'Object'
-    icon: 'cic-tag3'
-,
-
-  name: 'Objects'
+  name: 'Object.Category'
   desc: 'Objects'
   extra:
     display: 'Object'
@@ -112,48 +139,52 @@ module.exports = [
   name: 'Object'
   desc: 'Base object'
   extra:
-    category: 'Objects'
+    category: 'Object.Category'
     accepts: ['=Object++', 'Method++', 'Event++']
     color: 'gray'
     icon: 'cic-atom'
     code:
-      both: (node, user) ->
-        node.varName()
+      client_server: (out, node, user) ->
+        out.append node.varName()
 ,
 
-  name: 'ObjectRef'
+  name: 'Object.Ref'
   desc: 'Base reference object'
   extra:
-    category: 'ObjectsRef'
+    display: 'Object Ref'
+    category: 'Object.Ref.Category'
     options: 'h!'
     icon: 'cic-forward2'
     code:
-      both: (node, user) ->
-        node.varName()
+      client_server: (out, node, user) ->
+        out.append node.varName()
 ,
 
-  name: 'ObjectsRef'
+  name: 'Object.Ref.Category'
   desc: 'Available modules objects'
   extra:
+    display: 'Object Ref'
     options: 'c'
     icon: 'cic-forward2'
     color: 'gray'
 ,
 
-  name: 'ModulesRef'
+  name: 'Module.Ref.Category'
   desc: 'Available modules'
   extra:
+    display: 'Module Ref'
     options: 'c'
     icon: 'cic-ruler3'
     color: 'gray'
 ,
 
-  name: 'ModuleRef'
+  name: 'Module.Ref'
   desc: 'Module reference'
   extra:
-    category: 'ModulesRef'
+    display: 'Module Ref'
+    category: 'Module.Ref.Category'
     options: 'h!'
-    inherit: 'ObjectRef'
+    inherit: 'Object.Ref'
     icon: 'cic-ruler3'
 ,
 
@@ -166,93 +197,111 @@ module.exports = [
 #    color: 'darkpurple'
 #,
 #
-#  name: 'PropertyRef'
+#  name: 'Property.Ref'
 #  desc: 'Object property reference'
 #  extra:
 #    options: 'h!'
-#    inherit: 'ObjectRef'
+#    inherit: 'Object.Ref'
 #    icon: 'cic-tag2'
 #,
 
   name: 'Method'
   desc: 'Method definition'
   extra:
-    accepts: ['Statement++', 'MethodCall++']
+    accepts: ['Method.Argument++', 'Statement++']
     inherit: 'Object'
     icon: 'cic-cogs22'
     color: 'darkpurple'
     code:
-      client: (node) ->
-        Handlebars.compile('
-          function {{name}} ({{{args}}}) {\n
-            {{{generate_nodes node true null "*" "\n"}}}
-          };\n
-        ')(
-          component: @
-          node: node
-          name: node.varName()
-          args: node.argToString('parameters', user)
+      client: (out, node, user) ->
+        out.append "$scope.{0} = function (".format(node.varName())
+        for a in node.childrenOfKind('Method.Argument')
+          out.append a.varName()
+        out.append ")"
+        out.jsonBlock((out) ->
+          out.nodes node, 'client', user, "!Method.Argument"
         )
 
-      server: (node, user) ->
-        Handlebars.compile('
-          function {{name}} ({{{args}}}) {\n
-            {{{generate_nodes node false user "*" "\n"}}}
-          };\n
-        ')(
-          component: @
-          node: node
-          name: node.varName()
-          args: node.argToString('parameters', user)
+      server: (out, node, user) ->
+        out.append "function {0} (".format(node.varName())
+        for a in node.childrenOfKind('Method.Argument')
+          out.append a.varName()
+        out.append ")"
+        out.jsonBlock((out) ->
+          out.nodes node, 'server', user, "!Method.Argument"
         )
 ,
 
-  name: 'MethodRef'
+  name: 'Method.Argument'
+  desc: 'Method argument definition'
+  extra:
+    inherit: 'Object'
+    color: 'darkpurple'
+    icon: 'cic-parentheses'
+    args:
+      'type':
+        enum: ['String', 'Number', 'Boolean', 'Date', 'Time', 'DateTime', 'Color', 'Enum', 'Multi']
+        desc: 'Argument type'
+        default: 'String'
+      'default':
+        desc: 'Argument default value'
+      'enum':
+        'when': (node) ->
+          node.argIsEqual('type', 'Enum')
+        desc: 'Argument enumerations'
+      'multi':
+        'when': (node) ->
+          node.argIsEqual('type', 'Multi')
+        desc: 'Argument multiple enumerations'
+      'desc':
+        desc: 'Argument description'
+,
+
+  name: 'Method.Ref'
   desc: 'Method reference'
   extra:
+    display: 'Method Ref'
     options: 'h!'
-    inherit: 'ObjectRef'
+    inherit: 'Object.Ref'
     icon: 'cic-cogs22'
 ,
 
-  name: 'MethodCall'
+  name: 'Method.Call'
   desc: 'Method call'
   extra:
+    display: 'Method Call'
     options: 'h!'
     inherit: 'Statement'
     icon: 'cic-cogs22'
     code:
-      both: (node, user) ->
-        Handlebars.compile('{{name}}({{{args}}});\n')(
-          component: @
-          node: node
-          name: node.varName()
-          args: node.argsToString(user)
-        )
+      client: (out, node, user) ->
+        out.line "{0}({1});".format(node.varName(), node.argsToString('client', user))
+
+      server: (out, node, user) ->
+        out.line "{0}({1});".format(node.varName(), node.argsToString('server', user))
 ,
 
   name: 'Log'
   desc: 'Log stuff to the console'
   extra:
-    inherit: 'MethodCall'
+    inherit: 'Method.Call'
     icon: 'cic-rawaccesslogs'
     args:
       'Message':
         desc: 'Message to display'
         component: 'Literal.String'
     code:
-      both: (node, user) ->
-        Handlebars.compile('console.log({{{args}}});\n')(
-          component: @
-          node: node
-          args: node.argsToString(user)
-        )
+      client: (out, node, user) ->
+        out.line "console.log({0});".format(node.argsToString('client', user))
+
+      server: (out, node, user) ->
+        out.line "console.log({0});".format(node.argsToString('server', user))
 ,
 
   name: 'Alert'
   desc: 'Show standard alert modal box'
   extra:
-    inherit: 'MethodCall'
+    inherit: 'Method.Call'
     icon: 'cic-window2'
     args:
       'Message':
@@ -275,19 +324,11 @@ module.exports = [
         enum: ['Option A', 'Option B', 'Option C']
         component: 'Literal.String'
     code:
-      client: (node) ->
-        Handlebars.compile('alert({{{args}}});\n')(
-          component: @
-          node: node
-          args: node.argsToString(user)
-        )
+      client: (out, node, user) ->
+        out.line "alert({0});".format(node.argsToString('client', user))
 
-      server: (node, user) ->
-        Handlebars.compile('console.log({{{args}}});\n')(
-          component: @
-          node: node
-          args: node.argsToString(user)
-        )
+      server: (out, node, user) ->
+        out.line "console.log({0});".format(node.argsToString('server', user))
 
 ]
 

@@ -2,28 +2,18 @@
 
 .dyn-form(ng-controller="dynFormCtrl")
 
-  .panel.panel-primary(container="form.container")
+  .container-fluid(container="form.container")
 
-    .panel-heading
-      span.panel-title {{form.label}}
-      span.btn-group.btn-group-xs.pull-right.toolbar-group
-        a.btn.btn-default(ng-repeat="b in form.buttons", href="{{b.url}}")
-          | &nbsp;
-          i.cic(class="{{b.icon}}", style="vertical-align: middle;")
-          span(style="vertical-align: middle;") &nbsp; {{b.name}}
+    .row
+      include form_head
 
-    .panel-body
-      .container-fluid
+    .row-fluid
 
-        .row-fluid
+      ng-form(name="{{domName()}}", ng-class="getClass()", role="form", novalidate)
+        span(ng-repeat="row in rows track by $index")
+          // <row>
 
-          ng-form(name="{{domName()}}", ng-class="getClass()", role="form", novalidate)
-            span(ng-repeat="row in rows track by $index")
-              // <row>
+    .row-fluid
 
-        .row-fluid
-
-    .panel-footer
-      input.btn.btn-primary(type="button", ng-click="save(0)", value="Save", ng-disabled="!isModified(0) || hasErrors(0)")
-      span(style="padding:4px;")
-      input.btn.btn-danger(type='button', ng-click="cancel(0)", value="Cancel", ng-disabled="!isModified(0)")
+    .row
+      include form_foot

@@ -1,5 +1,5 @@
-.node-arg-input.node-arg-input-number
-  input.form-control.input-small(type="text", id="{{a.domId('input-number')}}", name="{{a.domName('input-number')}}", ng-click="$event.preventDefault(); $event.stopPropagation();", ng-model="a.value", ng-keyup="keyup($event)")
+.node-arg-input-number
+  input.form-control.input-small(type="text", id="{{a.domId('input-number')}}", name="{{a.domName('input-number')}}", ng-model="a.value", ng-keyup="keyup($event)")
 
 script.
-  $('.node-arg-input.node-arg-input-number > input').TouchSpin({min: NaN, max: NaN, boostat: 5, maxboostedstep: 10});
+  $('.node-arg-input-number > input').TouchSpin({min: NaN, max: NaN, boostat: 5, maxboostedstep: 10});

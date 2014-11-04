@@ -1,3 +1,13 @@
 //pre {{test}}
 
 #form
+
+hr
+
+.container-fluid
+  .pull-right
+    input.btn.btn-primary(type="button", ng-click="save(0)", value="Save", ng-disabled="!isModified(0) || hasErrors(0)")
+    span(style="padding:4px;")
+    input.btn.btn-danger(type='button', ng-click="cancel(0)", value="Cancel", ng-disabled="!isModified(0)")
+
+hr

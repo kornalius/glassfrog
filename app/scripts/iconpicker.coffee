@@ -36,13 +36,23 @@ angular.module('iconpicker.services', ['app', 'app.globals'])
 
         $http({ method: 'GET', url: '/css/cicons.txt' }).
         success((icons) ->
-          angular.extend(options,
+          options = _.extend({}, options,
+            hideOnSelect: true
+            inputSearch: true
             container: 'body'
             icons: icons.split(',')
             fullClassFormatter: (val) -> 'cic ' + (if val? and val.length then val else 'cic-null')
+            mustAccept: false
           )
 
-          input.iconpicker(options)
+          input.iconpicker(options).on('iconpickerShown', (e) ->
+            p = e.iconpickerInstance.popover.find('.iconpicker-items')
+            if p.length
+              p.scrollTop(0)
+              i = p.find('.iconpicker-item.iconpicker-selected')
+              if i.length
+                p.scrollTop(i.position().top - (p.height() / 2))
+          )
 
           scope.$watch(attrs.ngModel, (newValue) ->
             $timeout(->

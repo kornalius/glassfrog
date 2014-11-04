@@ -1,4 +1,12 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  discounts_fees = path + 'discounts_fees'
+
   schema.add(
 
     discounts_fees: [
@@ -19,33 +27,34 @@ module.exports = ((schema, options) ->
         label: 'Discount/Fee Percent'
     ]
 
+  , path)
+
+  schema.virtual(discounts_fees + '.isDiscount').get(->
+    amount = @get(discounts_fees + '.amount')
+    percent = @get(discounts_fees + '.percent')
+    return (amount? and amount < 0) or (percent? and percent < 0)
   )
 
-  schema.set('toObject', {virtuals: true})
-  schema.set('toJSON', {virtuals: true})
-
-  schema.virtual('discounts_fees.isDiscount').get(->
-    return (@amount? and @amount < 0) or (@percent? and @percent < 0)
-  )
-
-  schema.virtual('discounts_fees.isFee').get(->
-    return (@amount? and @amount > 0) or (@percent? and @percent > 0)
+  schema.virtual(discounts_fees + '.isFee').get(->
+    amount = @get(discounts_fees + '.amount')
+    percent = @get(discounts_fees + '.percent')
+    return (amount? and amount > 0) or (percent? and percent > 0)
   )
 
   schema.method(
 
-    discount: (r, amount) ->
+    discount: (r, _amount) ->
       d = 0
       if r.amount?
         d += r.amount
       if r.percent?
-        d += amount * (r.percent / 100)
+        d += _amount * (r.percent / 100)
       return -d
 
-    discounts: (amount) ->
-      a = amount
+    discounts: (_amount) ->
+      a = _amount
       d = 0
-      for r in @discounts_fees
+      for r in @get(discounts_fees)
         if r.isDiscount
           cd = @discount(r, a)
           if r.compound
@@ -53,18 +62,18 @@ module.exports = ((schema, options) ->
           d += d
       return d
 
-    fee: (r, amount) ->
+    fee: (r, _amount) ->
       f = 0
       if r.amount?
         f += r.amount
       if r.percent?
-        f += amount * (r.percent / 100)
+        f += _amount * (r.percent / 100)
       return f
 
-    fees: (amount) ->
-      a = amount
+    fees: (_amount) ->
+      a = _amount
       f = 0
-      for r in @discounts_fees
+      for r in @get(discounts_fees)
         if r.isFee
           cf = @fee(r, a)
           if r.compound
@@ -72,8 +81,8 @@ module.exports = ((schema, options) ->
           f += cf
       return d
 
-    discountsFees: (amount) ->
-      d = @discounts(amount)
+    discountsFees: (_amount) ->
+      d = @discounts(_amount)
       f = @fees(d)
       return d + f
 

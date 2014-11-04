@@ -1,10 +1,10 @@
 module.exports = [
 
-  name: 'Charts'
+  name: 'Chart.Category'
   desc: 'Charts'
   extra:
     display: 'Chart'
-    category: 'UIs'
+    category: 'UI.Category'
     options: 'c'
     icon: 'cic-bars'
     color: 'lightpurple'
@@ -13,7 +13,7 @@ module.exports = [
   name: 'Chart'
   desc: 'Chart'
   extra:
-    category: 'Charts'
+    category: 'Chart.Category'
     options: 'hp'
     inherit: 'UI'
     icon: 'cic-bars'

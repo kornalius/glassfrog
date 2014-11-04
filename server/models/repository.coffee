@@ -5,8 +5,6 @@ ownable = require('mongoose-ownable')
 comments = require('../mongoose_plugins/mongoose-comments')
 likes = require('../mongoose_plugins/mongoose-likes')
 Moment = require('moment')
-safejson = require('safejson')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 VersionClass = require('../version')
 
 RepositorySchema = mongoose.Schema(
@@ -32,6 +30,10 @@ RepositorySchema = mongoose.Schema(
     type: String
     label: 'Color'
 
+  tags:
+    type: [String]
+    label: 'Tags'
+
   extra:
     type: String
     label: 'Extra Info'
@@ -54,13 +56,54 @@ RepositorySchema = mongoose.Schema(
   readOnly: true
 )
 
-RepositorySchema.set('toObject', {virtuals: true})
-RepositorySchema.set('toJSON', {virtuals: true})
+RepositorySchema.extraFields = [
+
+  (user_id, newObj, cb) ->
+    that = @
+    mongoose.model('Module').findOne({ owner_id: user_id, repo: that._id.toString() }, (err, module) ->
+      newObj.isOwned = that.owner_id.toString() == user_id
+      if module
+        module_version = new VersionClass(module.version)
+        repo_version = new VersionClass(that.version)
+        newObj.needsUpdate = module_version.compareTo(repo_version) < 0
+        newObj.installed = module_version.compareTo(repo_version) == 0
+        newObj.canInstall = false
+        newObj.canUninstall = !newObj.isOwned
+        newObj.published = true
+        newObj.canPublish = false
+        newObj.canPublishUpdate = false
+        newObj.canUnpublish = newObj.isOwned
+        newObj.canDelete = false
+        newObj.canEdit = newObj.isOwned
+      else
+        newObj.needsUpdate = false
+        newObj.installed = false
+        newObj.canInstall = true
+        newObj.canUninstall = false
+        newObj.published = false
+        newObj.canPublish = false
+        newObj.canPublishUpdate = false
+        newObj.canUnpublish = false
+        newObj.canDelete = false
+        newObj.canEdit = false
+      mongoose.model('User').findById(that.owner_id.toString(), (err, user) ->
+        if user
+          newObj.author = user.name.full
+        that.installations((c) ->
+          newObj.installations = c
+          cb() if cb
+        )
+      )
+    )
+
+]
+
+#RepositorySchema.set('toObject', {virtuals: true})
+#RepositorySchema.set('toJSON', {virtuals: true})
 
 RepositorySchema.plugin(timestamps)
 RepositorySchema.plugin(comments)
 RepositorySchema.plugin(likes)
-RepositorySchema.plugin(filterPlugin)
 RepositorySchema.plugin(ownable)
 
 RepositorySchema.virtual('version').get(->
@@ -142,44 +185,6 @@ RepositorySchema.method(
         cb(false) if cb
     )
 
-  extraFields: (user_id, cb) ->
-    that = @
-    mongoose.model('Module').findOne({ owner_id: user_id, repo: that._id.toString() }, (err, module) ->
-      that._doc.isOwned = that.owner_id.toString() == user_id
-      that._doc.liked = that.likeStatus(user_id) == 1
-      that._doc.totalLikes = that.totalLikes()
-      if module
-        module_version = new VersionClass(module.version)
-        repo_version = new VersionClass(that.version)
-        that._doc.needsUpdate = module_version.compareTo(repo_version) < 0
-        that._doc.installed = module_version.compareTo(repo_version) == 0
-        that._doc.canInstall = false
-        that._doc.canUninstall = !that._doc.isOwned
-        that._doc.published = true
-        that._doc.canPublish = false
-        that._doc.canUnpublish = that._doc.isOwned
-        that._doc.canDelete = false
-        that._doc.canEdit = that._doc.isOwned
-      else
-        that._doc.needsUpdate = false
-        that._doc.installed = false
-        that._doc.canInstall = true
-        that._doc.canUninstall = false
-        that._doc.published = false
-        that._doc.canPublish = false
-        that._doc.canUnpublish = false
-        that._doc.canDelete = false
-        that._doc.canEdit = false
-      mongoose.model('User').findById(that.owner_id.toString(), (err, user) ->
-        if user
-          that._doc.author = user.name.full
-        that.installations((c) ->
-          that._doc.installations = c
-          cb() if cb
-        )
-      )
-    )
-
   $install: (req, res, cb) ->
     that = @
     @canInstall(req.user._id.toString(), (ok) ->
@@ -188,6 +193,7 @@ RepositorySchema.method(
           name: that.name
           desc: that.desc
           readme: that.readme
+          tags: _.clone(that.tags)
           icon: that.icon
           color: that.color
           repo: that._id.toString()
@@ -227,7 +233,7 @@ RepositorySchema.method(
           cb(err, that._id) if cb
         )
       else
-        cb(new Error(403)) if cb
+        cb(new Error(403, 'Cannot like/unlike a module you own')) if cb
     )
 
   $dislike: (req, res, cb) ->
@@ -239,7 +245,7 @@ RepositorySchema.method(
           cb(err, that._id) if cb
         )
       else
-        cb(new Error(403)) if cb
+        cb(new Error(403, 'Cannot like/unlike a module you own')) if cb
     )
 )
 
@@ -254,6 +260,7 @@ setTimeout( ->
     name: 'Briefcases organizer'
     desc: 'Organizes all your briefcases to fit the most heroin possible ;)'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "briefcase", "organizer", "heroin"]
     icon: 'cic-suitcase6'
     color: 'darkorange'
     extra:
@@ -284,6 +291,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -303,6 +311,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -322,6 +331,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -341,6 +351,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -360,6 +371,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -379,6 +391,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -398,6 +411,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -417,6 +431,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -436,6 +451,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '#Markdown directive\n*It works!*'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [
@@ -455,6 +471,7 @@ setTimeout( ->
     name: 'Test Module'
     desc: 'This is a cool test module that will not be available during production, because we don\'t want people to get too addicted to it.'
     readme: '### Markdown directive\n*It works!*\n*This* **is** [markdown](https://daringfireball.net/projects/markdown/) in the view.'
+    tags: ["module", "test", "cool"]
     icon: 'cic-uniF7DF'
     color: 'blue'
     history: [

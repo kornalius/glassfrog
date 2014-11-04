@@ -1,34 +1,119 @@
-table.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
+.node-line(ng-mouseover="setOver(n); $event.stopPropagation();", ng-mouseleave="setOver(null)")
 
-  td.node-expand-col.node-expand-col-lg
 
-    a.node-expand(type="button", ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="n.toggle($event.altKey); $event.stopPropagation();")
+  // expand/collapse button
+  .node-expand(ng-show="n.hasChildren()", ng-mouseover="setExpandOver(n); $event.stopPropagation();", ng-mouseleave="setExpandOver(null)", ng-click="n.toggle($event.altKey); $event.stopPropagation();")
+    span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }")
 
-      span.node-expand-icon.cic(ng-class="{ 'cic-arrow-right8': n.isClosed(), 'cic-arrow-down8': n.isOpened(), 'highlighted': isExpandOver(n) }")
 
-  td.node-content-col
+  // node
+  .node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.preventDefault(); $event.stopPropagation();", ng-dblclick="toggle(n); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'error': n.hasError(), 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n", ng-model="n")
 
-    table.node(id="node-element-id_{{n.id()}}", name="node-element_{{n.id()}}", ng-click="setSelection(n); $event.stopPropagation();", ng-dblclick="n.toggle(); $event.preventDefault(); $event.stopPropagation();", ng-class="{ 'highlighted': isOver(n), 'selected': isSelection(n) }", render-node="n", ng-model="n")
+    // draggable portion
+    .node-handle(ui-tree-handle)
 
-      td.node-handle-col(ui-tree-handle)
-        table
 
-          include node-color-template
+      // color
+      .node-color(id="node-color-id_{{n.id()}}", name="node-color_{{n.id()}}", class="{{n.getColor()}}-back")
+        //span.node-state-icon(id="node-state-icon-id_{{n.id()}}", name="node-state-icon_{{n.id()}}", ng-class="{ 'cic cic-new': n.hasErrors() }")
 
-          include node-icon-template
 
-          include node-label-template
+      // icon
+      .text-muted.node-icon.cic(id="node-icon-id_{{n.id()}}", name="node-icon_{{n.id()}}", class="{{n.getIcon()}}")
 
-          td.node-filler
 
-          include node-parenticons-template
+    // label
+    .node-label(id="node-label-id_{{n.id()}}", name="node-label_{{n.id()}}", ng-if="!isEditing(n)", ng-click="edit(n, $event); $event.stopPropagation()", data-nodrag="true") {{n.displayName()}}
 
-          include node-args-template
+    input.node-input.form-control.input-small(type="text", id="node-input-id_{{n.id()}}", name="node-input_{{n.id()}}", ng-model="n.name", ng-keyup="keyup($event)", ng-if="isEditing(n) && !n.hasEnum()", ng-controller="EditorNodeEditCtrl", data-nodrag="true")
+    //select2.node-input.node-select.input-small(id="node-select-id_{{n.id()}}", name="node-select_{{n.id()}}", ng-blur="saveEdit()", ng-model="n.name", ng-keyup="keyup($event)", field="{config: { dropdownAutoWidth: true }, options: {{getEnum(n)}} }", ng-change="saveEdit()", ng-if="n.hasEnum()")
 
-          include node-modified-template
 
-    include node-menu-template
+    // children icons
+    //span.text-muted.node-shared-icon.cic(id="node-shared-icon_{{n.id()}}", class="cic-share23", ng-show="n.isShared()")
+    //span.text-muted.node-sharing-icon.cic(id="node-sharing-icon_{{n.id()}}", class="cic-cloud32", ng-show="n.isSharing()")
+    //span.cic.cic-link3.node-link-icon(ng-show="n.isLink()")
+    .node-parentIcons(ng-show="n.hasParentIcons() && n.isClosed() && !isEditing(n)")
+      span.node-icon.node-parentIcon.cic(ng-repeat="cn in n.children()", ng-show="cn.getComponent().parentIcon()", class="{{cn.getIcon()}}")
 
-ol.nodes-tree(ng-if="n.isOpened()", ng-model="n.nodes", ui-tree-nodes="")
+
+    // arguments
+    .node-arg(ng-repeat="a in n.argsToArray(true)", id="{{a.domId()}}", name="{{a.domName()}}", ng-controller="EditorNodeArgEditCtrl")
+
+      // name
+      .node-arg-name(id="{{a.domId('name')}}}", name="{{a.domName('name')}}", ng-if="a.getLabel()") {{a.getLabel()}}:
+
+      // label
+      .node-arg-label-col(id="node-arg-label-col-id_{{n.id()}}", class="node-arg-label-{{a.getInputType()}}-col", name="node-arg-label-col_{{n.id()}}", ng-click="edit(a, $event); $event.preventDefault(); $event.stopPropagation();", ng-mouseover="setOver(a); $event.stopPropagation();", ng-mouseleave="setOver(null); $event.stopPropagation();", ng-if="(!a.noinput || a.noinput == false) && !isEditing(a)", data-nodrag)
+        span.node-arg-label(id="{{a.domId('label')}}", name="{{a.domName('label')}}", ng-class="a.getLabelClass()", ng-style="a.getLabelStyles()",  data-nodrag) {{a.displayValue()}}
+
+      .node-arg-input(ng-if="isEditing(a)", class="node-arg-input-{{a.getInputType()}}", data-nodrag, ng-include="'/partials/node-arg-input-' + a.getInputType() + '-template.html'")
+
+
+    // modified
+    .node-modified(id="node-modified-color-id_{{n.id()}}", name="node-modified-color_{{n.id()}}", ng-class="{ 'color': n.isModified() }")
+
+
+  // compile error
+  span.node-error(id="node-error-id.{{n.id()}}", name="node-error_{{n.id()}}", ng-if="n.hasError()")
+    span.cic.cic-spam3
+    span &nbsp;{{n.error().desc}}
+
+  // menu
+  .node-tool-menu(id="node-tool-menu-id_{{n.id()}}", name="node-tool-menu_{{n.id()}}", data-nodrag="true")
+
+    .btn-group(ng-show="isOver(n)")
+      button.btn.btn-sm.node-button-item(type="button", ng-click="removeIt(n); $event.stopPropagation();", ng-hide="!n.canRemove()")
+        span.node-button-icon.cic.cic-trashcan2
+
+      button.btn.btn-sm.node-button-item.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}", style="width: 200px;")
+        span.node-button-icon.cic.cic-menu2
+
+      ul.dropdown-menu.node-menu(id="node-menu", role="menu")
+
+        li.node-menu-item.disabled(id="node-menu-copy")
+          a(href="", ng-click="copy(n); $event.stopPropagation();")
+            span.node-menu-icon.cic.cic-copy
+            | Copy
+
+        li.node-menu-item.disabled(id="node-menu-cut")
+          a(href="", ng-click="cut(n); $event.stopPropagation();", ng-hide="!n.canRemove()")
+            span.node-menu-icon.cic.cic-cut
+            | Cut
+
+        li.node-menu-item.disabled(id="node-menu-paste")
+          a(href="", ng-click="paste(n); $event.stopPropagation();")
+            span.node-menu-icon.cic.cic-paste
+            | Paste
+
+        //li.divider(ng-hide="!n.canShare()")
+        //
+        //li.node-menu-item(id="node-menu-share")
+        //  a(href="", ng-click="share(n); $event.stopPropagation();", ng-hide="!n.canShare()")
+        //    span.node-menu-icon.cic.cic-cloud32
+        //    | Share...
+
+        //li.divider
+        //
+        //li.node-menu-item(id="node-menu-generate")
+        //  a(href="", ng-click="n.generate(); $event.stopPropagation();")
+        //    span.node-menu-icon.cic.cic-code2
+        //    | Generate code...
+
+        li.divider
+
+        li.node-menu-item(id="node-menu-expandAll")
+          a(href="", ng-click="expandAll(n); $event.stopPropagation();")
+            span.node-menu-icon.cic.cic-plus32
+            | Expand All
+
+        li.node-menu-item(id="node-menu-collapseAll")
+          a(href="", ng-click="collapseAll(n); $event.stopPropagation();")
+            span.node-menu-icon.cic.cic-minus42
+            | Collapse All
+
+
+// children nodes
+ol.nodes-tree(ng-if="n.isOpened()", ng-model="n.nodes", ui-tree-nodes="", ng-cloak)
 
   li(ng-repeat="n in n.nodes", data-collapsed="true", ui-tree-node, ng-include="'/partials/node-template.html'")

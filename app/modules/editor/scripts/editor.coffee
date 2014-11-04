@@ -64,8 +64,9 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
   '$interval'
   '$injector'
   'Rest'
+  'Globals'
 
-  (dynModal, $timeout, $interval, $injector, Rest) ->
+  (dynModal, $timeout, $interval, $injector, Rest, Globals) ->
     over: null
     prevOver: null
     expandTimeout: null
@@ -90,7 +91,7 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
 
           VCGlobal.modules = new Rest('module', '/api/modules')
           VCGlobal.modules.rows = VCGlobal.modules.find({}, (data, err) ->
-            if !err
+            if !err and data
               for m in data
                 VCModule.make(m)
               console.log "Loaded {0} modules".format(data.length)
@@ -125,26 +126,47 @@ angular.module('editor', ['editor.module', 'editor.component', 'editor.node', 'e
     editModule: (m, cb) ->
       that = @
 #      @askSaveModule((ok) ->
-      require(['vc_node'], (VCNode) ->
-        m.edit((ok) ->
-          console.log "editModule()", ok
-          if ok
-            that.module = m
-            that.rootNodes = m.getRoot().nodes
-#                $timeout(->
-#                  m.generateCode(true)
-#                  m.generateCode(false)
-#                , 1000)
-
-          cb(that.module) if cb
+      if m
+        require(['vc_node'], (VCNode) ->
+          m.edit((ok) ->
+            if ok
+              that.module = m
+              that.rootNodes = m.getRoot().nodes
+            console.log "editModule()", ok, that.module.displayName()
+            cb(that.module) if cb
+          )
         )
-      )
 #      )
 
     saveModule: (m, cb) ->
-      m.save((err, m) ->
-        cb(!err) if cb
-      )
+      that = @
+      if m
+        console.log "saveModule()", m
+        m.saveLocally((ok) ->
+          if ok
+            require(['vc_global', 'vc_module'], (VCGlobal, VCModule) ->
+              VCGlobal.modules.update(m, (mm, err) ->
+                if !err
+                  VCModule.make(mm)
+                  mm.clearSyntax()
+                  VCGlobal.modules.call(mm, 'build', (err, result) ->
+                    if !err
+                      if result and result.$e
+                        mm.showSyntaxError(result.$e)
+                        if result.$e._id
+                          n = VCGlobal.findNode(mm, result.$e._id, true)
+                          if n
+                            n.$data._error = result.$e
+                            n.makeVisible()
+                      else
+                        Globals.showMessage('Module compiled successfully!', 'success')
+                    that.editModule(mm, cb)
+                  )
+                else
+                  cb(err) if cb
+              )
+            )
+        )
 
     isOver: (o) ->
       @over == o

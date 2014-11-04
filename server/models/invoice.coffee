@@ -2,8 +2,6 @@ mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 payment = require('../mongoose_plugins/mongoose-payment')
 autoIncrement = require('mongoose-auto-increment')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
-User = require('./user')
 
 InvoiceSchema = mongoose.Schema(
   invoiceNo:
@@ -34,8 +32,8 @@ InvoiceSchema = mongoose.Schema(
   readOnly: true
 )
 
-InvoiceSchema.set('toObject', {virtuals: true})
-InvoiceSchema.set('toJSON', {virtuals: true})
+#InvoiceSchema.set('toObject', {virtuals: true})
+#InvoiceSchema.set('toJSON', {virtuals: true})
 
 InvoiceSchema.plugin(timestamps)
 InvoiceSchema.plugin(payment)
@@ -45,8 +43,6 @@ InvoiceSchema.plugin(autoIncrement.plugin,
   startAt: 0
   incrementBy: 1
 )
-
-InvoiceSchema.plugin(filterPlugin)
 
 InvoiceSchema.virtual('amount').get( ->
   @payment.amount

@@ -4,69 +4,69 @@ GlobalClass =
   modules: { rows: [] }
 
   findNode: (m, n, idOnly) ->
-    if type(n) is 'string'
+    if n and type(n) is 'string'
       n = n.toLowerCase()
       if !m
-        for m in GlobalClass.modules.rows
-          nn = @findNode(m, n, idOnly)
-          if nn
-            return nn
-        return null
+        if GlobalClass.modules.rows
+          for m in GlobalClass.modules.rows
+            nn = @findNode(m, n, idOnly)
+            if nn
+              return nn
       else if m.getNodes
         for nn in m.getNodes(true)
           if (idOnly? and nn.id and nn.id() == n) or (!idOnly? and ((nn.id and nn.id() == n) or (nn.name and nn.name.toLowerCase() == n)))
             return nn
-      return null
     else if n and n.$data and n.$data.isNode
       return n
-    else
-      return null
+    return null
 
   findNodesOfKind: (type, recursive) ->
     l = []
-    for m in @modules.rows
-      if m.getRoot
-        r = m.getRoot()
-      else
-        r = null
-      if r
-        l = l.concat(r.childrenOfKind(type, recursive))
+    if @modules and @modules.rows
+      for m in @modules.rows
+        if m.getRoot
+          r = m.getRoot()
+        else
+          r = null
+        if r
+          l = l.concat(r.childrenOfKind(type, recursive))
     return l
 
   findModule: (m, idOnly) ->
-    if type(m) is 'string'
+    if m and type(m) is 'string'
       m = m.toLowerCase()
       if @modules and @modules.rows
         for mm in @modules.rows
           if (idOnly? and mm.id and mm.id() == m) or (!idOnly? and ((mm.id and mm.id() == m) or (mm.name and mm.name.toLowerCase() == m)))
             return mm
-      return null
     else if m and m.$data and m.$data.isModule
       return m
-    else
-      return null
+    return null
 
   findComponent: (c, idOnly) ->
-    if type(c) is 'string'
+    if c and type(c) is 'string'
       c = c.toLowerCase()
-      for cc in @components
-        if (idOnly? and cc.id and cc.id() == c) or (!idOnly? and ((cc.id and cc.id() == c) or (cc.name and cc.name.toLowerCase() == c)))
-          return cc
-      return null
+      if @components
+        for cc in @components
+          if (idOnly? and cc.id and cc.id() == c) or (!idOnly? and ((cc.id and cc.id() == c) or (cc.name and cc.name.toLowerCase() == c)))
+            return cc
     else if c and c.$data and c.$data.isComponent
       return c
-    else
-      return null
+    return null
 
   findComponentsOfKind: (type) ->
-    if type(type) is 'string'
-      t = type
+    if type
+      if type(type) is 'string'
+        t = type
+      else
+        t = type.getName()
     else
-      t = type.getName()
+      return []
     l = []
-    for cc in @components
-      if t == '*' or (cc.kindOf and cc.kindOf(t))
-        l.push(cc)
+    if @components
+      for cc in @components
+        if t == '*' or (cc.kindOf and cc.kindOf(t))
+          l.push(cc)
     return l
 
   find: (name, idOnly) ->
@@ -77,65 +77,66 @@ GlobalClass =
       n = @findNode(null, name, idOnly)
     return n
 
+  currentSyntaxId: null
+
   checkSyntax: (s) ->
-    syntax = { code: '', nodes: null, error: null }
+    that = @
+    that.currentSyntaxId = null
+    syntax = { code: s, crc: checksum(s), ast: null, error: null }
     try
-      syntax.code = s
-      syntax.crc = checksum(s)
-      syntax.nodes = acorn.parse(s,
+      syntax.ast = acorn.parse(s,
         forbidReserved: 'everywhere'
         locations: true
         ranges: true
         onComment: (block, text, start, end) ->
-          if !block
-            line = acorn.getLineInfo(s, start)
-  #          console.log "onComment()", block, text, start, end, line
-            x = text.indexOf('id::')
-            if x != -1
-              ids = text.substr(x + 4).split(',')
-              for id in ids
-                n = GlobalClass.find(id, true)
-                if n and n.$data
-                  n.$data._syntax = { start: start, end: end, line: line }
+          if block and text.match(/[0-9a-f]+/)
+            that.currentSyntaxId = text
+#            that.currentSyntaxIdLine = acorn.getLineInfo(s, start)
       )
     catch e
       syntax.error = e
+      if syntax.error
+        syntax.error._id = that.currentSyntaxId
     finally
       return syntax
 
-  enumToList: (l, node, asObject, multi) ->
+  enumToList: (l, node, asObject) ->
+    nl = []
 
-    if !multi
-#      if asObject
-#        nl = [{label: '', value: ''}]
-#      else
-      nl = ['']
-    else
-      nl = []
+    if l
+      for i in [0..l.length - 1]
+        ii = l[i]
+        if ii? and type(ii) is 'string'
+          if ii == ''
+            nl.push('')
 
-    for i in [0..l.length - 1]
-      ii = l[i]
-      if ii and type(ii) is 'string'
-        if ii.startsWith('#')
-          nl = nl.concat(@findComponentsOfKind(ii.substr(1)).map((c) -> if asObject then {label: c.displayName(), value: c.id(), link: true} else c.displayName()))
+          else if ii.startsWith('#')
+            nl = nl.concat(@findComponentsOfKind(ii.substr(1)).map((c) -> if asObject then {label: c.displayName(), value: c.id(), link: true} else c.displayName()))
 
-        else if ii.toLowerCase() == '@module'
-          nl = nl.concat(@modules.rows.map((m) -> if asObject then {label: m.varName(), value: m.id(), link: true} else m.varName()))
+          else if ii.toLowerCase() == '@module'
+            nl = nl.concat(@modules.rows.map((m) -> if asObject then {label: m.varName(), value: m.id(), link: true} else m.varName()))
 
-        else if ii.startsWith('@@@') and node?
-          nl = nl.concat(node.childrenOfKind(ii.substr(3), true).map((n) -> if asObject then {label: n.varName(), value: n.id(), link: true} else n.varName()))
+          else if ii.startsWith('@@@') and node?
+            nl = nl.concat(node.childrenOfKind(ii.substr(3), true).map((n) -> if asObject then {label: n.pathname(true, n.module().isEditing()), value: n.id(), link: true} else n.pathname(true, n.module().isEditing())))
 
-        else if ii.startsWith('@@')
-          nl = nl.concat(@findNodesOfKind(ii.substr(2), true).map((n) -> if asObject then {label: n.varName(), value: n.id(), link: true} else n.varName()))
+          else if ii.startsWith('@@')
+            nl = nl.concat(@findNodesOfKind(ii.substr(2), true).map((n) -> if asObject then {label: n.pathname(true, n.module().isEditing()), value: n.id(), link: true} else n.pathname(true, n.module().isEditing())))
 
-        else if ii.startsWith('@')
-          nl = nl.concat(@findNodesOfKind(ii.substr(1), false).map((n) -> if asObject then {label: n.varName(), value: n.id(), link: true} else n.varName()))
+          else if ii.startsWith('@')
+            nl = nl.concat(@findNodesOfKind(ii.substr(1), false).map((n) -> if asObject then {label: n.pathname(true, n.module().isEditing()), value: n.id(), link: true} else n.pathname(true, n.module().isEditing())))
 
-        else
-          nl.push(if asObject then {label: ii, value: ii} else ii)
+          else if ii.startsWith('&')
+            try
+              l = eval(ii.substr(1))
+              if type(l) is 'string'
+                l = l.split(',')
+            catch e
+              l = []
+              console.log e
+            nl = nl.concat(l.map((n) -> if asObject then {label: n, value: n} else n))
 
-    if nl.length == 1 and !multi
-      nl = []
+          else
+            nl.push(if asObject then {label: ii, value: ii} else ii)
 
     id = null
     name = null
@@ -149,6 +150,22 @@ GlobalClass =
 
     return nl
 
+#  queryToList = (str, node, user, connection, prefix, cb) ->
+#    q = require('./endpoints').queryFromString(str, null, user, connection, prefix)
+#    if q
+#      return q.exec((err, results) ->
+#        if results
+#          for r in results
+#            v = ''
+#            for k of r
+#              if k != '_id'
+#                v = r[k]
+#                break
+#            nl.push(if asObject then {label: v, value: n._id.toString()} else v)
+#        cb(nl) if cb
+#      )
+#    else
+#      cb([]) if cb
 
   loadComponents: (cb) ->
     that = @
@@ -161,16 +178,19 @@ GlobalClass =
         .success((result, status) ->
           if result and result.length
             info = result[0]
-            that.status = info.status
-            that.err = info.err
+            that.status = info['$s']
+            that.err = info['$e']
             if that.status == 'ok'
               result.shift()
               data = result
               require(['vc_component'], (VCComponent) ->
                 that.components = data
-                for c in that.components
-                  VCComponent.make(c)
-                console.log "Loaded {0} components".format(data.length)
+                cc = 0
+                if that.components
+                  for c in that.components
+                    VCComponent.make(c)
+                    cc++
+                console.log "Loaded {0} components".format(cc)
                 cb(data) if cb
               )
 
@@ -193,10 +213,11 @@ GlobalClass =
         if data
           VCComponent = require('./vc_component')
           that.components = []
-          for c in data
-            cc = c.toObject()
-            VCComponent.make(cc)
-            that.components.push(cc)
+          if data
+            for c in data
+              cc = c.toObject()
+              VCComponent.make(cc)
+              that.components.push(cc)
           console.log "Loaded {0} components".format(that.components.length)
           cb(data) if cb
         else

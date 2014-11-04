@@ -1,7 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
-User = require('./user')
 
 LogSchema = mongoose.Schema(
   action:
@@ -44,7 +42,9 @@ LogSchema = mongoose.Schema(
 )
 
 LogSchema.plugin(timestamps)
-LogSchema.plugin(filterPlugin)
+
+#LogSchema.set('toObject', {virtuals: true})
+#LogSchema.set('toJSON', {virtuals: true})
 
 LogSchema.static(
   log: (user, action, schema, comment, ip, url) ->
@@ -57,9 +57,12 @@ LogSchema.static(
       url: url if url?
     )
 
-  LOG_REQUEST: -> 'R'
-  LOG_LOGIN: -> 'L'
-  LOG_LOGOUT: -> 'T'
+  LOG_REQUEST: ->
+    'R'
+  LOG_LOGIN: ->
+    'L'
+  LOG_LOGOUT: ->
+    'T'
 )
 
 module.exports = mongoose.model('Log', LogSchema)

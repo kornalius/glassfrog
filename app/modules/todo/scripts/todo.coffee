@@ -44,6 +44,7 @@ angular.module('todo', ['app'])
     .state('todo',
       url:'/todo'
       templateUrl: '/partials/todo.html'
+      controller: 'TodoCtrl'
       sidebarHidden: true
       data:
         ncyBreadcrumbLabel: 'Todo'

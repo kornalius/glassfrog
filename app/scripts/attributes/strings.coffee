@@ -41,7 +41,7 @@ angular.module('stringAttributes', [])
         else
           l = element.find('label')
           if l.length
-            l.prepend("<i class=\"display-icon cic cic-lock32\"/>")
+            l.prepend("<span class=\"display-icon cic cic-lock32\"/>")
 
     email:
       type: 'decorator'
@@ -54,7 +54,7 @@ angular.module('stringAttributes', [])
           input.attr('filter-format', "")
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-envelope-alt\"/>")
+          element.find('span').append("<span class=\"cic cic-envelope-alt\"/>")
         else
           element.removeAttr('email')
           l = element.find('label')
@@ -66,7 +66,7 @@ angular.module('stringAttributes', [])
             email = $parse(s)(scope)
             if email? and email.length
               l.wrap("<a href=\"mailto:" + _.str.escapeHTML(email) + "\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-envelope-alt\"/>")
+            l.prepend("<span class=\"display-icon cic cic-envelope-alt\"/>")
 
     phone:
       type: 'decorator'
@@ -78,10 +78,10 @@ angular.module('stringAttributes', [])
           input.attr('filter', "phone")
           input.attr('filter-format', "")
           input.attr('filter-apply', "true")
-          $(input).mask("(999) 999-9999? x99999")
+          input.mask("(999) 999-9999? x99999")
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-phone\"/>")
+          element.find('span').append("<span class=\"cic cic-phone\"/>")
         else
           element.removeAttr('phone')
           l = element.find('label')
@@ -92,7 +92,7 @@ angular.module('stringAttributes', [])
             phone = $parse(s)(scope)
             if phone? and phone.length
               l.wrap("<a href=\"tel:" + _.str.escapeHTML(phone.replace(/[\(\)\-\s]/gi, '')) + "\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-phone\"/>")
+            l.prepend("<span class=\"display-icon cic cic-phone\"/>")
 
     fax:
       type: 'decorator'
@@ -104,10 +104,10 @@ angular.module('stringAttributes', [])
           input.attr('filter', "phone")
           input.attr('filter-format', "")
           input.attr('filter-apply', "true")
-          $(input).mask("(999) 999-9999? x99999")
+          input.mask("(999) 999-9999? x99999")
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-printer\"/>")
+          element.find('span').append("<span class=\"cic cic-printer\"/>")
         else
           element.removeAttr('phone')
           l = element.find('label')
@@ -118,7 +118,7 @@ angular.module('stringAttributes', [])
             fax = $parse(s)(scope)
             if fax? and fax.length
               l.wrap("<a href=\"tel:" + _.str.escapeHTML(fax.replace(/[\(\)\-\s]/gi, '')) + "\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-printer\"/>")
+            l.prepend("<span class=\"display-icon cic cic-printer\"/>")
 
     url:
       type: 'decorator'
@@ -131,7 +131,7 @@ angular.module('stringAttributes', [])
           input.attr('filter-format', "")
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-btn").css("width", "39px")
-          element.find('span').append("<button class='btn btn-default'><i class=\"cic cic-external-link-sign\"/></button>")
+          element.find('span').append("<button class='btn btn-default'><span class=\"cic cic-external-link-sign\"/></button>")
         else
           element.removeAttr('url')
           l = element.find('label')
@@ -142,7 +142,7 @@ angular.module('stringAttributes', [])
             url = $parse(s)(scope)
             if url? and url.length
               l.wrap("<a href=\"" + url + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-external-link-sign\"/>")
+            l.prepend("<span class=\"display-icon cic cic-external-link-sign\"/>")
 
     username:
       type: 'decorator'
@@ -153,12 +153,12 @@ angular.module('stringAttributes', [])
           input.removeAttr('username')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-user32\"/>")
+          element.find('span').append("<span class=\"cic cic-user32\"/>")
         else
           element.removeAttr('username')
           l = element.find('label')
           if l.length
-            l.prepend("<i class=\"display-icon cic cic-user32\"/>")
+            l.prepend("<span class=\"display-icon cic cic-user32\"/>")
 
     address:
       type: 'decorator'
@@ -169,7 +169,7 @@ angular.module('stringAttributes', [])
           input.removeAttr('city')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-home3\"/>")
+          element.find('span').append("<span class=\"cic cic-home3\"/>")
         else
           element.removeAttr('address')
           l = element.find('label')
@@ -180,7 +180,7 @@ angular.module('stringAttributes', [])
             address = _.str.trim($parse(s)(scope))
             if address? and address.length
               l.wrap("<a href=\"http://maps.google.com/?q=" + _.str.escapeHTML(address) + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-home3\"/>")
+            l.prepend("<span class=\"display-icon cic cic-home3\"/>")
 
     city:
       type: 'decorator'
@@ -191,7 +191,7 @@ angular.module('stringAttributes', [])
           input.removeAttr('city')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-uniF576\"/>")
+          element.find('span').append("<span class=\"cic cic-uniF576\"/>")
         else
           element.removeAttr('city')
           l = element.find('label')
@@ -202,7 +202,7 @@ angular.module('stringAttributes', [])
             city = _.str.trim($parse(s)(scope))
             if city? and city.length
               l.wrap("<a href=\"http://maps.google.com/?q=" + _.str.escapeHTML(city) + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-uniF576\"/>")
+            l.prepend("<span class=\"display-icon cic cic-uniF576\"/>")
 
     state:
       type: 'decorator'
@@ -213,7 +213,7 @@ angular.module('stringAttributes', [])
           input.removeAttr('city')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-map\"/>")
+          element.find('span').append("<span class=\"cic cic-map\"/>")
         else
           element.removeAttr('state')
           l = element.find('label')
@@ -224,7 +224,7 @@ angular.module('stringAttributes', [])
             state = _.str.trim($parse(s)(scope))
             if state? and state.length
               l.wrap("<a href=\"http://maps.google.com/?q=" + _.str.escapeHTML(state) + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-map\"/>")
+            l.prepend("<span class=\"display-icon cic cic-map\"/>")
 
     country:
       type: 'decorator'
@@ -235,7 +235,7 @@ angular.module('stringAttributes', [])
           input.removeAttr('city')
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-globe6\"/>")
+          element.find('span').append("<span class=\"cic cic-globe6\"/>")
         else
           element.removeAttr('country')
           l = element.find('label')
@@ -246,7 +246,7 @@ angular.module('stringAttributes', [])
             country = _.str.trim($parse(s)(scope))
             if country? and country.length
               l.wrap("<a href=\"http://maps.google.com/?q=" + _.str.escapeHTML(country) + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-globe6\"/>")
+            l.prepend("<span class=\"display-icon cic cic-globe6\"/>")
 
     zipcode:
       type: 'decorator'
@@ -260,7 +260,7 @@ angular.module('stringAttributes', [])
           input.attr('filter-apply', "true")
           input.parent().addClass("input-group")
           element.find('span').addClass("input-group-addon").css("width", "39px")
-          element.find('span').append("<i class=\"cic cic-stamp\"/>")
+          element.find('span').append("<span class=\"cic cic-stamp\"/>")
         else
           element.removeAttr('zipcode')
           l = element.find('label')
@@ -271,7 +271,7 @@ angular.module('stringAttributes', [])
             zip = _.str.trim($parse(s)(scope))
             if zip? and zip.length
               l.wrap("<a href=\"http://maps.google.com/?q=" + _.str.escapeHTML(zip) + "\" target=\"_blank\"></a>")
-            l.prepend("<i class=\"display-icon cic cic-stamp\"/>")
+            l.prepend("<span class=\"display-icon cic cic-stamp\"/>")
 
     mask:
       type: 'decorator'
@@ -279,14 +279,6 @@ angular.module('stringAttributes', [])
         m = field.mask
         input = dynForm.getFieldDOM(element)
         if input and input.length and input[0].nodeName == 'INPUT'
-          $(input).on("focus", (e) ->
-            $(input).mask(m, window.maskOptions)
-          )
-          $(input).on("blur", (e) ->
-#            console.log element.$viewValue
-            $(input).unmask()
-          )
-        else
-          $(input).mask(m)
+          input.mask(m)
 
 ])

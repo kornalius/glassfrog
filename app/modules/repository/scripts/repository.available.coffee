@@ -24,7 +24,7 @@ angular.module('repository.available', ['dynamicForm', 'editor'])
         gridpart_md: 3
         gridpart_sm: 2
         gridpart_xs: 1
-        layout: {type: 'grid', style: 'form-inline', include: 'repository-card-template'}
+        layout: {type: 'grid', style: 'form-inline'}
 
         fields: [
           fieldname: 'name'

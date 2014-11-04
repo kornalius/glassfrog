@@ -1,6 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
+roles = require('../mongoose_plugins/mongoose-roles')
 
 ShareSchema = mongoose.Schema(
   module:
@@ -17,19 +17,12 @@ ShareSchema = mongoose.Schema(
     label: 'Should you host the data on your plan'
 
   users: [
-    user:
+    user_id:
       type: mongoose.Schema.Types.ObjectId
       ref: 'User'
       required: true
       label: 'User'
       populate: true
-
-    state:
-      type: String
-      enum: ['active', 'disabled']
-      default: 'disabled'
-      required: true
-      label: 'Share state'
   ]
 ,
   label: 'Shares'
@@ -37,7 +30,10 @@ ShareSchema = mongoose.Schema(
 )
 
 ShareSchema.plugin(timestamps)
-ShareSchema.plugin(filterPlugin)
+ShareSchema.plugin(roles, {path: 'users'})
+
+#ShareSchema.set('toObject', {virtuals: true})
+#ShareSchema.set('toJSON', {virtuals: true})
 
 #ShareSchema.post('save', (doc) ->
 #  mongoose.model('Share').refreshShares()

@@ -1,3 +1,11 @@
-div(ng-controller='DashboardCtrl')
+.blog-page
 
-  .dashboard-container(dashboard="dashboardOptions")
+  .blog-header
+    h1.blog-title {{title}}
+    h4.blog-description {{description}}
+
+  hr(style="margin-top: 10px;")
+
+  .blog-posts
+
+    div(ui-view="main")

@@ -1,6 +1,6 @@
 module.exports = [
 
-  name: 'Queries'
+  name: 'Query.Category'
   desc: 'Query'
   extra:
     display: 'Query'
@@ -13,7 +13,7 @@ module.exports = [
   name: 'Query'
   desc: 'Query'
   extra:
-    category: 'Queries'
+    category: 'Query.Category'
     inherit: 'Object'
     icon: 'cic-filter'
     defaults: [
@@ -33,7 +33,7 @@ module.exports = [
   name: 'Query.Action'
   desc: 'Query action'
   extra:
-    category: 'Queries'
+    category: 'Query.Category'
     options: 'hp!'
     icon: 'cic-filter'
     color: 'lightgreen'
@@ -43,7 +43,7 @@ module.exports = [
   desc: 'Selected fields'
   extra:
     icon: 'cic-selectionadd'
-    accepts: ['FieldRef+']
+    accepts: ['Field.Ref+']
     inherit: 'Query.Action'
 ,
 

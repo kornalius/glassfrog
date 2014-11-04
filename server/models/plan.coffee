@@ -1,7 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
-User = require('./user')
 
 PlanSchema = mongoose.Schema(
   name:
@@ -60,7 +58,9 @@ PlanSchema = mongoose.Schema(
 )
 
 PlanSchema.plugin(timestamps)
-PlanSchema.plugin(filterPlugin)
+
+#PlanSchema.set('toObject', {virtuals: true})
+#PlanSchema.set('toJSON', {virtuals: true})
 
 PlanSchema.method(
 

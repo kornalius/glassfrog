@@ -47,7 +47,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #        label:'Dash'
 #        type: 'dashboard'
 #        description: 'Some dashboard'
-#        options:
+#        config:
 #          explicitSave: true
 #          hideWidgetSettings: true
 #          hideWidgetClose: true
@@ -167,7 +167,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         type: "check"
         description: "select this box if it is true"
         fieldname: 'id3'
-        options:
+        config:
 #          on_label: 'YES'
 #          off_label: 'NO'
           show_labels: false
@@ -280,7 +280,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
         type: "input"
         description: "telephone mask testing"
         fieldname: 'id8'
-        mask: '(999) 999-9999'
+        mask: '(999) 999-9999? x99999'
 #        mask: '0xhhhhhh'
       ,
         label: "Mask"
@@ -392,7 +392,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #            [1030766400000, 4.34280392]
 #          ]
 #        ]
-#        options:
+#        config:
 #          height: 300
 #          showxaxis: true
 #          showyaxis: true
@@ -417,7 +417,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #          key: "Series 2"
 #          values: [ [1025409600000, 0], [1028088000000, -1.2813671283], [1030766400000, -8.283722], [1033358400000, -14.2371212], [1036040400000, -2.28372112], [1038632400000, 7.29371293721], [1041310800000, -9.293782913], [1043989200000, -15.2867332] ]
 #        ]
-#        options:
+#        config:
 ##          width: 400
 #          height: 300
 #          showxaxis: false
@@ -460,7 +460,7 @@ angular.module('test.form', ['dynamicForm', 'Datetimepicker'])
 #          key: "Seven"
 #          y: 9
 #        ]
-#        options:
+#        config:
 #          x: "xFunction()"
 #          y: "yFunction()"
 ##          width: 300

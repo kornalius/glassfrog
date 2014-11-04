@@ -1,8 +1,32 @@
 if !process.env.NODE_ENV?
   process.env.NODE_ENV = 'development'
 
-if global?
-  global.CircularJSON = require('circular-json')
+server = null
+toobusy = require('toobusy')
+console.log("Maximum allowed event loop lag: " + toobusy.maxLag(5000) + "ms")
+
+process.on('SIGINT', ->
+#  if server
+#    server.close()
+#  toobusy.shutdown()
+  process.exit()
+)
+
+process.on('exit', (code) ->
+  console.log 'About to exit with code:', code
+  if server
+    server.close()
+  toobusy.shutdown()
+  console.log 'Done exit cleanups!'
+)
+
+if process.env.NODE_ENV != 'development'
+  process.on('uncaughtException', (err) ->
+    console.log 'Uncaught exception:', err
+    process.exit()
+  )
+
+global.CircularJSON = require('circular-json')
 
 exts = require("./exts")
 
@@ -11,12 +35,9 @@ exts = require("./exts")
 
 console.log "{red}Loading Server's required modules..."
 
-modulesPath = 'client_modules'
-exports.modulesPath = modulesPath
+exports.modulesPath = modulesPath = 'client_modules'
 
 http = require('http')
-path = require('path')
-
 flash = require('express-flash')
 express = require('express')
 favicon = require('serve-favicon')
@@ -31,10 +52,9 @@ passport = require('passport')
 LocalStrategy = require('passport-local').Strategy
 helmet = require('helmet')
 csrf = require('csurf')
-util = require('util')
-sanitizer = require('sanitizer')
+#util = require('util')
 
-global.serialize = require('serialize-js')
+global.sanitizer = require('sanitizer')
 
 #require('debug-trace')({ colors: true, always: true})
 i18n = require('i18next')
@@ -62,9 +82,6 @@ _.str = require("underscore.string")
 
 global.acorn = require('acorn')
 
-global.Handlebars = require('handlebars')
-require('swag').registerHelpers(Handlebars)
-
 global.js_beautify = require('js-beautify')
 
 global.traverse = require('traverse')
@@ -72,54 +89,68 @@ global.traverse = require('traverse')
 global.tinycolor = require('tinycolor2')
 
 
-validUser = (req) ->
-  req? and req.user? and req.user._id? and req.user.isVerified and req.isAuthenticated()
-exports.validUser = validUser
+exports.validUser = validUser = (req) ->
+#  console.log req.constructor.name, req instanceof http.IncomingMessage
+  if req instanceof http.IncomingMessage
+    user = req.user
+  else
+    user = req
+    req = null
+  user? and user._id? and user.isVerified and (!req? or req.isAuthenticated())
 
-userInfo = (req) ->
-  return mongoose.model('User').filter(req.user, {}, 'read')
-exports.userInfo = userInfo
+exports.userInfo = userInfo = (req, cb) ->
+  require('./endpoints').toPublicJSON(req.user, req.user, mongoose.model('User').schema, {}, (i) ->
+    cb(i) if cb
+  )
 
-model = (name, req, cb) ->
+exports.model = model = (name, user, cb) ->
   console.log "app.model()", name
+  if user instanceof http.IncomingMessage
+    req = user
+    user = req.user
+  else
+    req = null
   m = null
   if mongoose.modelNames().indexOf(name) != -1
     m = mongoose.model(name)
-  if !m and validUser(req)
-    req.user.model(name, (m, plan, c, prefix) ->
+  if !m and validUser((if req then req else user))
+    user.model(name, (m, plan, c, prefix) ->
       cb(m, plan, c, prefix) if cb
     )
   else
     cb(m, null, mongoose.db, '') if cb
-exports.model = model
 
-modelSync = (name, req) ->
+exports.modelSync = modelSync = (name, user, connection, prefix) ->
   console.log "app.modelSync()", name
   m = null
   if mongoose.modelNames().indexOf(name) != -1
     m = mongoose.model(name)
-  if !m and validUser(req)
-    m = req.user.modelSync(name, req)
+  if !m and validUser(user)
+    m = user.modelSync(name, user, connection, prefix)
   return m
-exports.modelSync = modelSync
 
-schemaPaths = (schema, node, path) ->
+exports.schemaPaths = schemaPaths = (schema, node, path) ->
   results = {}
 
   if !node
     return results
 
+  makePath = (path, k) ->
+    return (if path then path + '.' + k else k)
+
   if node instanceof Array
     f = _.first(node)
     if f
-      if path
-        results[path] = {type: 'NestedArray'}
       if f.tree
+        if path
+          results[path] = {type: 'DocumentArray'}
         for k of f.tree
-          _.extend(results, schemaPaths(schema, f.tree[k], (if path then path + '.' + k else k)))
+          _.extend(results, schemaPaths(schema, f.tree[k], makePath(path, k)))
       else
+        if path
+          results[path] = {type: 'NestedArray'}
         for k of f
-          _.extend(results, schemaPaths(schema, f[k], (if path then path + '.' + k else k)))
+          _.extend(results, schemaPaths(schema, f[k], makePath(path, k)))
     else
       results[path] = {}
       results[path].type = 'Array'
@@ -131,10 +162,11 @@ schemaPaths = (schema, node, path) ->
         results[path].type = 'Nested'
       else
         results[path] = {}
-        results[path].type = undefined
+        results[path].type = 'Subdocument'
 
-    for k of node
-      _.extend(results, schemaPaths(schema, node[k], (if path then path + '.' + k else k)))
+    if type(node) != 'function'
+      for k of node
+        _.extend(results, schemaPaths(schema, node[k], makePath(path, k)))
 
   else if _.isObject(node) and !node.type and node.getters
     results[path] = {}
@@ -157,16 +189,22 @@ schemaPaths = (schema, node, path) ->
     else if node.instance? and type(node.instance) is 'string'
       results[path].type = node.instance.toProperCase()
 
+  for k of results
+    results[k].path = k
+    results[k].fieldname = _.last(k.split('.'))
+
   return results
-exports.schemaPaths = schemaPaths
 
-modelPaths = (model) ->
-  return schemaPaths(model.schema, model.schema.tree)
-exports.modelPaths = modelPaths
+exports.modelPaths = modelPaths = (model) ->
+  if model instanceof mongoose.Schema
+    return schemaPaths(model, model.tree)
+  else if type(model) is 'function'
+    return schemaPaths(model.schema, model.schema.tree)
+  else
+    return {}
 
-hasOwner = (model) ->
+exports.hasOwner = hasOwner = (model) ->
   return model.schema.path('owner_id')
-exports.hasOwner = hasOwner
 
 console.log "Creating Passport functions..."
 
@@ -269,6 +307,7 @@ app.use(bodyParser.json())
 app.use(serveStatic(path.join(__dirname, '../_public')))
 app.use(favicon(path.join(__dirname, '../_public/favicon.ico')))
 app.use(flash())
+
 app.use(session(
   store: store
   name: 'sid'
@@ -311,22 +350,14 @@ app.use(helmet())
 #))
 
 app.use((req, res, next) ->
+  if toobusy()
+    res.send(new Error(503, "Server is too busy right now, sorry."))
+    return res.end()
+
 #  token = req.csrfToken()
   token = ''
   res.cookie('XSRF-TOKEN', token)
   res.locals.csrftoken = token
-
-  if req.params?
-    for k of req.params
-      req.params[k] = sanitizer.sanitize(req.params[k])
-
-  if req.query?
-    for k of req.query
-      req.query[k] = sanitizer.sanitize(req.query[k])
-
-  if req.body?
-    s = jsonToString(req.body)
-    req.body = stringToJson(sanitizer.sanitize(s))
 
   if mongoose.model('Log')?
     if req.user
@@ -345,7 +376,7 @@ app.use((req, res, next) ->
 
 app.use((err, req, res, next) ->
   if req.xhr
-    res.status(500, { error: 'Something blew up!' }).end()
+    res.status(500, { error: 'Something blew up!' })
   else
     next(err)
 )
@@ -362,20 +393,18 @@ console.log "Initializing Mongoose framework..."
 mongoose.connect(mongoUri + 'glassfrog')
 exports.mongoose = mongoose
 
-db = mongoose.connection
-exports.db = db
+exports.db = db = mongoose.connection
 
 autoIncrement.initialize(mongoose.connection)
 
 console.log "Registering models..."
 
-models_paths = __dirname + '/models'
+exports.models_paths = models_paths = __dirname + '/models'
 fs.readdirSync(models_paths).forEach((file) ->
   if path.extname(file) == '.js'
     console.log "Loading model {0}...".format(file)
     m = require(models_paths + '/' + file)
 )
-exports.models_paths = models_paths
 
 console.log "Initializing i18 framework..."
 
@@ -431,29 +460,28 @@ app.get('/', (req, res, next) ->
       errors: req.flash('error')
       warnings: req.flash('info')
     )
-  next()
 )
 
-user = require('./routes/user_pre')
+user = require('./routes/user')
 
 app.get('/app', user.ensureAuthenticated, (req, res, next) ->
-  res.render('app',
-    title: 'App'
-    user: userInfo(req)
-    errors: req.flash('error')
-    warnings: req.flash('info')
+  userInfo(req, (i) ->
+    res.render('app',
+      title: 'App'
+      user: i
+      errors: req.flash('error')
+      warnings: req.flash('info')
+    )
   )
-  next()
 )
 
-routes_paths = __dirname + '/routes'
-exports.routes_paths = routes_paths
+exports.routes_paths = routes_paths = __dirname + '/routes'
 
-console.log "Registering pre routes..."
+console.log "Registering routes..."
 
 fs.readdirSync(routes_paths).forEach((file) ->
   ext = path.extname(file)
-  if ext == '.js' and path.basename(file, ext).endsWith('_pre')
+  if ext == '.js' # and path.basename(file, ext).endsWith('_pre')
     console.log "Loading route {0}...".format(file)
     require(routes_paths + '/' + file)
 )
@@ -463,31 +491,18 @@ console.log "Registering endpoints..."
 endpoints = require('./endpoints')
 endpoints.register()
 
-console.log "Registering post routes..."
-
-fs.readdirSync(routes_paths).forEach((file) ->
-  ext = path.extname(file)
-  if ext == '.js' and path.basename(file, ext).endsWith('_post')
-    console.log "Loading route {0}...".format(file)
-    require(routes_paths + '/' + file)
+app.get('*', (req, res, next) ->
+  next(new Error(404))
 )
 
-console.log "Registering Handlebars partials..."
-
-fs.readdirSync(__dirname + '/components').forEach((file) ->
-  ext = path.extname(file)
-  if ext == '.hbs'
-    console.log "Loading partial {0}...".format(file)
-    s = fs.readFileSync(__dirname + '/components/' + file).toString()
-    Handlebars.registerPartial(path.basename(file, ext), s)
-)
+#console.log app._router.stack.filter((r) -> r.route).map((r) -> r.method + ' -> ' + r.route.path)
 
 console.log "Connecting to MongoDB server..."
 
 db.on('error', console.error.bind(console, 'connection error:'))
 
 db.once('open', () ->
-  app.listen(app.get('port'), () ->
+  server = app.listen(app.get('port'), () ->
     console.log 'Express server listening on port ' + app.get('port')
   )
 )

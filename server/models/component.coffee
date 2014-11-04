@@ -3,8 +3,6 @@ mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 fs = require('fs');
 async = require('async')
-safejson = require('safejson')
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 #VCGlobal = require("../vc_global")
 #Component = require("../vc_component")
@@ -41,7 +39,6 @@ ComponentSchema = mongoose.Schema(
 )
 
 ComponentSchema.plugin(timestamps)
-ComponentSchema.plugin(filterPlugin)
 
 ComponentSchema.method(
 )
@@ -79,98 +76,113 @@ ComponentSchema.static(
 
 module.exports = mongoose.model('Component', ComponentSchema)
 
-setTimeout( ->
-  data = []
+if true
+  setTimeout( ->
+    data = []
 
-  data = data.concat(require('../components/root'))
-  data = data.concat(require('../components/literal'))
-  data = data.concat(require('../components/statement'))
+    fs = require("fs")
+    path = require("path")
 
-  data = data.concat(require('../components/database'))
-  data = data.concat(require('../components/schema'))
-  data = data.concat(require('../components/field'))
-  data = data.concat(require('../components/query'))
+    components_path_root = path.resolve('_server/components')
 
-  data = data.concat(require('../components/server'))
-
-  data = data.concat(require('../components/ui/ui'))
-  data = data.concat(require('../components/ui/control'))
-  data = data.concat(require('../components/ui/menu'))
-  data = data.concat(require('../components/ui/table'))
-  data = data.concat(require('../components/ui/dashboard'))
-  data = data.concat(require('../components/ui/chart'))
-
-  data = data.concat(require('../components/ui/decorators/decorator'))
-  data = data.concat(require('../components/ui/decorators/color'))
-  data = data.concat(require('../components/ui/decorators/font'))
-
-  C = mongoose.model('Component')
-
-  properConvert = (f) ->
-    if f.extra
-      if f.extra.accepts
-        naccepts = []
-        for n in f.extra.accepts
-          ca = { component: null, multi: false, unique: false, reject: false, strict: false, inherited: false }
-
-          if n.startsWith('!')
-            ca.reject = true
-            n = n.substr(1)
-
-          if n.startsWith('=')
-            ca.strict = true
-            n = n.substr(1)
-
-          if n.endsWith('+')
-            ca.multi = true
-            ca.unique = true
-            n = n.substr(0, n.length - 1)
-
-          if n.endsWith('+')
-            ca.unique = false
-            n = n.substr(0, n.length - 1)
-
-          if n == '@'
-            ca.inherited = true
-            n = ''
-
-          ca.component = n
-          naccepts.push(ca)
-        f.extra.accepts = naccepts
-
-      if f.extra.code
-        if type(f.extra.code) != 'string'
-          nc = {}
-          for k of f.extra.code
-            nc[k] = f.extra.code[k].toString()
-          f.extra.code = nc
-        else if fs.existsSync('_server/component_scripts/' + f.extra.code)
-          f.extra.code = fs.readFileSync('_server/component_scripts/' + f.extra.code)
+    files = []
+    addComponents = (dir) ->
+      fs.readdirSync(components_path_root + '/' + dir).forEach((file) ->
+        if fs.statSync(components_path_root + '/' + dir + file).isDirectory()
+          addComponents(dir + file + '/')
         else
-          f.extra.code = null
-
-      jsonToString(f.extra, (err, json) ->
-        if !err
-          f.extra = json
-        else
-          throw err
+          ext = path.extname(file)
+          if ext == '.js'
+            files.push(dir + file.replace(/(\.js)$/, ''))
       )
 
-  C.remove({}, (err) ->
+    addComponents('')
 
-    dd = data.map((d) ->
-      f = _.clone(d)
+    for f in ['root', 'literal', 'statement']
+      i = files.indexOf(f)
+      if i != -1
+        files.splice(i, 1)
+      console.log "Adding components {0}...".format(f)
+      data = data.concat(require(components_path_root + '/' + f))
 
-      properConvert(f)
+    for f in files
+      console.log "Adding components {0}...".format(f)
+      data = data.concat(require(components_path_root + '/' + f))
 
-      return f
+    C = mongoose.model('Component')
+
+    properConvert = (f) ->
+      if f.extra
+        if f.extra.accepts
+          naccepts = []
+          for n in f.extra.accepts
+            ca = { component: null, multi: false, unique: false, reject: false, strict: false, inherited: false }
+
+            if n.startsWith('!')
+              ca.reject = true
+              n = n.substr(1)
+
+            if n.startsWith('=')
+              ca.strict = true
+              n = n.substr(1)
+
+            if n.endsWith('+')
+              ca.multi = true
+              ca.unique = true
+              n = n.substr(0, n.length - 1)
+
+            if n.endsWith('+')
+              ca.unique = false
+              n = n.substr(0, n.length - 1)
+
+            if n == '@'
+              ca.inherited = true
+              n = ''
+
+            ca.component = n
+            naccepts.push(ca)
+          f.extra.accepts = naccepts
+
+        if f.extra.code
+          if type(f.extra.code) != 'string'
+            nc = {}
+            for k of f.extra.code
+              nc[k] = f.extra.code[k].toString()
+            f.extra.code = nc
+          else if fs.existsSync('_server/component_scripts/' + f.extra.code)
+            f.extra.code = fs.readFileSync('_server/component_scripts/' + f.extra.code)
+          else
+            f.extra.code = null
+
+        if f.extra.args
+          for k of f.extra.args
+            if f.extra.args[k]
+              for pk of f.extra.args[k]
+                if type(f.extra.args[k][pk]) == 'function'
+                  f.extra.args[k][pk] = f.extra.args[k][pk].toString()
+
+        jsonToString(f.extra, (err, json) ->
+          if !err
+            f.extra = json
+          else
+            throw err
+        )
+
+    C.remove({}, (err) ->
+
+      dd = data.map((d) ->
+        f = _.clone(d)
+
+        properConvert(f)
+
+        return f
+      )
+
+      C.create(dd, (err) ->
+        if err
+          console.log err
+        VCGlobal = require('../vc_global')
+        VCGlobal.loadComponents()
+      )
     )
-
-    C.create(dd, (err) ->
-      if err
-        console.log err
-      VCGlobal = require('../vc_global')
-      VCGlobal.loadComponents()
-    )
-  )
-, 500)
+  , 500)

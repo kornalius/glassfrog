@@ -2,18 +2,11 @@
 
 angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/backdrop.html', 'template/modal/window.html', 'numberAttributes', 'dateAttributes', 'layoutAttributes', 'stringAttributes', 'iconspickerAttributes', 'restangular'])
 
-.run( ->
-  window.maskOptions =
-    clearIfNotMatch: true
-    translation:
-      '0': {pattern: /\d/}
-      '9': {pattern: /\d/, optional: true}
-      '#': {pattern: /\d/, recursive: true}
-      'A': {pattern: /[a-zA-Z0-9]/}
-      'S': {pattern: /[a-zA-Z]/}
-      'H': {pattern: /[A-Fa-f0-9]/}
-      '~': {pattern: /[+-]/}
-)
+.config([
+
+  () ->
+    $.mask.definitions['~'] = "[+-]"
+])
 
 .factory('dynForm', [
   '$compile'
@@ -68,7 +61,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 #          console.log "generateFields()", "form:", form, "\n", "layout:", layout, "\n", "fields:", fields, "\n", "formTmpl:", formTmpl, "\n", "r:", r, "\n", "l:", l, "\n", "f:", f
 
           fieldsTemplate = ""
-          if fields.length > 0
+          if fields
             for fieldIndex in [0..fields.length - 1]
               field = dynForm.populateField(form, fields[fieldIndex])
 
@@ -181,7 +174,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       nav = false
       fb = []
-      if form.buttons
+      if form and form.buttons
         for b in form.buttons
           if type(b) is 'string' and form.layout.type != 'modal'
             if b.toLowerCase() == 'nav'
@@ -205,8 +198,14 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       if form.layout.type != 'display'
         if form.blank == undefined
           form.blank = false
+
         if form.editMode == undefined
           form.editMode = 'always'
+          form.canEdit = true
+          form.canCreate = true
+          form.canDelete = true
+          form.canMove = true
+
         if form.canEdit == undefined
           form.canEdit = true
         if form.canCreate == undefined
@@ -216,12 +215,55 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         if form.canMove == undefined
           form.canMove = true
 
+        if form.navbars == undefined
+          form.navbars = true
+          form.navFilter = true
+          form.navSort = true
+          form.navPerPage = true
+          form.navSearch = true
+          form.navPagination = true
+          form.navButtons = true
+
+        if form.navTop == undefined
+          form.navTop = true
+        if form.navBottom == undefined
+          form.navBottom = true
+
+        if form.navFilter == undefined
+          form.navFilter = true
+        if form.navSort == undefined
+          form.navSort = true
+        if form.navPerPage == undefined
+          form.navPerPage = true
+        if form.navSearch == undefined
+          form.navSearch = true
+        if form.navPagination == undefined
+          form.navPagination = true
+        if form.navButtons == undefined
+          form.navButtons = true
+      else
+        form.blank = false
+        form.editMode = null
+        form.canEdit = false
+        form.canCreate = false
+        form.canDelete = false
+        form.canMove = false
+        form.navbars = false
+        form.navTop = true
+        form.navBottom = true
+        form.navFilter = true
+        form.navSort = true
+        form.navPerPage = true
+        form.navSearch = true
+        form.navPagination = true
+        form.navButtons = true
+
       if form.autolabel == undefined
         form.autolabel = true
 
       form.on = (name, args...) ->
         if @events and @events[name]
-          return @events[name].call(@, args)
+          return @events[name].apply(@, args)
         else
           return null
 
@@ -489,7 +531,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
                 selectize = elem.selectize()[0].selectize
                 values = a
 
-                if values and values.length and !values[0].label and !values[0].value
+                if values and !values[0].label and !values[0].value
                   for i in [0..values.length - 1]
                     values[i] = { value: values[i], label: values[i] }
 
@@ -502,10 +544,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
                 )
 
                 ok = false
-                for s in values
-                  if s.label == v
-                    ok = true
-                    break
+                if values
+                  for s in values
+                    if s.label == v
+                      ok = true
+                      break
 
                 if ok
                   $timeout(->
@@ -532,10 +575,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         if @validRow(idx)
           return @editStates[idx] and @editStates[idx].indexOf(state) != -1
         else
-          for k of @editStates
-            e = @editStates[k]
-            if e.indexOf(state) != -1
-              return true
+          if @editStates
+            for k of @editStates
+              e = @editStates[k]
+              if e.indexOf(state) != -1
+                return true
           return false
 
       $scope.addState = (state, idx) ->
@@ -569,7 +613,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 #            for i in [0.._source.length - 1]
 #              r = r.concat(r, @_flatten(makeKey(key, '[' + i.toString() + ']'), _source[i], complex))
 #
-#        else if angular.isObject(_source) and Object.keys(_source).length
+#        else if angular.isObject(_source) and _.keys(_source).length
 #          for k of _source
 #            r = r.concat(@_flatten(makeKey(key, k), _source[k], complex))
 #
@@ -584,13 +628,13 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 #        return r
 
       $scope._diff = (_source, _target) ->
-        src = JSON.flatten(jsonToString(_source))
-        tgt = JSON.flatten(jsonToString(_target))
+        src = flatten(jsonToString(_source))
+        tgt = flatten(jsonToString(_target))
         return JsDiff.diffChars(src, tgt)
 
       $scope._isRowModified = (_source, _target) ->
-        src = JSON.flatten(jsonToString(_source))
-        tgt = JSON.flatten(jsonToString(_target))
+        src = flatten(jsonToString(_source))
+        tgt = flatten(jsonToString(_target))
 #        if src != tgt
 #          console.log "diff", JsDiff.diffChars(src, tgt)
         return src != tgt
@@ -614,12 +658,13 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           @rows = []
 
       $scope.setRowValues = (idx, values) ->
-        if @rows[idx].plain?
+        if @rows[idx].plain
           r = @rows[idx].plain()
         else
           r = @rows[idx]
-        for k of r
-          @rows[idx][k] = values[k]
+        if r
+          for k of r
+            @rows[idx][k] = values[k]
 
       $scope.tryEdit = (idx) ->
         that = @
@@ -774,8 +819,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
               )
 
       $scope.cancelAll = () ->
-        for i in [0..@rows.length - 1]
-          @cancel(i)
+        if @rows
+          for i in [0..@rows.length - 1]
+            @cancel(i)
         @removeErrors()
         @setAllPristine()
 
@@ -811,9 +857,10 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           field = null
 
         ee = _.clone(@form.$errors)
-        for e in ee
-          if (!field? or e.field == field.fieldname) and (!idx? or e.idx == idx)
-            @form.$errors.splice(@form.$errors.indexOf(e), 1)
+        if ee
+          for e in ee
+            if (!field? or e.field == field.fieldname) and (!idx? or e.idx == idx)
+              @form.$errors.splice(@form.$errors.indexOf(e), 1)
 
       $scope.hasErrors = (field, idx) ->
         return @errors(field, idx).length > 0
@@ -827,17 +874,19 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           field = null
 
         err = []
-        for e in @form.$errors
-          if (!field? or e.field == field.fieldname) and (!idx? or e.idx == idx)
-            err.push(e)
+        if @form and @form.$errors
+          for e in @form.$errors
+            if (!field? or e.field == field.fieldname) and (!idx? or e.idx == idx)
+              err.push(e)
 
         return err
 
       $scope.validateAllFields = () ->
         if @hasOwnProperty('validateField')
-          for i in [0..@rows.length - 1]
-            for f in @fields
-              @validateField(f, i)
+          if @rows and @fields
+            for i in [0..@rows.length - 1]
+              for f in @fields
+                @validateField(f, i)
 
         c = @$$childHead
         if c != @
@@ -853,7 +902,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
   #            console.log "_validateFields", f.fieldname, f.subform, r
   #            if angular.isArray(r) and f.subform and f.subform.fields
   #              @_validateFields(r, f.subform.fields, 0, r.length - 1)
-  #            else if angular.isObject(r) and Object.keys(r).length > 0 and f.subform and f.subform.fields
+  #            else if angular.isObject(r) and _.keys(r).length > 0 and f.subform and f.subform.fields
   #              @_validateFields([r], f.subform.fields, 0, 0)
   #            else
   #              sc = findRowsInScope(rows, $rootScope)
@@ -869,7 +918,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           , 10)
         else
           @removeErrors()
-          if that.rows?.length?
+          if that.rows
             for i in [Math.max(0, _start)..Math.min(_end, that.rows.length - 1)]
               err = that.validator.validate(that.rows, fields, i)
               if err and err.length
@@ -961,6 +1010,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
       $scope.sort =
         field : '_id'
         reverse : false
+
       if $scope.form.model and $scope.form.model.sort
         s = $scope.form.model.sort
         if type(s) is 'array'
@@ -973,9 +1023,10 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
       $scope.filtersQuery = () ->
         w = []
-        for k in Object.keys(@filters)
-          if @filters[k].length
-            w.push(@queryBuilder(k, @filters[k]))
+        if @filters
+          for k in _.keys(@filters)
+            if @filters[k].length
+              w.push(@queryBuilder(k, @filters[k]))
         if w.length
           return w.join(', AND ')
         else
@@ -1031,9 +1082,12 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
             sc.updateRows()
           )
 
+
     initGrid: ($scope) ->
       $scope.limit = 10
       $scope.search = ''
+      $scope.filters = {group: null}
+      $scope.filtersJson = {}
       $scope.sort =
         field : '_id'
         reverse : false
@@ -1047,6 +1101,32 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           $scope.sort.reverse = true
         else
           $scope.sort.field = s
+
+      $scope.$watch("filters", (newValue) ->
+        @filtersJson = jsonToString(newValue)
+        console.log "json", @filtersJson
+#        @output = computed(newValue.group)
+      , true)
+
+      $scope.addFilterGroup = () ->
+        @filters.group = {operator: 'AND', rules:[]}
+
+#      $scope.filtersGroupToString = (group) ->
+#
+#        htmlEntities = (str) ->
+#          String(str).replace(/</g, "&lt;").replace(/>/g, "&gt;")
+#
+#        if !group
+#          return ""
+#
+#        str = "("
+#        i = 0
+#        while i < group.rules.length
+#          if i > 0
+#            str += " " + group.operator + " "
+#          str += (if group.rules[i].group then @filtersGroupToString(group.rules[i].group) else group.rules[i].field + " " + htmlEntities(group.rules[i].condition) + " " + group.rules[i].data)
+#          i++
+#        str + ")"
 
       $scope.searchQuery = () ->
         return @queryBuilder(null, @search)
@@ -1208,28 +1288,30 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
           if !p.options or !p.options.inline
             cf = []
             ff = formDefinition
-            for f in fp
-              cf.push(f)
-  #            cfn = cf.join('.')
+            if fp
+              for f in fp
+                cf.push(f)
+    #            cfn = cf.join('.')
 
-              ok = false
-              for fff in ff.fields
-                if fff.type == 'subform' and fff.fieldname == f
-                  ff = fff.subform
-                  ok = true
+                ok = false
+                if ff.fields
+                  for fff in ff.fields
+                    if fff.type == 'subform' and fff.fieldname == f
+                      ff = fff.subform
+                      ok = true
 
-              if !ok
-                s =
-                  label: _.str.humanize(cf.join(' '))
-                  type: 'subform'
-                  fieldname: f
-                  subform:
+                if !ok
+                  s =
                     label: _.str.humanize(cf.join(' '))
-                    name: 'sub_' + cf.join('_')
-                    layout: {type:'sub{0}'.format(layout), style: style}
-                    fields: []
-                ff.fields.push(s)
-                ff = s.subform
+                    type: 'subform'
+                    fieldname: f
+                    subform:
+                      label: _.str.humanize(cf.join(' '))
+                      name: 'sub_' + cf.join('_')
+                      layout: {type:'sub{0}'.format(layout), style: style}
+                      fields: []
+                  ff.fields.push(s)
+                  ff = s.subform
 
             fd = ff
             fn = ln
@@ -1245,8 +1327,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
               layout: {type:'sub{0}'.format(layout), style: style}
               fields: []
           fd.fields.push(s)
-          for fn of p.schema.paths
-            addField(s.subform, layout, fn, p.schema.paths[fn])
+          if p.schema.paths
+            for fn of p.schema.paths
+              addField(s.subform, layout, fn, p.schema.paths[fn])
 
         else
 
@@ -1312,17 +1395,19 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 #              minimumInputLength: 1
             ff.type = "select"
 
-          for t of _type
-            if t != 'type' and !ff['number']?
-              ff[t] = _type[t]
+          if _type
+            for t of _type
+              if t != 'type' and !ff['number']?
+                ff[t] = _type[t]
 
           fd.fields.push(ff)
 
 
       if model and type(model) is 'string'
         @modelSchema(model, (fields) ->
-          for fn of fields
-            addField(formDefinition, layout, fn, fields[fn])
+          if fields
+            for fn of fields
+              addField(formDefinition, layout, fn, fields[fn])
 
           cb(formDefinition) if cb
         )
@@ -1334,8 +1419,9 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
         else if model instanceof Array and model.length
           r = model[0]
 
-        for fn of Object.keys(r)
-          addField(formDefinition, layout, fn, {path: fn, instance: typeof r[fn], object: r[fn]})
+        if r
+          for fn of _.keys(r)
+            addField(formDefinition, layout, fn, {path: fn, instance: typeof r[fn], object: r[fn]})
 
         cb(formDefinition) if cb
 
@@ -1762,10 +1848,11 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
     link: (scope, element, attrs) ->
       field = $parse(attrs.attributes)(scope)
-      for k in Object.keys(field)
-        k = k.toLowerCase()
-        if k != "label" and k != "type" and k != "description" and k != "fieldname" and k != "config" and k != "options" and k != "dompath" and k != "show" and k[0] != "_" and k != "value"
-          attributes.process(scope, element, k, field)
+      if field
+        for k in _.keys(field)
+          k = k.toLowerCase()
+          if k != "label" and k != "type" and k != "description" and k != "fieldname" and k != "config" and k != "options" and k != "dompath" and k != "show" and k[0] != "_" and k != "value"
+            attributes.process(scope, element, k, field)
 ])
 
 .factory('attributes', [
@@ -1815,7 +1902,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
     link: (scope, element, attrs) ->
       fields = $parse(element.attr('dyn-attrs'))(scope)
       if fields
-        for k in Object.keys(fields)
+        for k in _.keys(fields)
           element.attr(k, fields[k])
       element.removeAttr('dyn-attrs')
       $compile(element)(scope)

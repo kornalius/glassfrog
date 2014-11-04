@@ -1,6 +1,5 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-filterPlugin = require('../mongoose_plugins/mongoose-filter')
 
 ActivateSchema = mongoose.Schema(
   email:
@@ -21,7 +20,6 @@ ActivateSchema = mongoose.Schema(
 )
 
 ActivateSchema.plugin(timestamps)
-ActivateSchema.plugin(filterPlugin)
 
 ActivateSchema.method(
 )

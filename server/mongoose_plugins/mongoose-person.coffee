@@ -1,4 +1,10 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
   schema.add(
     name:
       first:
@@ -36,22 +42,19 @@ module.exports = ((schema, options) ->
       type: String
       default: 'en_us'
       label: 'Locale'
-  )
+  , path)
 
   if options && options.index.gender
-    schema.path('gender').index(options.index.gender)
+    schema.path(path + 'gender').index(options.index.gender)
 
   if options && options.index.timezone
-    schema.path('timezone').index(options.index.timezone)
+    schema.path(path + 'timezone').index(options.index.timezone)
 
   if options && options.index.locale
-    schema.path('locale').index(options.index.locale)
+    schema.path(path + 'locale').index(options.index.locale)
 
-  schema.set('toObject', {virtuals: true})
-  schema.set('toJSON', {virtuals: true})
-
-  schema.virtual('name.full').get(->
-    @name.first + ' ' + @name.last
+  schema.virtual(path + 'name.full').get(->
+    @get(path + 'name.first') + ' ' + @get(path + 'name.last')
   ).set((name) ->
     s = name.split(' ')
     first = null
@@ -65,10 +68,10 @@ module.exports = ((schema, options) ->
         last = _.str.trim(s[1])
 
     if first
-      @set('name.first', first)
+      @set(path + 'name.first', first)
     if middle
-      @set('name.middle', middle)
+      @set(path + 'name.middle', middle)
     if last
-      @set('name.last', last)
+      @set(path + 'name.last', last)
   )
 )

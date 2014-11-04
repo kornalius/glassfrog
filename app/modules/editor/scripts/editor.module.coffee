@@ -84,8 +84,8 @@ angular.module('editor.module', ['editor.component', 'editor.node', 'dynamicForm
       @clearSelection()
       if m
         require(['vc_global'], (VCGlobal) ->
-          that.selected = VCGlobal.findModule(m)
-          if that.isSelection(m)
+          m = VCGlobal.findModule(m)
+          if !that.isSelection(m)
             Editor.editModule(m, (sm) ->
               EditorNode.clearSelection()
               that.selected = sm

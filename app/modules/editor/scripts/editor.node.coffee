@@ -157,18 +157,13 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       n.hasEnum()
 
     getEnum: (n, asObject) ->
-      l = []
-      x = 0
-      for nn in n.getEnum(asObject)
-        if nn and nn.$data and nn.$data.isNode
-          l.push({ id: nn.id(), text: nn.getPath(true) })
-        else if nn and nn.$data and nn.$data.isComponent
-          l.push({ id: nn.id(), text: nn.name })
-        else if nn and nn.$data and nn.$data.isModule
-          l.push({ id: nn.id(), text: nn.name })
-        else if type(nn) is 'string'
-          l.push({ id: x++, text: nn })
-      return l
+      return n.getEnum(asObject)
+
+    hasMulti: (n) ->
+      n.hasMulti()
+
+    getMulti: (n, asObject) ->
+      return n.getMulti(asObject)
 
     edit: (n, $event) ->
       if @canEdit(n)
@@ -237,28 +232,31 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
       @currentEdit == n
 
     makeVisible: (n) ->
-      p = n.getParent()
-      while p
-        p.open()
-        p = p.getParent()
+      n.makeVisible()
 
     copy: (n) ->
-#     @clipboard = _.cloneDeep(@)
+#     @clipboard = _.cloneDeep(n)
 
     cut: (n) ->
-#      @copy()
-#      @remove()
+#      @copy(n)
+#      @remove(n)
 
     paste: (n) ->
 
+    canRemove: (n) ->
+      n.canRemove()
+
+    remove: (n) ->
+      n.remove()
+
     render: (n) ->
       cc = n.getComponent()
-      if cc and cc.hasRenderCode()
+      if cc
         cc.render(n)
 
       for nn in n.children()
         cc = nn.getComponent()
-        if cc and cc.hasRenderCode()
+        if cc
           cc.render(n)
 
 #    save: (n, cb) ->
@@ -489,44 +487,39 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.paste = (n) ->
       EditorNode.paste(n)
 
+    $scope.canRemove = (n) ->
+      EditorNode.canRemove(n)
+
+    $scope.removeIt = (n) ->
+      EditorNode.remove(n)
+
     $scope.refresh = (selected) ->
       EditorNode.refresh(selected)
 
-    $scope.schema = (cb) ->
-      planes = new Rest('Planes')
-      planes.create({'FlightNo': '1'}, (p, err) ->
-        console.log p, err
-        planes.create({'FlightNo': '2'}, (p, err) ->
-          console.log p, err
-          planes.create({'FlightNo': '3'}, (p, err) ->
-            console.log p, err
-            planes.find({l: 10}, (result, err) ->
-              console.log result, err
-              for p in planes.rows
-                console.log p
-            )
-          )
-        )
-      )
+#    $scope.getSchema = (cb) ->
+#      planes = new Rest('Planes')
+#      planes.create({'FlightNo': '1'}, (p, err) ->
+#        console.log p, err
+#        planes.create({'FlightNo': '2'}, (p, err) ->
+#          console.log p, err
+#          planes.create({'FlightNo': '3'}, (p, err) ->
+#            console.log p, err
+#            planes.find({l: 10}, (result, err) ->
+#              console.log result, err
+#              for p in planes.rows
+#                console.log p
+#            )
+#          )
+#        )
+#      )
 
     $scope.toggle = (n, recursive) ->
-      n.toggle(recursive)
+      if !@isEditing(n)
+        n.toggle(recursive)
 
     $scope.save = (cb) ->
-      m = Editor.module
-      m.saveLocally((ok) ->
-        if ok
-#          Editor.module = null
-#          Editor.rootNodes = []
-          require(['vc_global', 'vc_module'], (VCGlobal, VCModule) ->
-            VCGlobal.modules.update(m, (result, err) ->
-              if !err
-                VCModule.make(result)
-                Editor.editModule(result, cb)
-              else
-                cb(null) if cb
-            )
-          )
+      Editor.saveModule(Editor.module, (ok) ->
+        cb(ok) if cb
       )
 
     $scope.alert = (cb) ->
@@ -597,7 +590,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
 
     $scope.$watch('a.value', (newValue, oldValue) ->
       if !_.isEqual(newValue, oldValue)
-        console.log "$watch a.value", newValue, oldValue
+#        console.log "$watch a.value", newValue, oldValue
         $scope.a.setValue(newValue)
         $scope.a.setModified(true)
     )
@@ -611,6 +604,6 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     restrict: 'A'
     link: (scope, element, attrs) ->
       n = $parse(attrs.renderNode)(scope)
-      if n and n.hasRenderCode()
+      if n
         n.render()
 ])

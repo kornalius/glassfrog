@@ -1,23 +1,86 @@
-.repository-card-container
+.container-fluid.repository-card(ng-model="row")
 
-  table.repository-card(ng-model="row")
-    tr
-      include repository-card-color-template
-      td.repository-card-inside-col
-        table.repository-card-inside
-          thead
-            include repository-card-icon-template
-            include repository-card-label-template
-            include repository-card-version-template
+  .row.repository-card-row
 
-          tfoot
-            include repository-card-installs-template
-            include repository-card-button-template
+    .repository-color-col(class="{{row.color}}-back")
 
-          tbody
-            td.repository-card-info-line(colspan="4")
-              table(width="100%")
-                include repository-card-creator-template
-                include repository-card-date-template
-            tr
-              include repository-card-desc-template
+    .col-xs-12.col-sm-12.col-md-12.col-lg-12.repository-card-inside-col
+
+      .repository-card-inside
+
+        .row.repository-title-row
+
+          .col-xs-1.col-sm-1.col-md-1.col-lg-1.repository-icon-col
+            span.repository-icon.cic(class="{{row.icon}}")
+
+          .col-xs-8.col-sm-8.col-md-8.col-lg-8.repository-label-col
+            span.repository-label {{row.name}}
+
+          .col-xs-3.col-sm-3.col-md-3.col-lg-3.repository-version-col
+            span.repository-version {{row.version}}
+
+        .row.repository-info-row
+
+          .col-xs-6.col-sm-6.col-md-6.col-lg-6.repository-creator-col
+            .repository-creator
+              span.cic.cic-user32 &nbsp;
+              span {{row.author}}
+
+          .col-xs-6.col-sm-6.col-md-6.col-lg-6.repository-date-col
+            .repository-date
+              span.cic.cic-calendar &nbsp;
+              span {{row.latest.date | amCalendar}}
+
+        .row.repository-desc-row
+
+          .col-xs-12.col-sm-12.col-md-12.col-lg-12.repository-desc-col
+            textarea.repository-desc(readonly, perfect-scrollbar, suppress-scroll-x="true") {{row.desc}}
+
+        .row.repository-tags-row
+
+          .col-xs-12.col-sm-12.col-md-12.col-lg-12.repository-tags-col
+            .repository-tags
+              button.btn.btn-xs.btn-default.repository-tag(ng-repeat="t in row.tags") {{t}}
+
+        .row.repository-buttons-row
+
+          .col-xs-3.col-sm-3.col-md-3.col-lg-3.pull-left.repository-installs-col
+            .repository-installs.pull-left
+              span.cic.cic-floppy2 &nbsp;
+              | {{row.installations}}
+              button.btn.btn-sm.btn-link(type="button", ng-show="!row.liked", ng-click="like(row._id)")
+                span.cic.cic-heart6
+              button.btn.btn-sm.btn-link(ng-show="row.liked", ng-click="dislike(row._id)")
+                span.cic.cic-heart23
+              | {{row.totalLikes}}
+
+          .col-xs-9.col-sm-9.col-md-9.col-lg-9.pull-right.repository-buttons-col
+            span.repository-button.pull-right
+              button.btn.btn-xs.btn-info(ng-show="row.canEdit", ng-click="edit(row._id)")
+                span.cic.cic-pencil &nbsp;
+                | Edit
+              button.btn.btn-xs.btn-primary(ng-show="row.canInstall", ng-click="install(row._id)")
+                span.cic.cic-download2 &nbsp;
+                | Install
+              button.btn.btn-xs.btn-primary(ng-show="row.canUninstall", ng-click="uninstall(row._id)")
+                span.cic.cic-eject &nbsp;
+                | Uninstall
+              button.btn.btn-xs.btn-warning(ng-show="row.needsUpdate", ng-click="update(row._id)")
+                span.cic.cic-refresh32 &nbsp;
+                | Update
+              button.btn.btn-xs.btn-success(ng-show="row.canPublish", ng-click="publish(row._id)")
+                span.cic.cic-checkmark &nbsp;
+                | Publish
+              button.btn.btn-xs.btn-success(ng-show="row.canPublishUpdate", ng-click="publishUpdate(row._id)")
+                span.cic.cic-refresh32 &nbsp;
+                | Update Repo
+              button.btn.btn-xs.btn-warning(ng-show="row.canUnpublish", ng-click="unpublish(row._id)")
+                span.cic.cic-x &nbsp;
+                | Unpublish
+              button.btn.btn-xs.btn-danger(ng-show="row.canDelete", ng-click="delete(row._id)")
+                span.cic.cic-trashfull &nbsp;
+                | Delete
+              button.btn.btn-xs.btn-default(ng-show="row.readme", ng-click="more(row._id)")
+                span.cic.cic-search5 &nbsp;
+                | More
+

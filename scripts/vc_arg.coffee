@@ -9,6 +9,7 @@ ArgClass =
 #  multi []
 #  default
 #  states
+#  when
 
   VCGlobal: null
 
@@ -26,14 +27,12 @@ ArgClass =
     a.$data._link = null
     a.$data.isArg = true
 
-    if k? and !a.name?
+    if k and !a.name
       a.name = k
 
-    if !a.component? and node?
+    if !a.component and node
       ad = node.getArgDef(k)
       if ad
-#        if ad.enum
-#          a.enum = ad.enum
         cc = ad.getComponent()
         if !cc
           cc = ArgClass.VCGlobal.findComponent('Literal.String')
@@ -60,27 +59,37 @@ ArgClass =
       else
         return null
 
-    a.displayValue = () ->
+    a.displayValue = (trueValue, falseValue) ->
       t = @getInputType()
       if t == 'icon'
         return ''
       else
-        @toString()
+        @toString(trueValue, falseValue)
 
-    a.getValue = () ->
+    a.getValue = (trueValue, falseValue) ->
       if @isLink()
         v = @getLink()
       else
         v = @value
+        if trueValue? and falseValue?
+          if v
+            if trueValue.indexOf('$') != -1
+              v = trueValue.replace('$', v)
+            else
+              v = trueValue
+          else
+            v = falseValue
+        else if !v and trueValue?
+          v = trueValue
       return v
 
-    a.toString = () ->
-      v = @getValue()
+    a.toString = (trueValue, falseValue) ->
+      v = @getValue(trueValue, falseValue)
       t = type(v)
       if v and v.$data and v.displayName
         return v.displayName()
       else if t is 'boolean'
-        return (if v then 'true' else 'false')
+        return (if @getValue() then 'true' else 'false')
       else if t is 'number'
         return (if Number.isNaN(v) then '0' else v.toString())
       else if t is 'moment'
@@ -98,13 +107,107 @@ ArgClass =
       else
         return v
 
-    a.getValueOrDefault = () ->
-      v = @getValue()
-      if !v?
-        v = @getDefault()
-      if !v?
-        v = 'null'
-      return v
+    a.toBoolean = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'boolean'
+        return v
+      else
+        v = @toString().toLowerCase()
+        return v == 'true' or v == 't' or v == 'yes' or v = 'y' or v == '1' or v == 'ok'
+
+    a.toNumber = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'number'
+        return v
+      else
+        v = @toString()
+        try
+          n = new Number(v)
+        catch e
+          n = 0
+        return n
+
+    a.toColor = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'tinycolor'
+        return v
+      else
+        tc = tinycolor(@toString().toLowerCase())
+        if !tc.isValid()
+          tc = tinycolor('black')
+        return tc
+
+    a.toRegExp = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'regexp'
+        return v
+      else
+        return new RegExp(@toString().escapeRegExp())
+
+    a.toArray = (delimiter, trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'array'
+        return v
+      else
+        return @toString().split(delimiter)
+
+    a.toDateTime = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'moment'
+        return v
+      else
+        m = moment(v)
+        if !m.isValid()
+          m = moment()
+        return m
+
+    a.toFunction = (argnames) ->
+      v = @getValueOrDefault()
+      if type(v) is 'function'
+        return v
+      else
+        return new Function((if argnames then argnames else []), @toString())
+
+    a.toJSON = (trueValue, falseValue) ->
+      v = @getValueOrDefault(null, trueValue, falseValue)
+      if type(v) is 'function'
+        return v
+      else
+        return stringToJson(@toString())
+
+    a.toHtml = (trueValue, falseValue) ->
+      return sanitizer.sanitize(@toString(trueValue, falseValue))
+
+    a.getValueOrDefault = (typecast, trueValue, falseValue) ->
+      if typecast
+        typecast = typecast.toLowerCase()
+        if typecast == 'number'
+          return @toNumber(trueValue, falseValue)
+        else if typecast == 'boolean'
+          return @toBoolean(trueValue, falseValue)
+        else if typecast == 'color'
+          return @toColor(trueValue, falseValue)
+        else if typecast == 'regexp'
+          return @toRegExp(trueValue, falseValue)
+        else if typecast == 'array'
+          return @toArray(trueValue, falseValue)
+        else if typecast == 'date'
+          return @toDate(trueValue, falseValue)
+        else if typecast == 'function'
+          return @toFunction([])
+        else if typecast == 'object'
+          return @toJSON(trueValue, falseValue)
+        else if typecast == 'html'
+          return @toHtml(trueValue, falseValue)
+        else
+          return @toString(trueValue, falseValue)
+      else
+        v = @getValue(trueValue, falseValue)
+        if !v
+          v = @getDefault()
+        if !v
+          v = 'null'
+        return v
 
     a.is = (value) ->
       _.contains(@getValue().map((v) -> v.toLowerCase()), value.toLowerCase())
@@ -135,6 +238,26 @@ ArgClass =
             @setModified(true)
             return true
       return false
+
+    a.getWhen = () ->
+      ca = @getArgDef()
+      if ca and ca['when']
+        if type(ca['when']) == 'string'
+          ca['when'] = eval('(' + ca['when'] + ')')
+        return ca['when']
+      else
+        return null
+
+    a.shouldDisplay = () ->
+      f = @getWhen()
+      return !f or f.apply(@, [@getNode()])
+
+    a.getArgDef = () ->
+      n = @getNode()
+      if n
+        return n.getArgDef(@name)
+      else
+        return null
 
     a.setValue = (value) ->
       if value and value.$data?
@@ -195,11 +318,10 @@ ArgClass =
       @setModified(true)
 
     a.canEdit = () ->
-      cc = @getComponent()
-      @canModify() and cc and !cc.isLocked()
+      @canModify() and !@isReadOnly()
 
     a.canModify = () ->
-      return !@isReadOnly()
+      return @getNode().canModify()
 
     a.isReadOnly = () ->
       return @hasOption('r')
@@ -251,12 +373,16 @@ ArgClass =
         if i != -1
           @$data._states = @$data._states.substr(0, i) + @$data._states.substr(i + 1)
 
+    a.isEqual = (value) ->
+      _.isEqual(@getValue(), value)
+
+    a.contains = (value) ->
+      _.contains(@getValue(), value)
+
     a.hasEnum = () ->
-      node = @getNode()
-      if node
-        ad = node.getArgDef(@name)
-        if ad
-          return ad.hasEnum()
+      ad = @getArgDef()
+      if ad
+        return ad.hasEnum()
 
       else if @enum
         return true
@@ -267,41 +393,40 @@ ArgClass =
       else
         return false
 
-    a.getEnum = (node, asObject) ->
+    a.getEnum = (node, asObject, cb) ->
       if type(node) is 'boolean'
         asObject = node
         node = null
 
-      if @getNode()
-        ad = @getNode().getArgDef(@name)
-        if ad
-          e = ad.getEnum(node, asObject)
-          if e and e.length
-            return e
+      ad = @getArgDef()
+      if ad
+        e = ad.getEnum(node, asObject, cb)
+        if e and e.length
+          return e
 
       else if @enum
-        return ArgClass.VCGlobal.enumToList(@enum, node, asObject)
+        return ArgClass.VCGlobal.enumToList(@enum, node, asObject, cb)
 
       c = @getComponent()
       if c
-        return c.getEnum(node, asObject)
+        return c.getEnum(node, asObject, cb)
       else
         return []
 
     a.hasMulti = () ->
       @getMulti(false).length
 
-    a.getMulti = (asObject) ->
+    a.getMulti = (asObject, cb) ->
+      ad = @getArgDef()
       node = @getNode()
-      if node
-        ad = node.getArgDef(@name)
-        if ad
-          m = ad.getMulti(node, asObject)
-          if m and m.length
-            return m
+
+      if ad
+        m = ad.getMulti(node, asObject, cb)
+        if m and m.length
+          return m
 
       else if @multi
-        return ArgClass.VCGlobal.enumToList(@multi, node, asObject, true)
+        return ArgClass.VCGlobal.enumToList(@multi, node, asObject, cb)
 
       return []
 
@@ -310,6 +435,9 @@ ArgClass =
 
     a.isOptional = () ->
       @hasOption('o')
+
+    a.isTags = () ->
+      @hasOption('t')
 
     a.hasLabel = () ->
       !@hasOption('h')
@@ -348,7 +476,7 @@ ArgClass =
         @setModified(true)
 
     a.kindOf = (name) ->
-      if name instanceof Array
+      if name and name instanceof Array
         for n in name
           if @kindOf(n)
             return true
@@ -357,10 +485,12 @@ ArgClass =
         cc = @getComponent()
         return cc and cc.kindOf(name)
 
-    a.codeValue = (client, user) ->
+    a.codeValue = (codetype, user) ->
       c = @getComponent()
       if c
-        return c.generateCode(@, client, user)
+        out = new StringBuilder()
+        c.generateCode(out, @, codetype, user)
+        return out.toString()
       else
         return @getValue()
 
@@ -405,7 +535,7 @@ ArgClass =
         s = _.extend({}, {'background-color': tinycolor(a.getValue()).toRgbString()})
       return s
 
-    a.getLabelClass = () ->
+    a.getLabelClass = (trueValue, falseValue) ->
       t = @getInputType()
       scope = @scope('label')
       c = 'node-arg-label-' + t
@@ -414,7 +544,7 @@ ArgClass =
       if scope.isSelection(@)
         c += ' selected'
       if t == 'icon'
-        c += ' cic ' + @getValueOrDefault()
+        c += ' cic ' + @getValueOrDefault(null, trueValue, falseValue)
       return c
 
     a.getInputType = () ->
@@ -422,6 +552,8 @@ ArgClass =
         return "enum"
       else if @hasMulti()
         return "multi"
+      else if @isTags()
+        return "tags"
       c = @getComponent()
       if c
         it = c.getInputType()

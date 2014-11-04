@@ -48,6 +48,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       @p = null #populate
       @total = 0 #total rows in table
       @display = 0 #count of rows received
+      @page = 1
       @pages = 1 #number of pages
       @first = 1
       @last = 1
@@ -72,10 +73,11 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         if options.l
           @l = options.l
 
-        if options.sk
-          @sk = options.sk
-        else if options.page
+        if options.page
           @sk = (options.page - 1) * @l
+
+        else if options.sk
+          @sk = options.sk
 
         if options.sort
           @sort = options.sort
@@ -89,10 +91,11 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
       findRowIndexById: (_id) ->
         _id = _id.toString()
-        for i in [0..@rows.length - 1]
-          r = @rows[i]
-          if r._id? and r._id.toString() == _id
-            return i
+        if @rows
+          for i in [0..@rows.length - 1]
+            r = @rows[i]
+            if r._id? and r._id.toString() == _id
+              return i
         return -1
 
 
@@ -112,15 +115,15 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         console.log "Rest find start...", that
 
-        q = (if options.query then options.q else that.q)
-        l = (if options.l then options.l else that.l)
-        if options.page
+        q = (if options and options.query then options.q else that.q)
+        l = (if options and options.l then options.l else that.l)
+        if options and options.page
           sk = (options.page - 1) * l
         else
-          sk = (if options.sk then options.sk else that.sk)
-        s = (if options.s then options.s else that.s)
-        p = (if options.p then options.p else that.p)
-        sort = (if options.sort then options.sort else that.sort)
+          sk = (if options and options.sk then options.sk else that.sk)
+        s = (if options and options.s then options.s else that.s)
+        p = (if options and options.p then options.p else that.p)
+        sort = (if options and options.sort then options.sort else that.sort)
 
         that.q = q
         that.l = l
@@ -128,18 +131,6 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         that.s = s
         that.p = p
         that.sort = sort
-
-        that.total = 1
-        that.display = 1
-        that.pages = 1
-        that.firstPage = 1
-        that.lastPage = 1
-        that.prevPage = 1
-        that.nextPage = 1
-        that.first = 1
-        that.last = 1
-        that.prev = 1
-        that.next = 1
 
         if that.url?
           that.rest = Restangular.allUrl(that.modelName, that.url)
@@ -150,18 +141,33 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         that.fetchTimeout = $timeout( ->
           p = that.rest.getList(query).then((result) ->
+
+            that.total = 1
+            that.display = 1
+            that.page = 1
+            that.pages = 1
+            that.firstPage = 1
+            that.lastPage = 1
+            that.prevPage = 1
+            that.nextPage = 1
+            that.first = 1
+            that.last = 1
+            that.prev = 1
+            that.next = 1
+
             if result and result.length
               info = result[0]
-              that.status = info.status
-              that.err = info.err
+              that.status = info['$s']
+              that.err = info['$e']
 
-              if info.status == 'ok'
-                if info.__p
+              if that.status == 'ok'
+                if info['$p']
                   that.total = info.total
                   that.display = info.displayCount
-                  that.page = info.page
                   that.pages = info.pages
                   that.page = info.page
+                  that.sk = info.sk
+                  that.l = info.l
                   that.firstPage = info.firstPage
                   that.lastPage = info.lastPage
                   that.prevPage = info.prevPage
@@ -178,8 +184,8 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
                 cb(result, null) if cb
 
               else
-                if info.err
-                  err = new Error(info.err.code, info.err.message)
+                if that.err
+                  err = new Error(that.err.code, that.err.msg)
                 else
                   err = new Error(500)
                 console.log "Rest find end with error...", that, err
@@ -200,33 +206,24 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
       findById: (_id, cb) ->
         that = @
 
-        that.total = 1
-        that.display = 1
-        that.pages = 1
-        that.firstPage = 1
-        that.lastPage = 1
-        that.prevPage = 1
-        that.nextPage = 1
-        that.first = 1
-        that.last = 1
-        that.prev = 1
-        that.next = 1
-
         console.log "Rest findById start...", that
 
+        query = {}
         if that.url?
           that.rest = Restangular.oneUrl(that.modelName, that.url)
-          query = {}
         else
           that.rest = Restangular.one(that.modelName, _id)
-          query = {s: that.s, p: that.p}
+          if that.s
+            query.s = that.s
+          if that.p
+            query.p = that.p
 
         p = that.rest.get(query).then((result) ->
           if result
-            that.status = result.status
-            that.err = result.err
-            delete result.status
-            delete result.err
+            that.status = result['$s']
+            that.err = result['$e']
+            delete result['$s']
+            delete result['$e']
             if that.status == 'ok'
               that.rows = [result]
               console.log "Rest findById end...", that
@@ -234,7 +231,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
             else
               if that.err
-                err = new Error(that.err.code, that.err.message)
+                err = new Error(that.err.code, that.err.msg)
               else
                 err = new Error(500)
               console.log "Rest findById end with error...", that, err
@@ -272,10 +269,10 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         if temp
           p = $http.get('/api/{0}/defaults'.format(that.modelName)).success((result) ->
             if result
-              that.status = result.status
-              that.err = result.err
-              delete result.status
-              delete result.err
+              that.status = result['$s']
+              that.err = result['$e']
+              delete result['$s']
+              delete result['$e']
               if that.status == 'ok'
                 defaults = result
                 Restangular.restangularizeElement('', defaults, that.modelName, false)
@@ -285,7 +282,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
               else
                 if that.err
-                  err = new Error(that.err.code, that.err.message)
+                  err = new Error(that.err.code, that.err.msg)
                 else
                   err = new Error(500)
                 console.log "Rest create end with error...", that, err
@@ -305,10 +302,10 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           if that.rest.post?
             p = that.rest.post(row).then((result) ->
               if result
-                that.status = result.status
-                that.err = result.err
-                delete result.status
-                delete result.err
+                that.status = result['$s']
+                that.err = result['$e']
+                delete result['$s']
+                delete result['$e']
                 if that.status == 'ok'
                   that.rows.push(result)
                   console.log "Rest create end...", that, result
@@ -316,7 +313,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
                 else
                   if that.err
-                    err = new Error(that.err.code, that.err.message)
+                    err = new Error(that.err.code, that.err.msg)
                   else
                     err = new Error(500)
                   console.log "Rest create end with error...", that, err
@@ -341,6 +338,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         if !row
           console.log "Rest update error, missing row", that
+          cb(null, new Error("Rest update error, missing row"))
           return
 
         console.log "Rest update start...", that, row
@@ -348,10 +346,10 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         if row.save?
           p = row.save().then((result) ->
             if result
-              that.status = result.status
-              that.err = result.err
-              delete result.status
-              delete result.err
+              that.status = result['$s']
+              that.err = result['$e']
+              delete result['$s']
+              delete result['$e']
               if that.status == 'ok'
                 x = that.findRowIndexById(result._id.toString())
                 if x != -1
@@ -359,14 +357,15 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
                     r = that.rows[x].plain()
                   else
                     r = that.rows[x]
-                  for k of r
-                    that.rows[x][k] = result[k]
+                  if r
+                    for k of r
+                      that.rows[x][k] = result[k]
                 console.log "Rest update end...", that, result
                 cb(that.rows[x], null) if cb
 
               else
                 if that.err
-                  err = new Error(that.err.code, that.err.message)
+                  err = new Error(that.err.code, that.err.msg)
                 else
                   err = new Error(500)
                 console.log "Rest update end with error...", that, err
@@ -391,6 +390,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         if !row
           console.log "Rest remove error, missing row", that
+          cb(null, new Error("Rest remove error, missing row"))
           return
 
         console.log "Rest remove start...", that, row
@@ -399,10 +399,10 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           _id = row._id
           p = row.remove().then((result) ->
             if result
-              that.status = result.status
-              that.err = result.err
-              delete result.status
-              delete result.err
+              that.status = result['$s']
+              that.err = result['$e']
+              delete result['$s']
+              delete result['$e']
               if that.status == 'ok'
                 x = that.findRowIndexById(_id.toString())
                 if x != -1
@@ -412,7 +412,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
               else
                 if that.err
-                  err = new Error(that.err.code, that.err.message)
+                  err = new Error(that.err.code, that.err.msg)
                 else
                   err = new Error(500)
                 console.log "Rest remove end with error...", that, err
@@ -445,16 +445,17 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
         p = $http.get('/api/{0}/schema'.format(that.modelName)).success((result) ->
           if result
-            that.status = result.status
-            that.err = result.err
-            delete result.status
-            delete result.err
+            that.status = result['$s']
+            that.err = result['$e']
+            delete result['$s']
+            delete result['$e']
             if that.status == 'ok'
               schema = result
               p = []
-              for k of schema
-                if k != 'id'
-                  p.push(k)
+              if schema
+                for k of schema
+                  if k != 'id'
+                    p.push(k)
               schema.paths = p
               that.schema = schema
               console.log "Rest schema end...", that, schema
@@ -462,7 +463,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
 
             else
               if that.err
-                err = new Error(that.err.code, that.err.message)
+                err = new Error(that.err.code, that.err.msg)
               else
                 err = new Error(500)
               console.log "Rest schema end with error...", that, err
@@ -475,6 +476,31 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
         ).error((err) ->
           console.log "Rest schema end with error...", that, err
           cb(null, err) if cb
+        )
+
+
+      call: (row, name, args, cb) ->
+        that = @
+
+        if type(args) is 'function'
+          cb = args
+          args = {}
+
+        if !row
+          console.log "Rest call error, missing row", that
+          cb(null, new Error("Rest call error, missing row"))
+          return
+
+        console.log "Rest call start...", that, row
+
+        $http({ method:'GET', url:"/api/{0}/call/{1}/{2}".format(that.modelName, name, row._id), params: args })
+        .success((result) ->
+          cb(null, result) if cb
+          console.log "Rest call end...", that, row, result
+        )
+        .error((data, status) ->
+          console.log "Rest call end with error...", that, row, data
+          cb(new Error(status, data), null) if cb
         )
 
 

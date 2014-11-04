@@ -1,6 +1,6 @@
 module.exports = [
 
-  name: 'Literals'
+  name: 'Literal.Category'
   desc: 'Literal value'
   extra:
     display: 'Literal'
@@ -12,13 +12,13 @@ module.exports = [
   name: 'Literal'
   desc: 'Literal value'
   extra:
-    category: 'Literals'
+    category: 'Literal.Category'
     options: 'h'
     icon: 'cic-tag8'
     color: 'gray'
     code:
-      both: (arg, user) ->
-        Handlebars.compile('{{value}}')({value: arg.getValueOrDefault()})
+      client_server: (out, arg, user) ->
+        out.append '{0}'.format(arg.toString())
 ,
 
   name: 'Literal.String'
@@ -28,8 +28,8 @@ module.exports = [
     icon: 'cic-quote-right'
     default: ''
     code:
-      both: (arg, user) ->
-        Handlebars.compile('\'{{value}}\'')({value: arg.getValueOrDefault()})
+      client_server: (out, arg, user) ->
+        out.append '\'{0}\''.format(arg.toString())
 ,
 
   name: 'Literal.Number'
@@ -39,9 +39,8 @@ module.exports = [
     icon: 'cic-hash'
     default: 0
     code:
-      both: (arg, user) ->
-        v = arg.getValueOrDefault()
-        return (if type(v) is 'number' and Number.isNaN(v) then '0' else v.toString())
+      client_server: (out, arg, user) ->
+        out.append '{0}'.format(arg.toNumber())
 ,
 
   name: 'Literal.Boolean'
@@ -58,11 +57,8 @@ module.exports = [
     inherit: 'Literal'
     icon: 'cic-calendar32'
     code:
-      both: (arg, user) ->
-        m = moment(arg.getValueOrDefault())
-        if !m.isValid()
-          m = moment()
-        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('L')})
+      client_server: (out, arg, user) ->
+        out.append 'moment(\'{0}\')'.format(arg.toDateTime().format('L'))
 ,
 
   name: 'Literal.DateTime'
@@ -72,11 +68,8 @@ module.exports = [
     icon: 'cic-appointment'
     options: 'h'
     code:
-      both: (arg, user) ->
-        m = moment(arg.getValueOrDefault())
-        if !m.isValid()
-          m = moment()
-        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('L LT')})
+      client_server: (out, arg, user) ->
+        out.append 'moment(\'{0}\')'.format(arg.toDateTime().format('L LT'))
 ,
 
   name: 'Literal.Time'
@@ -86,11 +79,8 @@ module.exports = [
     icon: 'cic-clock23'
     options: 'h'
     code:
-      both: (arg, user) ->
-        m = moment(arg.getValueOrDefault())
-        if !m.isValid()
-          m = moment()
-        Handlebars.compile('moment(\'{{value}}\')')({value: m.format('LT')})
+      client_server: (out, arg, user) ->
+        out.append 'moment(\'{0}\')'.format(arg.toDateTime().format('LT'))
 ,
 
   name: 'Literal.Color'
@@ -100,11 +90,8 @@ module.exports = [
     icon: 'cic-palette'
     default: tinycolor('black').toHex8String()
     code:
-      both: (arg, user) ->
-        tc = tinycolor(arg.getValueOrDefault().toLowerCase())
-        if !tc.isValid()
-          tc = tinycolor('black')
-        Handlebars.compile('tinycolor(\'{{value}}\')')({value: tc.toHex8String()})
+      client_server: (out, arg, user) ->
+        out.append 'tinycolor(\'{0}\')'.format(arg.toColor().toHex8String())
 ,
 
   name: 'Literal.Html'
@@ -113,8 +100,8 @@ module.exports = [
     inherit: 'Literal'
     icon: 'cic-chevrons'
     code:
-      both: (arg, user) ->
-        Handlebars.compile('$(\'{{value}}\')')({value: arg.getValueOrDefault()})
+      client_server: (out, arg, user) ->
+        out.append '$(\'{0}\')'.format(arg.toHtml())
 ,
 
   name: 'Literal.JSON'
@@ -124,8 +111,8 @@ module.exports = [
     icon: 'cic-braces'
     default: {}
     code:
-      both: (arg, user) ->
-        Handlebars.compile('\{{{value}}\}')({value: arg.getValueOrDefault()})
+      client_server: (out, arg, user) ->
+        out.append '\{{0}\}'.format(arg.toJSON())
 ,
 
   name: 'Literal.Array'
@@ -135,8 +122,8 @@ module.exports = [
     icon: 'cic-squarebrackets'
     default: []
     code:
-      both: (arg, user) ->
-        Handlebars.compile('[{{value}}]')({value: arg.getValueOrDefault().join(', ')})
+      client_server: (out, arg, user) ->
+        out.append '[{0}]'.format(arg.toArray().join(', '))
 ,
 
   name: 'Literal.RegExp'
@@ -146,8 +133,8 @@ module.exports = [
     icon: 'cic-asterisk'
     default: /$.*^/ig
     code:
-      both: (arg, user) ->
-        Handlebars.compile('$(/{{value}}/')({value: arg.getValueOrDefault().toString()})
+      client_server: (out, arg, user) ->
+        out.append '/{0}/'.format(arg.toString())
 ,
 
   name: 'Literal.Expression'
@@ -158,8 +145,8 @@ module.exports = [
     default: ->
 
     code:
-      both: (arg, user) ->
-        Handlebars.compile('(/{{value}}/')({value: arg.getValueOrDefault().toString()})
+      client_server: (out, arg, user) ->
+        out.append '(/{0}/)'.format(arg.toString())
 ,
 
   name: 'Literal.Icon'
@@ -168,8 +155,8 @@ module.exports = [
     inherit: 'Literal'
     icon: 'cic-uniF545'
     code:
-      both: (arg, user) ->
-        Handlebars.compile('\'cic {{value}}\'')({value: arg.getValueOrDefault()})
+      client_server: (out, arg, user) ->
+        out.append '\'cic {0}\''.format(arg.toString())
 
 ]
 

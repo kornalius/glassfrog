@@ -16,11 +16,14 @@ angular.module('ui.selectize', [])
       value = attrs.selectize
 
       options =
+        delimiter: ','
         diacritics: true
         highlight: true
         openOnFocus: false
         create: false
+        createOnBlur: false
         persist: true
+        allowEmptyOption: false
 #        maxOptions: 1000
         hideSelected: false
         selectOnTab: false
@@ -55,13 +58,13 @@ angular.module('ui.selectize', [])
         if !value.startsWith('{')
           value = '{' + value + '}'
         v = scope.$eval('(' + value + ')')
-        options = $.extend(options, v)
+        options = $.extend({}, options, v)
 
       if !options.url?
         delete options.load
 
-      options.delimiter = (if options.delimiter? then options.delimiter else ',')
-
+#      options.delimiter = (if options.delimiter? then options.delimiter else ',')
+#
       if options.maxItems?
         options.plugins =
           'remove_button': {}
@@ -89,7 +92,7 @@ angular.module('ui.selectize', [])
         $timeout(->
           v = getValues()
 
-#          oo = []
+          #          oo = []
 #          for s in v
 #            o = selectize.options[s]
 #            console.log s, o
@@ -164,6 +167,7 @@ angular.module('ui.selectize', [])
             else
               return ""
         )
+
 ])
 
 #.directive('selectize', [

@@ -1,4 +1,12 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  unit = path + 'unit'
+
   schema.add(
 
     weight:
@@ -56,6 +64,6 @@ module.exports = ((schema, options) ->
         default: 'hour'
         label: 'Time Unit'
 
-  )
+  , path)
 
 )

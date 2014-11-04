@@ -1,4 +1,12 @@
 module.exports = ((schema, options) ->
+
+  if options and options.path?
+    path = options.path + '.'
+  else
+    path = ''
+
+  dates = path + 'dates'
+
   schema.add(
 
     dates: [
@@ -12,6 +20,6 @@ module.exports = ((schema, options) ->
         label: 'Date'
     ]
 
-  )
+  , path)
 
 )

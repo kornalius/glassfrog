@@ -1,14 +1,14 @@
 @import "/bower_components/bootstrap/less/variables.less";
 @import "/bower_components/bootstrap/less/mixins.less";
 
-@repository-color: @control-color;
-@repository-width: 400px;
-@repository-height: 175px;
+@role-color: @control-color;
+@role-width: 400px;
+@role-height: 175px;
 
-.repository-card {
-  height: @repository-height;
-  min-height: @repository-height;
-  max-height: @repository-height;
+.role-card {
+  height: @role-height;
+  min-height: @role-height;
+  max-height: @role-height;
   margin-top: 8px;
   margin-bottom: 8px;
   background: white;
@@ -17,77 +17,77 @@
   box-shadow: 2px 2px 5px rgba(80, 80, 80, 0.25);
 }
 
-.repository-card-inside-col {
+.role-card-inside-col {
   padding: 4px;
 }
 
-.repository-card-inside {
+.role-card-inside {
   margin-left: 10px;
 }
 
-.repository-color-col {
+.role-color-col {
   position: absolute;
   border-radius: @border-radius-base 0px 0px @border-radius-base;
-  height: @repository-height;
+  height: @role-height;
   width: 10px !important;
 }
 
-.repository-title-row {
+.role-title-row {
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
-.repository-icon-col {
+.role-icon-col {
   vertical-align: middle;
   text-align: center;
 }
 
-.repository-icon {
+.role-icon {
   color: @icon-color;
   font-size: large;
 }
 
-.repository-label-col {
+.role-label-col {
   vertical-align: middle;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-.repository-label {
+.role-label {
   font-size: small;
   font-weight: bold;
   color: @text-color;
 }
 
-.repository-version-col {
+.role-version-col {
   vertical-align: middle;
   text-align: right;
 }
 
-.repository-version {
+.role-version {
   font-size: small;
   color: @dark-purple-color;
 }
 
-.repository-info-row {
+.role-info-row {
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
-.repository-creator-col {
+.role-creator-col {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   vertical-align: middle;
 }
 
-.repository-creator {
+.role-creator {
   font-size: x-small;
   color: @icon-color;
 }
 
-.repository-date-col {
+.role-date-col {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -95,18 +95,18 @@
   text-align: right;
 }
 
-.repository-date {
+.role-date {
   font-size: x-small;
   color: @icon-color;
 }
 
-.repository-desc-row {
+.role-desc-row {
 }
 
-.repository-desc-col {
+.role-desc-col {
 }
 
-.repository-desc {
+.role-desc {
   overflow: hidden;
   font-size: small;
   font-style: italic;
@@ -120,36 +120,36 @@
   height: 64px !important;
 }
 
-.repository-tags-row {
+.role-tags-row {
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
-.repository-tags-col {
+.role-tags-col {
   vertical-align: middle;
 }
 
-.repository-tags {
+.role-tags {
 }
 
-.repository-tag {
+.role-tag {
   display: inline-table;
   font-size: x-small;
   margin-right: 2px;
 }
 
-.repository-buttons-row {
+.role-buttons-row {
   vertical-align: middle;
   margin-top: 4px;
   margin-bottom: 4px;
 }
 
-.repository-installs-col {
+.role-installs-col {
   vertical-align: middle;
   white-space: nowrap;
 }
 
-.repository-installs {
+.role-installs {
   font-size: x-small;
   color: @icon-color;
 
@@ -158,12 +158,12 @@
   }
 }
 
-.repository-buttons-col {
+.role-buttons-col {
   white-space: nowrap;
   vertical-align: middle;
 }
 
-.repository-button {
+.role-button {
   > button {
   }
 }

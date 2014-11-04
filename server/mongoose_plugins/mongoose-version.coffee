@@ -8,7 +8,11 @@ class Version extends mongoose.SchemaTypes.String
     @validate(@validateVersion.bind(@, options and options.required), 'version is invalid')
 
   cast: (val) =>
-    if val?
+    if val instanceof VersionClass
+      return val.versionString()
+    else if type(val) is 'object' and val.major? and val.minor?
+      return new VersionClass(val).versionString()
+    else if val?
       return val
     else
       return ''

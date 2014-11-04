@@ -9,8 +9,8 @@ function finish {
 
 trap finish EXIT
 
-/opt/local/bin/mongod --dbpath ./server/data/db &
+mongod --dbpath ./server/data/db &
 
 redis-server &
 
-/opt/local/bin/grunt debug
+grunt debug --noserver

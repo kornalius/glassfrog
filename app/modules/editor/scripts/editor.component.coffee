@@ -47,12 +47,13 @@ angular.module('editor.component', ['editor.node'])
 #          return VCGlobal.findComponent(c)
 
         l = []
-        for c in that.componentNodes
-          categories = c.getCategories().reverse()
-          if categories.length
-            cc = categories.shift()
-            if l.indexOf(cc) == -1
-              l.push(cc)
+        if that.componentNodes
+          for c in that.componentNodes
+            categories = c.getCategories().reverse()
+            if categories.length
+              cc = categories.shift()
+              if l.indexOf(cc) == -1
+                l.push(cc)
 
         for c in l
           c.$data._components = c.getComponents(that.componentNodes)
@@ -180,6 +181,6 @@ angular.module('editor.component', ['editor.node'])
 
     link: (scope, element, attrs) ->
       c = $parse(attrs.renderComponent)(scope)
-      if c and c.hasRenderCode()
+      if c
         c.render()
 ])

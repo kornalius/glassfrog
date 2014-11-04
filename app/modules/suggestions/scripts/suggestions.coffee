@@ -1,6 +1,6 @@
 angular.module('suggestions', ['app', 'dynamicForm'])
 
-.controller('suggestionsCtrl', [
+.controller('SuggestionsCtrl', [
   '$scope'
   '$rootScope'
   '$injector'
@@ -72,6 +72,7 @@ angular.module('suggestions', ['app', 'dynamicForm'])
       url:'/suggestions'
       icon: 'cic-comments'
       templateUrl: '/partials/suggestions.html'
+      controller: 'SuggestionsCtrl'
       sidebarHidden: true
       data:
         ncyBreadcrumbLabel: 'Suggestions'

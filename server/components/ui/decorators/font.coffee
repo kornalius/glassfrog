@@ -7,7 +7,7 @@ module.exports = [
     category: 'Decorators'
     options: 'c'
     icon: 'cic-font'
-    color: 'darkorange'
+    color: 'lightpurple'
 ,
 
   name: 'Font'

@@ -99,6 +99,7 @@ angular.module('dashboard', ['app', 'dashboard.models', 'dashboard.lineChart', '
         abstract: true
         url:'/dashboard'
         templateUrl: '/partials/dashboard.html'
+        controller: 'DashboardCtrl'
       )
 
       .state('dashboard.main',

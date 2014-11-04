@@ -205,12 +205,37 @@ a.active {
 }
 
 .pagination {
+  display: block;
   margin-top: 0px;
   margin-bottom: 0px;
+  & li > a {
+    padding: 4px 12px;
+  }
+}
+
+.table-nav {
+  display: inline-block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.query-group-conditions {
+  margin-left: 32px;
+}
+
+.query-alert-group {
+  margin: 5px;
+  padding: 8px;
+  background-color: @control-color;
+  border-color: @lighter-gray-color;
+}
+
+.query-condition {
+  margin-top: 5px;
 }
 
 textarea.form-control {
-  height:150px;
+  height: 150px;
   max-width: 100%;
 }
 
@@ -221,7 +246,7 @@ textarea.form-control {
 .panel-subform > .panel > .panel-heading {
   padding-top: 4px;
   padding-bottom: 4px;
-  background-color: @form-color;
+//  background-color: @form-color;
 }
 
 .panel-subform > .panel > .panel-heading.accordion-toggle .panel-title:after {
@@ -380,6 +405,42 @@ a .display-icon {
   text-decoration: line-through;
 }
 
+.xx-small {
+  font-size: xx-small;
+}
+
+.x-small {
+  font-size: x-small;
+}
+
+.smaller {
+  font-size: smaller;
+}
+
+.small {
+  font-size: small;
+}
+
+.medium {
+  font-size: medium;
+}
+
+.large {
+  font-size: large;
+}
+
+.larger {
+  font-size: larger;
+}
+
+.x-large {
+  font-size: x-large;
+}
+
+.xx-large {
+  font-size: xx-large;
+}
+
 .label-form-error {
   margin-right: 8px;
 }
@@ -399,10 +460,22 @@ a .display-icon {
 
 .btn-link:focus {
   outline: none !important;
-  border-color: none !important;
+  border-color: transparent !important;
 }
 
 .btn-link:active {
   background-color: @btn-default-border;
   border-radius: @border-radius-base !important;
+}
+
+.ms-container .ms-list {
+  background-color: white;
+}
+
+.ms-container .ms-selectable {
+  background-color: transparent;
+}
+
+.ms-container .ms-selection {
+  background-color: transparent;
 }
