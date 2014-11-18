@@ -552,7 +552,7 @@ angular.module('dynamicForm', ['app', 'ui.bootstrap.modal', 'template/modal/back
 
                 if ok
                   $timeout(->
-                    selectize.setValue(v)
+                    selectize.setOptionsValue(v)
                   )
 
           $scope.prevStateIdx = idx

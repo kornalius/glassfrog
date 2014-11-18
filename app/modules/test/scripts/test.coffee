@@ -1,4 +1,4 @@
-angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 'test.info'])
+angular.module('test', ['test.form', 'test.table', 'test.grid', 'test.details', 'test.po', 'test.info'])
 
 .config([
   '$stateProvider'
@@ -27,6 +27,9 @@ angular.module('test', ['test.form', 'test.table', 'test.details', 'test.po', 't
         table:
           templateUrl: '/partials/test.table.html'
           controller: 'TestTableCtrl'
+        grid:
+          templateUrl: '/partials/test.grid.html'
+          controller: 'TestGridCtrl'
     )
 
     .state('test.po',

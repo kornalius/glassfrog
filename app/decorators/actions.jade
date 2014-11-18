@@ -1,0 +1,5 @@
+.btn-group
+
+  input.btn(ng-repeat-start='item in form.items', type='submit', class="{{ item.style || 'btn-primary' }}", value='{{item.title}}', ng-if="item.type === 'submit'", ng-disabled="form.readonly")
+
+  button.btn(ng-repeat-end='', class="{{ item.style || 'btn-default' }}", type='button', ng-disabled='form.readonly', ng-if="item.type !== 'submit'", ng-click='buttonClick($event,item)') {{item.title}}

@@ -78,7 +78,7 @@ body.dragging, body.dragging * {
 
 .box {
   position: absolute;
-  bottom: 0px;
+  bottom: 24px;
   left: 0px;
   right: 0px;
   top: 77px;
@@ -478,4 +478,105 @@ a .display-icon {
 
 .ms-container .ms-selection {
   background-color: transparent;
+}
+
+input.form-control.ng-valid.ng-modified {
+  border-color: #6699ff;
+}
+
+select.form-control.ng-valid.ng-modified {
+  border-color: #6699ff;
+}
+
+input.form-control:disabled {
+  background: none;
+  box-shadow: none;
+  border: none;
+  padding: 0px;
+  height: inherit;
+}
+
+select.form-control:disabled {
+  background: none;
+  box-shadow: none;
+  border: none;
+  padding: 0px;
+  height: inherit;
+}
+
+.angular-center-container {
+  position: fixed;
+  top:0;
+  left:0;
+  height:100%;
+  width:100%;
+  display:table;
+  pointer-events: none;
+  z-index:9999;
+}
+
+.angular-centered {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.form-container {
+  background: white;
+  border-radius: @border-radius-large;
+  border: thin solid @panel-default-border;
+  padding: @padding-large-horizontal;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.bs-callout {
+  margin-top: 0px;
+}
+
+.dyn-form-group {
+
+}
+
+.dyn-form-content {
+
+}
+
+.dyn-form-help {
+
+}
+
+
+.dyn-table {
+  & .dyn-form-group {
+    margin: 0px;
+    padding: 0px !important;
+  }
+}
+
+.dyn-table-row {
+}
+
+.dyn-table-col {
+  padding: 8px !important;
+}
+
+.grid-panel {
+  display: block;
+
+  & .dyn-form-group {
+    margin: 0px;
+  }
+}
+
+.grid-panel-content {
+  display: inline-block;
+//  vertical-align: top;
+  cursor: pointer;
+  margin: 4px 4px;
+  background-color: @white-color;
+  border-radius: @border-radius-large;
+  padding: @padding-small-horizontal;
+  min-width: 50px;
+  min-height: 50px;
 }

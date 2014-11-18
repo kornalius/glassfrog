@@ -1,6 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-ownable = require('mongoose-ownable')
+ownable = require('../mongoose_plugins/mongoose-ownable')
 likes = require('./mongoose-likes')
 
 CommentSchema = mongoose.Schema(

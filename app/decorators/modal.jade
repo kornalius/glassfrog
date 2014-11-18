@@ -1,0 +1,19 @@
+// modal.html
+
+div(ng-controller="dynModalCtrl")
+  .modal-header(ng-if="form.label")
+    button.close(type="button", ng-click="modalClick('cancel')") &times;
+    h4.modal-title {{form.label}}
+
+  .modal-body
+    .container-fluid
+      .row-fluid
+        ng-form(name="{{domName()}}", ng-class="getClass()", role="form", ng-repeat="row in rows track by $index", novalidate)
+          // <row>
+      .row-fluid
+
+  .modal-footer(ng-show="form.buttons")
+    span(ng-repeat="b in form.buttons", style="padding:4px;")
+      button.btn(type="button", class="btn-{{b.class}}", ng-click="modalClick(b.url)")
+        span.cic(ng-if="b.icon", class="{{b.icon}}") &nbsp;
+        | {{b.label}}

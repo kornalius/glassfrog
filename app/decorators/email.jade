@@ -1,0 +1,6 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    div(dyn-model-value, ng-show="form.key", ade-url="email", ade-class="form-control", schema-validate="form", ng-model="$$value$$", ng-disabled="form.readonly", placeholder="{{form.placeholder}}")

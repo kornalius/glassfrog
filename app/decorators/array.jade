@@ -1,0 +1,36 @@
+div(sf-array='form', ng-model='$$value$$', ng-model-options='form.ngModelOptions')
+
+  h3(ng-show='form.title && form.notitle !== true') {{ form.title }}
+
+
+  div(ng-if="form.format === 'table'")
+    table.table.table-bordered.table-striped.dyn-table(dyn-model-value, ng-model='modelArray')
+      tr.dyn-table-row(ng-repeat='item in modelArray track by $index', ng-init='arrayIndex = $index; form = copyWithIndex($index)')
+        td.dyn-table-col(ng-repeat='formItem in form.items', ng-init="formItem.notitle = true; formItem.feedback = false; formItem.readonly = true;")
+          sf-decorator(form='formItem', dyn-form-row="item")
+
+
+  div(ng-if="form.format === 'grid'")
+    .grid-panel(dyn-model-value, ng-model='modelArray')
+      .grid-panel-content(ng-repeat='item in modelArray track by $index', ng-init='arrayIndex = $index; form = copyWithIndex($index)')
+        sf-decorator(ng-repeat='formItem in form.items', ng-init="formItem.notitle = true; formItem.feedback = false; formItem.readonly = true;", form='formItem', dyn-form-row="item")
+
+
+  div(ng-if="form.format !== 'table' && form.format !== 'grid'")
+    ol.list-group(dyn-model-value, ng-model='modelArray', ui-sortable="{ disabled: {{form.sortable === false ? true : false}} }")
+      li.list-group-item(ng-repeat='item in modelArray track by $index')
+
+        button.close.pull-right(ng-hide='form.readonly || form.delete === false', ng-click='deleteFromArray($index)', style='position: relative; z-index: 20;', type='button')
+          span(aria-hidden='true') &times;
+          span.sr-only Close
+
+        sf-decorator(ng-init='arrayIndex = $index', form='copyWithIndex($index)', dyn-form-row="item")
+
+    .clearfix(style='padding: 15px;')
+
+      button.btn.pull-right(ng-hide='form.readonly', ng-click='appendToArray()', type='button', class="{{ form.style.add || 'btn-default' }}")
+        i.glyphicon.glyphicon-plus
+        | {{ form.add || &apos;Add&apos; }}
+
+
+  .help-block(ng-show='(hasError() && errorMessage(schemaError())) || form.description', ng-bind-html='(hasError() && errorMessage(schemaError())) || form.description')

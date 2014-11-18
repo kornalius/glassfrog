@@ -1,0 +1,8 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label.control-label(ng-show='showTitle()') {{form.title}}
+
+    input.form-control(dyn-model-value, ng-show='form.key', type='{{form.type}}', step='any', sf-changed='form', placeholder='{{form.placeholder}}', ng-model-options='form.ngModelOptions', ng-model='$$value$$', ng-disabled='form.readonly || !isEditing()', schema-validate='form', ng-click-select)
+
+    span.form-control-feedback(ng-if="form.feedback !== false && !form.readonly && !isEditing()", ng-class="evalInScope(form.feedback) || {'cic cic-ok green': hasSuccess(), 'cic cic-remove3 red': hasError(), 'cic cic-exclamation2 red': !hasSuccess() && !hasError() && form.required}")

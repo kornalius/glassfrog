@@ -3,7 +3,7 @@
   "app": "logiciel",
   "copyright": "tout droits réservés",
   "nav": {
-    "home": "maison",
+    "home": "acceuil",
     "todo": "à faires",
     "view1": "page un",
     "view2": "page deux",
@@ -25,6 +25,30 @@
     "user": {
       "profile": "profile",
       "invoices": "factures"
+    },
+    "test": {
+      "main": "acceuil",
+      "po": "commandes",
+      "details": "détails",
+      "info": "information"
+    }
+  },
+  "tab": {
+    "home": "acceuil",
+    "test": {
+      "main": "acceuil",
+      "po": "commandes",
+      "details": "détails",
+      "info": "information"
+    }
+  },
+  "breadcrumb": {
+    "home": "acceuil",
+    "test": {
+      "main": "test principal",
+      "po": "commandes",
+      "details": "détails",
+      "info": "information"
     }
   }
 }

@@ -25,11 +25,30 @@
     "user": {
       "profile": "profile",
       "invoices": "invoices"
+    },
+    "test": {
+      "main": "main test",
+      "po": "purchase orders",
+      "details": "details",
+      "info": "information"
     }
-   },
-   "tab": {
-     "test": {
-       "po": "purchase orders"
-     }
-   }
+  },
+  "tab": {
+    "home": "acceuil",
+    "test": {
+      "main": "main test",
+      "po": "purchase orders",
+      "details": "details",
+      "info": "information"
+    }
+  },
+  "breadcrumb": {
+    "home": "acceuil",
+    "test": {
+      "main": "main test",
+      "po": "purchase orders",
+      "details": "details",
+      "info": "information"
+    }
+  }
 }

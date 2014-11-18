@@ -1,0 +1,8 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    select(dyn-model-value, ng-show="form.key", type="text", style="background-color: white; width: 100% !important;", schema-validate="form", ng-model="$$value$$", ng-disabled="form.readonly", multiple="multiple", twolist, options="{{form.titleMap}}")
+
+      option(ng-repeat="item in form.titleMap", value="{{item.value}}") {{item.name}}

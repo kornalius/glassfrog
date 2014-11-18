@@ -2,48 +2,6 @@
 
 angular.module('checklistbox.services', ['app', 'app.globals'])
 
-.controller('checklistboxCtrl', [
-  '$scope'
-  'Globals'
-
-  ($scope, globals) ->
-
-    $scope.options = []
-
-    $scope.modelValue = () ->
-      l = []
-      for o in $scope.options
-        if o.checked
-          l.push(o)
-
-      if $scope.format == 'string-label'
-        return l.map((o) -> o.label).join($scope.delimiter)
-      else if $scope.format == 'string-value'
-        return l.map((o) -> o.value).join($scope.delimiter)
-      else if $scope.format == 'array'
-        return l.map((o) -> {label: o.label, value: o.value})
-      else if $scope.format == 'array-label'
-        return l.map((o) -> o.label)
-      else if $scope.format == 'array-value'
-        return l.map((o) -> o.value)
-      else
-        return []
-
-
-    $scope.processOptions = (options) ->
-      l = []
-      for i in [0..options.length - 1]
-        if !options[i].label and !options[i].value
-          l.push({value: options[i], label: options[i], checked: false})
-        else
-          if !options[i].checked?
-            l.push({value: options[i].value, label: options[i].label, checked: false})
-          else
-            l.push(options[i])
-      return l
-
-])
-
 .directive('checklistbox', [
   '$document'
   '$window'
@@ -52,74 +10,54 @@ angular.module('checklistbox.services', ['app', 'app.globals'])
 
   ($document, $window, $timeout, $parse) ->
     restrict: 'A'
+    replace: true
     require: '?ngModel'
 #    ngModel: '='
-    controller: 'checklistboxCtrl'
     priority: 1
+    controller: ['$scope', ($scope) ->
+      $scope.config = {}
+      $scope.options = []
+
+      $scope.processOptions = (options) ->
+        l = []
+        for i in [0..options.length - 1]
+          if !options[i].name and !options[i].value
+            l.push({name: options[i], value: options[i]})
+          else
+            l.push(options[i])
+        return l
+
+      $scope.toggle = (index) ->
+        if $scope.ngModel and $scope.ngModel.$modelValue and index in [0..$scope.options.length - 1]
+          i = $scope.ngModel.$modelValue.indexOf($scope.options[index].value)
+          if i == -1
+            $scope.ngModel.$modelValue.push($scope.options[index].value)
+          else
+            $scope.ngModel.$modelValue.splice(i, 1)
+          $scope.ngModel.$dirty = true
+          $scope.ngModel.$pristine = false
+
+      $scope.isChecked = (index) ->
+        if $scope.ngModel and $scope.ngModel.$modelValue and index in [0..$scope.options.length - 1]
+          return $scope.ngModel.$modelValue.indexOf($scope.options[index].value) != -1
+        return false
+    ]
 
     link: (scope, element, attrs, ctrl) ->
 
-      defaults =
-        config:
-          format: 'string-label'
-          delimiter: ','
-        selected: []
+      scope.config =
+        delimiter: ','
 
-      if attrs.field?
-        field = $parse(attrs.field)(scope)
+      if attrs.checklistboxOptions?
+        o = $parse(attrs.checklistboxOptions)(scope)
       else
-        field =
-          config: {}
-          selected: []
-
-      field.config = angular.extend({}, defaults.config, field.config)
-      scope.format = field.config.format
-      scope.delimiter = field.config.delimiter
+        o = {}
+      _.extend(scope.config, o)
 
       scope.options = scope.processOptions($parse(attrs.options)(scope))
 
-      ctrl.$render = ->
-#        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
-#        ctrl.$modelValue = newValue
-        scope.updateCheck()
-
-      element.on('change', ->
-        r = scope.modelValue()
-        if !angular.equals(ctrl.$viewValue, r)
-          $timeout(->
-            scope.$apply(->
-              ctrl.$setViewValue(r)
-            )
-          )
-      )
-
-      scope.$watch('options', (newValue, oldValue) ->
-        if !angular.equals(newValue, oldValue)
-          element.trigger('change')
-      , true)
-
-      scope.updateCheck = () ->
-        ls = []
-
-        v = ctrl.$modelValue
-        if scope.format.startsWith('string') and type(v) is 'string'
-          ls = v.split(scope.delimiter)
-        else if scope.format.startsWith('array') and type(v) is 'array'
-          ls = v
-
-        for o in scope.options
-          o.checked = false
-
-        for l in ls
-          for o in scope.options
-            if (scope.format == 'string-label' and o.label == l) or (scope.format == 'string-value' and o.value == l) or (scope.format == 'array-label' and o.label == l) or (scope.format == 'array-value' and o.value == l) or (scope.format == 'array' and o.value == l.value)
-              o.checked = true
-              break
-
-      scope.$watch(attrs.ngModel, (newValue, oldValue) ->
-        if !angular.equals(newValue, oldValue)
-          element.trigger('change')
-          scope.updateCheck()
-      , true)
+#      scope.$watch(attrs.ngModel, (newValue) ->
+#        console.log "$watch attrs.ngModel", newValue, ctrl, scope.ngModel
+#      )
 
 ])

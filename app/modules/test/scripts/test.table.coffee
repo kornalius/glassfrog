@@ -3,99 +3,37 @@ angular.module('test.table', ['dynamicForm'])
 .controller('TestTableCtrl', [
   '$scope'
   '$rootScope'
-  'dynForm'
   'Rest'
 
-($scope, $rootScope, dynForm, Rest) ->
+($scope, $rootScope, Rest) ->
 
-  $scope.tests = []
+  $scope.model = {}
+  $scope.schema = {}
+  $scope.form = []
 
-  $scope.tests = new Rest('test')
+  $scope.test = new Rest('test')
+  $scope.test.find({l: 10}, ->
+    $scope.model = $scope.test
 
-  $scope.tests.find({l: 10}, ->
-    testTable =
-      label: 'Table test'
-      name: "myTable"
-      editMode: 'inline'
-      canMove: false
-      layout: {type:'table'}
+    $scope.test.getSchema(true, (schema, err) ->
+      $scope.schema = schema
 
-      moreModal: {}
-
-      editModal:
-        label: "Edit"
-        name: "myEditModal"
-        layout: {type:'modal', style:'horizontal'}
-        buttons: [{ icon: 'cic-disk3', class: 'success', label: 'Save', url: "ok" }, { icon: null, class: 'danger', label: 'Cancel', url: "cancel" }]
-
-        fields: [
-          type: "tabs"
-          tabs: [
-            label: 'Main'
-          ,
-            label: 'Dates'
-          ]
+      $scope.form = [
+        key: 'rows'
+        type: 'array'
+        format: 'table'
+        title: "Table view"
+        items: [
+          "rows[]._id"
         ,
-          label: "ID"
-          type: "input"
-          description: "id of the record"
-          fieldname: '_id'
-          style: {name:'color', value:'darkorange'}
-          required: true
+          "rows[].created_at"
         ,
-          label: "Created"
-          type: "input"
-          placeholder: "Creation date"
-          description: "date the record was created"
-          fieldname: 'created_at'
-          datetime: true
-          required: true
-          tab: 1
+          "rows[].updated_at"
         ,
-          label: "Updated"
-          type: "input"
-          description: "date the record was modified"
-          fieldname: 'updated_at'
-          datetime: true
-          required: true
-          placeholder: "Updated date"
-          tab: 1
+          "rows[].value"
+        ]
       ]
-
-      fields: [
-        label: "#"
-        type: "input"
-        description: "id of the record"
-        fieldname: '_id'
-#        number: true
-#        min: 0
-#        max: 10
-        width: '10%'
-        style: {name:'color', value:'darkorange'}
-#          hidden: false
-#          disabled: true
-        required: true
-        sum: '"Count:" + rows.length'
-      ,
-        label: "Created"
-        type: "input"
-        placeholder: "Creation date"
-        description: "date the record was created"
-        fieldname: 'created_at'
-        width: '10%'
-#        datetime: true
-        required: true
-      ,
-        label: "Updated"
-        type: "input"
-        description: "date the record was modified"
-        fieldname: 'updated_at'
-        width: '10%'
-#        datetime: true
-        required: true
-        placeholder: "Updated date"
-      ]
-
-    dynForm.build($scope, testTable, $scope.tests, '#table')
+    )
   )
+
 ])

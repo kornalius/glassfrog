@@ -66,7 +66,7 @@
       button.btn.btn-sm.node-button-item(type="button", ng-click="removeIt(n); $event.stopPropagation();", ng-hide="!n.canRemove()")
         span.node-button-icon.cic.cic-trashcan2
 
-      button.btn.btn-sm.node-button-item.dropdown-toggle(type="button", data-toggle="dropdown", data-model="{{n}}", style="width: 200px;")
+      button.btn.btn-sm.node-button-item.dropdown-toggle(type="button", data-toggle="dropdown", data-model="n")
         span.node-button-icon.cic.cic-menu2
 
       ul.dropdown-menu.node-menu(id="node-menu", role="menu")

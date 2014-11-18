@@ -259,7 +259,7 @@ ArgClass =
       else
         return null
 
-    a.setValue = (value) ->
+    a.setOptionsValue = (value) ->
       if value and value.$data?
         @setLink(value)
       else if ArgClass.VCGlobal.isValidId(value)

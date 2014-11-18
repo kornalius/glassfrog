@@ -1,0 +1,7 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label(ng-show='showTitle()') {{form.title}}
+
+    input.form-control(ng-if="form.type !== 'textarea'", type='text', disabled='', value='{{$$value$$}}')
+    textarea.form-control(ng-if="form.type === 'textarea'", disabled='') {{$$value$$}}

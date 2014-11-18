@@ -1,0 +1,5 @@
+.dyn-form-group.form-group(ng-class="{'has-error': hasError(), 'has-success': hasSuccess() && ngModel.modified, 'has-feedback': form.feedback !== false }")
+
+  span.dyn-form-content(data-block="content")
+
+  span.dyn-form-help.help-block(ng-show='(hasError() && errorMessage(schemaError())) || form.description', ng-bind-html='(hasError() && errorMessage(schemaError())) || form.description')

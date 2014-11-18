@@ -1,7 +1,7 @@
 app = require("../app")
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-ownable = require('mongoose-ownable')
+ownable = require('../mongoose_plugins/mongoose-ownable')
 async = require('async')
 Version = require('../mongoose_plugins/mongoose-version')()
 VersionClass = require('../version')

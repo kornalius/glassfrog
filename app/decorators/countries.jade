@@ -1,0 +1,6 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html", ng-controller="CountryStateCtrl")
+
+  div(data-block="content")
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    select#country-select(dyn-model-value, selectize="[{openOnFocus: true}, form.config]", ng-show="form.key", type="text", style="background-color: white; width: 100% !important;", schema-validate="form", ng-model="$$value$$", ng-disabled="form.readonly", placeholder="{{form.placeholder}}", options="{{countries}}", ng-change="countryChange")

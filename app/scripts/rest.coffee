@@ -432,7 +432,11 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           cb(null, new Error('no remove method found')) if cb
 
 
-      getSchema: (cb) ->
+      getSchema: (json, cb) ->
+        if type(json) is 'function'
+          cb = json
+          json = false
+
         that = @
 
         console.log "Rest schema start...", that
@@ -443,7 +447,7 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
           else
             that.rest = Restangular.one(that.modelName)
 
-        p = $http.get('/api/{0}/schema'.format(that.modelName)).success((result) ->
+        p = $http.get('/api/{0}/schema{1}'.format(that.modelName, (if json then '/json' else ''))).success((result) ->
           if result
             that.status = result['$s']
             that.err = result['$e']
@@ -451,12 +455,6 @@ mod = angular.module('rest.services', ['app.globals', 'restangular'])
             delete result['$e']
             if that.status == 'ok'
               schema = result
-              p = []
-              if schema
-                for k of schema
-                  if k != 'id'
-                    p.push(k)
-              schema.paths = p
               that.schema = schema
               console.log "Rest schema end...", that, schema
               cb(schema, null) if cb

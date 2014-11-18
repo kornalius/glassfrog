@@ -129,40 +129,122 @@ exports.modelSync = modelSync = (name, user, connection, prefix) ->
     m = user.modelSync(name, user, connection, prefix)
   return m
 
+
+makePath = (path, k) ->
+  return (if path then path + '.' + k else k)
+
+exports.schemaTree = schemaTree = (schema, node, name, path) ->
+  results = {}
+
+  if !node
+    return results
+
+  if node instanceof Array
+    f = _.first(node)
+    if f
+      if f.tree
+        results[name] =
+          path: path
+          fieldname: name
+          type: 'documentarray'
+          fields: {}
+        for k of f.tree
+          _.extend(results[name].fields, schemaTree(schema, f.tree[k], k, makePath(path, k)))
+      else
+        results[name] =
+          path: path
+          fieldname: name
+          type: 'nestedarray'
+          fields: {}
+        for k of f
+          _.extend(results[name].fields, schemaTree(schema, f[k], k, makePath(path, k)))
+    else
+      results[name] =
+        path: path
+        fieldname: name
+        type: 'array'
+
+  else if _.isObject(node) and !node.type and !node.getters and schema.pathType(path) != 'real'
+    if name
+      if schema.pathType(path) == 'nested'
+        r = results[name] =
+          path: path
+          fieldname: name
+          type: 'nested'
+          fields: {}
+      else
+        r = results[name] =
+          path: path
+          fieldname: name
+          type: 'subdocument'
+          fields: {}
+    else
+      r = _.extend(results,
+        fields: {}
+      )
+
+    if type(node) != 'function'
+      for k of node
+        _.extend(r.fields, schemaTree(schema, node[k], k, makePath(path, k)))
+
+  else if _.isObject(node) and !node.type and node.getters
+    results[name] =
+      path: path
+      fieldname: name
+      type: 'virtual'
+
+  else
+    r = results[name] =
+      path: path
+      fieldname: name
+
+    for k of node
+      p = node[k]
+      keys = _.keys(p)
+      f = _.filter(_.values(p), (v) -> type(v) != 'function')
+      if f.length == keys.length
+        r[k] = p
+
+    if type(node.type) is 'function'
+      r.type = node.type.prototype.constructor.name.toLowerCase()
+    else if type(node) is 'function'
+      r.type = node.prototype.constructor.name.toLowerCase()
+    else if node.instance? and type(node.instance) is 'string'
+      r.type = node.instance.toLowerCase()
+
+  return results
+
 exports.schemaPaths = schemaPaths = (schema, node, path) ->
   results = {}
 
   if !node
     return results
 
-  makePath = (path, k) ->
-    return (if path then path + '.' + k else k)
-
   if node instanceof Array
     f = _.first(node)
     if f
       if f.tree
         if path
-          results[path] = {type: 'DocumentArray'}
+          results[path] = {type: 'documentarray'}
         for k of f.tree
           _.extend(results, schemaPaths(schema, f.tree[k], makePath(path, k)))
       else
         if path
-          results[path] = {type: 'NestedArray'}
+          results[path] = {type: 'nestedarray'}
         for k of f
           _.extend(results, schemaPaths(schema, f[k], makePath(path, k)))
     else
       results[path] = {}
-      results[path].type = 'Array'
+      results[path].type = 'array'
 
   else if _.isObject(node) and !node.type and !node.getters and schema.pathType(path) != 'real'
     if path
-      if schema.pathType(path) == 'Nested'
+      if schema.pathType(path) == 'nested'
         results[path] = {}
-        results[path].type = 'Nested'
+        results[path].type = 'nested'
       else
         results[path] = {}
-        results[path].type = 'Subdocument'
+        results[path].type = 'subdocument'
 
     if type(node) != 'function'
       for k of node
@@ -170,7 +252,7 @@ exports.schemaPaths = schemaPaths = (schema, node, path) ->
 
   else if _.isObject(node) and !node.type and node.getters
     results[path] = {}
-    results[path].type = 'Virtual'
+    results[path].type = 'virtual'
 
   else
     results[path] = {}
@@ -183,11 +265,11 @@ exports.schemaPaths = schemaPaths = (schema, node, path) ->
         results[path][k] = p
 
     if type(node.type) is 'function'
-      results[path].type = node.type.prototype.constructor.name
+      results[path].type = node.type.prototype.constructor.name.toLowerCase()
     else if type(node) is 'function'
-      results[path].type = node.prototype.constructor.name
+      results[path].type = node.prototype.constructor.name.toLowerCase()
     else if node.instance? and type(node.instance) is 'string'
-      results[path].type = node.instance.toProperCase()
+      results[path].type = node.instance.toLowerCase()
 
   for k of results
     results[k].path = k
@@ -200,6 +282,14 @@ exports.modelPaths = modelPaths = (model) ->
     return schemaPaths(model, model.tree)
   else if type(model) is 'function'
     return schemaPaths(model.schema, model.schema.tree)
+  else
+    return {}
+
+exports.modelTree = modelTree = (model) ->
+  if model instanceof mongoose.Schema
+    return schemaTree(model, model.tree)
+  else if type(model) is 'function'
+    return schemaTree(model.schema, model.schema.tree)
   else
     return {}
 

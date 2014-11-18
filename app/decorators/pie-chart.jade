@@ -1,0 +1,5 @@
+// pie-chart.html
+
+.chart-container
+  nvd3-pie-chart(data="fields[{%fieldIndex%}].data", dyn-attrs="fields[{%fieldIndex%}].config")
+    svg(style="width: {{fields[{%fieldIndex%}].config.width === undefined ? '100%' : fields[{%fieldIndex%}].config.width}}; height: {{fields[{%fieldIndex%}].config.height === undefined ? '100%' : fields[{%fieldIndex%}].config.height}};")

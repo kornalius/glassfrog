@@ -1,0 +1,6 @@
+fieldset(ng-disabled='form.readonly')
+  legend(ng-show='form.title') {{ form.title }}
+
+  .help-block(ng-show='form.description', ng-bind-html='form.description')
+
+  div(ng-transclude='')

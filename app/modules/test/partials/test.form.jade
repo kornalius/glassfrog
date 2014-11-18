@@ -1,13 +1,9 @@
-//pre {{test}}
+.container.form-container(ng-controller="DynamicFormCtrl")
+  ng-form(name="myForm", ng-submit="onSubmit()", novalidate)
 
-#form
+    dyn-form(sf-schema="schema", sf-form="form", sf-model="model", sf-form-dom="myForm")
 
-hr
+    .form-group
+      button.btn.btn-primary.pull-right(type="submit", ng-click="save()", ng-disabled="!modified()") Save
 
-.container-fluid
-  .pull-right
-    input.btn.btn-primary(type="button", ng-click="save(0)", value="Save", ng-disabled="!isModified(0) || hasErrors(0)")
-    span(style="padding:4px;")
-    input.btn.btn-danger(type='button', ng-click="cancel(0)", value="Cancel", ng-disabled="!isModified(0)")
-
-hr
+      button.btn.btn-default.pull-right(type="button", style="margin-right: 8px;", ng-click="cancel()", ng-disabled="!modified()") Reset

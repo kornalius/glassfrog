@@ -14,7 +14,24 @@ angular.module('Datetimepicker', [])
 
       (scope, element, attrs, ctrl) ->
         $timeout( ->
-          element.datetimepicker(if attrs.dateTimePickerOptions? then $parse(attrs.dateTimePickerOptions)(scope) else {})
+          config =
+            icons:
+              time: "cic cic-clock5"
+              date: "cic cic-calendar-empty"
+              up: "cic cic-arrow-up"
+              down: "cic cic-arrow-down"
+
+          o = attrs.dateTimePickerOptions
+          if !o
+            o = {}
+          o = $parse(o)(scope)
+          if type(o) is 'array'
+            for e in o
+              if e
+                _.extend(config, e)
+          else
+            _.extend(config, o)
+          element.datetimepicker(config)
           ctrl.$setViewValue(element.context.value)
         )
 

@@ -1,0 +1,12 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    .checklistbox.btn-group-vertical(dyn-model-value, data-toggle="buttons", ng-show="form.key", style="background-color: white; width: 100%;", schema-validate="form", ng-model="$$value$$", checklistbox, checklist-options="{}", options="form.titleMap", ng-disabled="form.readonly")
+
+      label.btn.btn-default(type="button", ng-repeat="val in options track by $index", ng-click="toggle($index)")
+
+        span.pull-left.cic(ng-class="{'cic-checkbox-checked text-info': isChecked($index), 'cic-checkbox-unchecked text-muted': !isChecked($index)}", style="font-size: 18px; margin-right: 8px;")
+        | {{form.titleMap[$index].name}}

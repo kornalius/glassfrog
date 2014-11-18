@@ -31,7 +31,7 @@ SettingSchema.static(
       cb(if result then result.value else null) if cb
     )
 
-  setValue: (key, value) ->
+  setOptionsValue: (key, value) ->
     mongoose.model('Setting').findOneAndUpdate({key: key}, {value: value}, {upsert: true}, (err, result) ->
     )
 )

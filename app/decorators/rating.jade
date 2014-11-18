@@ -1,0 +1,10 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html", ng-controller="UIBootstrapRatingCtrl")
+
+  div(data-block="content")
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    rating(dyn-model-value, ng-show="form.key", style="display: inline-block;", max="form.max || 10", state-on="form.stateon || 'cic cic-star6 gold'", state-off="form.stateoff || 'cic cic-star-empty silver'", readonly="form.readonly", on-hover="hoveringOver(value)", on-leave="overStar = null", schema-validate="form", ng-model="$$value$$", ng-disabled="form.readonly", placeholder="{{form.placeholder}}")
+
+    span &nbsp;
+
+    span.label(ng-class="{'label-warning': percent < 30, 'label-info': percent >= 30 && percent < 70, 'label-success': percent >= 70}",ng-show="overStar && !form.readonly") {{percent}}%

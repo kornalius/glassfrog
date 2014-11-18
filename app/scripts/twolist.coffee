@@ -2,25 +2,6 @@
 
 angular.module('twolist.services', ['app', 'app.globals'])
 
-.controller('twolistCtrl', [
-  '$scope'
-  'Globals'
-
-  ($scope, globals) ->
-
-    $scope.options = []
-
-    $scope.processOptions = (options) ->
-      l = []
-      for i in [0..options.length - 1]
-        if !options[i].label and !options[i].value
-          l.push({value: options[i], label: options[i]})
-        else
-          l.push(options[i])
-      return l
-
-])
-
 .directive('twolist', [
   '$document'
   '$window'
@@ -29,67 +10,64 @@ angular.module('twolist.services', ['app', 'app.globals'])
 
   ($document, $window, $timeout, $parse) ->
     restrict: 'A'
+    replace: true
     require: '?ngModel'
-#    ngModel: '='
-    controller: 'twolistCtrl'
     priority: 1
+    controller: ['$scope', ($scope) ->
+      $scope.config = {}
+      $scope.options = []
+      $scope.origValue = null
+
+      $scope.init = (element) ->
+        v = $scope.ngModel.$modelValue
+        $scope.origValue = _.cloneDeep(v)
+        if type(v) == 'string'
+          v = v.split(',')
+        else if !v
+          v = []
+        element.multiSelect($scope.config)
+        element.multiSelect('select', v)
+        element.multiSelect('refresh')
+        $scope.ngModel.$setPristine()
+
+      $scope.processOptions = (options) ->
+        l = []
+        for i in [0..options.length - 1]
+          if !options[i].name and !options[i].value
+            l.push({value: options[i], name: options[i]})
+          else
+            l.push(options[i])
+        return l
+    ]
 
     link: (scope, element, attrs, ctrl) ->
-
-      scope.options = scope.processOptions($parse(attrs.options)(scope))
-
-      defaults =
-        config: {}
+      scope.config = {}
 #          afterInit: (container) ->
 #            ctrl.$setViewValue([])
 
-      if attrs.field?
-        field = $parse(attrs.field)(scope)
+      if attrs.twolistOptions?
+        o = $parse(attrs.twolistOptions)(scope)
       else
-        field =
-          config: {}
+        o = {}
 
-      field.config = angular.extend({}, defaults.config, field.config)
+      _.extend(scope.config, o)
 
-#      ctrl.$render = ->
-#        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
-#        console.trace "$render twolist", newValue, ctrl.$modelValue
+      scope.options = scope.processOptions($parse(attrs.options)(scope))
 
-#      element.on('change', ->
-#        v = element.val()
-#        if v and !angular.equals(v, ctrl.$viewValue)
-#          console.log "change", v, ctrl.$viewValue
-#          $timeout(->
-#            scope.$apply(->
-#              ctrl.$setViewValue(v)
-#            )
-#          )
-#      )
-
-#      scope.$watch('options', (newValue, oldValue) ->
-#        console.trace "options.$watch()", newValue, oldValue
-##        if !angular.equals(newValue, oldValue)
-##          element.trigger('change')
-#      , true)
+      $timeout(->
+        scope.init(element)
+      )
 
       scope.$watch(attrs.ngModel, (newValue, oldValue) ->
-#        console.log "model.$watch()", newValue, oldValue
-        if !angular.equals(newValue, oldValue)
-          $timeout(->
-            if !newValue
-              newValue = []
-#            element.multiSelect('deselect_all')
-            for v in newValue
-              element.multiSelect('select', v)
-            element.multiSelect('refresh')
-          )
-      , true)
-
-      $timeout( ->
-        element.multiSelect(field.config)
-        for v in ctrl.$modelValue
+        if !_.isEqual(newValue, oldValue)
+          if type(newValue) == 'string'
+            v = newValue.split(',')
+          else if !v
+            v = []
           element.multiSelect('select', v)
-#        element.multiSelect('select', [], 'init')
-        element.multiSelect('refresh')
-      )
+          element.multiSelect('refresh')
+          if !_.isEqual(scope.origValue, newValue)
+            scope.ngModel.$dirty = true
+            scope.ngModel.$pristine = false
+      , true)
 ])

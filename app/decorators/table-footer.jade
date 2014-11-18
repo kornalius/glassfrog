@@ -1,0 +1,43 @@
+.table-nav
+
+  .col.hidden-xs.hidden-sm.col-lg-1.col-md-2
+    .input-group.input-group-sm(ng-if="form.navPerPage")
+      select.form-control.input-sm(type="select", ng-model="limit", ng-change="limitChanged()")
+        option 10
+        option 25
+        option 50
+        option 100
+      span.input-group-btn
+        button.btn.btn-link(type="button")
+          span.cic.cic-numbered-list
+
+  .col.hidden-xs.hidden-sm.col-md-2.col-lg-2
+    .input-group.input-group-sm(ng-if="form.navSort")
+      select.form-control.input-sm(type="select", ng-model="sort.field", ng-change="sortChanged()")
+        option(ng-repeat="ff in form.model.schema.paths", ng-if="ff.indexOf('.') == -1") {{ff}}
+      span.input-group-btn
+        button.btn.btn-link(type="button", ng-click="sortOrderChanged()")
+          span.cic.cic-sort-by-attributes(ng-show="sort.reverse")
+          span.cic.cic-sort-by-attributes-alt(ng-show="!sort.reverse")
+
+  .col.hidden-xs.col-sm-3.col-md-3.col-lg-4
+    .btn-group.toolbar-group(ng-if="form.navButtons")
+      button.btn.btn-success.btn-sm(ng-show="form.canCreate", ng-click="createRow()")
+        span.cic.cic-plus-sign &nbsp;New...
+
+      button.btn.btn-default.btn-sm(ng-show="!angular.isUndefined(filtersJson) && filters.group == null && form.navFilter", ng-click="addFilterGroup()")
+        span.cic.cic-filter2 &nbsp;Filter...
+
+      button.btn.btn-default(ng-repeat="b in form.buttons", href="{{b.url}}")
+        span.cic(class="{{b.icon}}") &nbsp;{{b.name}}
+
+  .col.col-xs-12.col-sm-7.col-md-3.col-lg-3
+    .pagination.pull-right(ui-pagination="form.model", ng-if="form.navPagination")
+
+  .col.hidden-xs.col-sm-2.col-md-2.col-lg-2
+    .input-group.input-group-sm.pull-right(ng-if="form.navSearch")
+      input.form-control.grid-input-filter.input-sm(type='text', placeholder='Search', ng-model="search", ng-change="searchChanged()", clearable)
+      span.searchclear &times;
+      span.input-group-btn
+        button.btn.btn-default.btn-sm(type="button")
+          span.cic.cic-search

@@ -71,7 +71,7 @@ exports.populatedPaths = populatedPaths = (r, model) ->
   paths = _app.modelPaths(model)
   for k of paths
     f = paths[k]
-    if f.type == 'ObjectId' and f.ref and r[f] and r[f]._id?
+    if f.type == 'objectid' and f.ref and r[f] and r[f]._id?
       l.push(k)
 #  console.log "populatedPaths()", l
   return l
@@ -322,7 +322,7 @@ exports.populateFields = populateFields = (populate, model, user, connection, pr
   if paths
     for k of paths
       f = paths[k]
-      if !f.private and f.type == 'ObjectId' and f.ref and (f.populate or k in populate)
+      if !f.private and f.type == 'objectid' and f.ref and (f.populate or k in populate)
         m = _app.modelSync(f.ref, user, connection, prefix)
         if m
           c = { path: k }
@@ -545,14 +545,99 @@ exports.method = method = (req, res, next) ->
 exports.schema = schema = (req, res, next) ->
   console.log "schema()", req.query, req.params
 
+  makeField = (j, f) ->
+    _.extend(j, f)
+    delete j['formtype']
+    delete j['path']
+    delete j['fieldname']
+    delete j['label']
+    j.type = (if f.formtype? then f.formtype else schemaType(f.type))
+    j.title = (if f.label? then f.label else undefined)
+    if f.fieldname == '_id'
+      j.required = true
+      j.readonly = true
+      j.title = 'ID'
+
+  schemaType = (t) ->
+    if t == 'objectid'
+      return 'string'
+    else if t == 'integer'
+      return 'number'
+    else
+      return t
+
+  toJsonSchema = (js, f) ->
+    if !f.private and f.fieldname != 'id'
+      if f.fields?
+
+        if f.fieldname
+          j = js[f.fieldname] = {}
+        else
+          j = js
+        r = null
+
+        if f.fieldname
+          makeField(j, f)
+
+        if f.type == 'array' or f.type == 'nestedarray' or f.type == 'documentarray'
+          _.extend(j,
+            type: 'array'
+            items:
+              type: 'object'
+              properties: {}
+          )
+          r = j.items.properties
+        else
+          if f.fieldname
+            _.extend(j,
+              type: 'object'
+              properties: {}
+            )
+            r = j.properties
+          else
+            _.extend(j,
+              type: 'object'
+              properties: {}
+            )
+            r = j.properties
+
+        if r
+          for k of f.fields
+            toJsonSchema(r, f.fields[k])
+
+      else
+        if f.fieldname
+          j = js[f.fieldname] = {}
+        else
+          j = js
+
+        makeField(j, f)
+
+#          notitle: !f.label?
+#          feedback: "{ 'cic': true, 'cic-asterisk': form.required && !hasSuccess() && !hasError(), 'cic-ok': hasSuccess(), 'cic-remove': hasError() }"
+#          readonly: f.readOnly if f.readOnly?
+#          description: f.description if f.description?
+#          placeholder: f.placeholder if f.placeholder?
+#          validationMessage: f.validationMessage if f.validationMessage?
+#          ngModelOptions: f.ngModelOptions if f.ngModelOptions?
+#          onChange: f.onChange if f.onChange?
+
+
   req.user.can('schema', req.m.modelName, null, (can) ->
     if can
-      l = {}
-      s = _app.modelPaths(req.m)
-      if s
-        for k of s
-          if s[k].private
-            delete s[k]
+      if req.params.type? and req.params.type == 'json'
+        s = _app.modelTree(req.m)
+        if s
+          js = {}
+          toJsonSchema(js, s)
+          s = [js]
+          console.log s
+      else
+        s = _app.modelPaths(req.m)
+        if s
+          for k of s
+            if s[k].private or s[k].fieldname == 'id'
+              delete s[k]
       process_results(s, req, res, next)
     else
       next(new Error(403))
@@ -726,6 +811,8 @@ exports.remove = remove = (req, res, next) ->
 exports.register = register = () ->
 
   app.get('/api/:model/call/:method/:id', checkUser, checkModel, method, (req, res, next) -> )
+
+  app.get('/api/:model/schema/:type', checkUser, checkModel, schema, (req, res, next) -> )
 
   app.get('/api/:model/schema', checkUser, checkModel, schema, (req, res, next) -> )
 

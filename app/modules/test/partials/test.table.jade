@@ -1,3 +1,4 @@
-//pre {{tests}}
+.container.form-container(ng-controller="DynamicFormCtrl")
+  ng-form(name="myTableForm", novalidate)
 
-#table
+    dyn-form(sf-schema="schema", sf-form="form", sf-model="model", sf-form-dom="myTableForm")

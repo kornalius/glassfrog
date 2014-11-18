@@ -1,0 +1,6 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label(ng-show="showTitle()") {{form.title}}
+
+    textarea.form-control(dyn-model-value, sf-changed="form", placeholder="{{form.placeholder}}", ng-disabled="form.readonly", ng-model="$$value$$", ng-model-options="form.ngModelOptions", schema-validate="form", ng-click-select)

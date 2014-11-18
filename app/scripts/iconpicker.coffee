@@ -29,23 +29,27 @@ angular.module('iconpicker.services', ['app', 'app.globals'])
 #        input = $(element.find('#node-arg-input-icon'))
         input = $(element)
 
+        config =
+          hideOnSelect: true
+          inputSearch: true
+          container: 'body'
+          fullClassFormatter: (val) -> 'cic ' + (if val? and val.length then val else 'cic-null')
+          mustAccept: false
+
         if attrs.options?
-          options = $parse(attrs.options)(scope)
-        else
-          options = {}
+          o = $parse(attrs.options)(scope)
+          if type(o) is 'array'
+            for e in o
+              if e
+                _.extend(config, e)
+          else
+            _.extend(config, o)
 
         $http({ method: 'GET', url: '/css/cicons.txt' }).
         success((icons) ->
-          options = _.extend({}, options,
-            hideOnSelect: true
-            inputSearch: true
-            container: 'body'
-            icons: icons.split(',')
-            fullClassFormatter: (val) -> 'cic ' + (if val? and val.length then val else 'cic-null')
-            mustAccept: false
-          )
+          config.icons = icons.split(',')
 
-          input.iconpicker(options).on('iconpickerShown', (e) ->
+          input.iconpicker(config).on('iconpickerShown', (e) ->
             p = e.iconpickerInstance.popover.find('.iconpicker-items')
             if p.length
               p.scrollTop(0)
@@ -56,7 +60,7 @@ angular.module('iconpicker.services', ['app', 'app.globals'])
 
           scope.$watch(attrs.ngModel, (newValue) ->
             $timeout(->
-              $(element).data('iconpicker').setValue(newValue)
+              $(element).data('iconpicker').setOptionsValue(newValue)
             )
           )
         )

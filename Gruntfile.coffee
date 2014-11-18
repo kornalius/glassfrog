@@ -296,6 +296,7 @@ module.exports = (grunt) ->
             'bower_components/angular-resource/angular-resource.js'
             'bower_components/angular-animate/angular-animate.js'
             'bower_components/angular-ui-router/release/angular-ui-router.js'
+            'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
             'bower_components/i18next/i18next.js'
             'bower_components/ng-i18next/dist/ng-i18next.js'
             'bower_components/restangular/dist/restangular.js'
@@ -306,7 +307,6 @@ module.exports = (grunt) ->
             'bower_components/jquery-maskedinput/dist/jquery.maskedinput.js'
             'bower_components/angular-webstorage/angular-webstorage.js'
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
-            'bower_components/angular-bootstrap/ui-bootstrap-tpls.js'
             'bower_components/multiselect/js/jquery.multi-select.js'
             'bower_components/angular-filters/dist/angular-filters.js'
             'bower_components/angular-lodash/angular-lodash.js'
@@ -345,12 +345,16 @@ module.exports = (grunt) ->
             'bower_components/tv4/tv4.js'
             'bower_components/objectpath/lib/ObjectPath.js'
             'bower_components/angular-schema-form/dist/schema-form.js'
-            'bower_components/angular-schema-form/dist/bootstrap-decorator.min.js'
+#            'bower_components/angular-input-modified/dist/angular-input-modified.js'
+            'bower_components/ng-click-select/ng-click-select.js'
+            'bower_components/ng-scope/ng-scope.js'
+            'bower_components/angular-blocks/dist/angular-blocks.js'
             'node_modules/diff/diff.js'
             'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
             tmp_dev + '/dynFormTemplates.js'
+            tmp_dev + '/decorators.js'
           ]
           dest: out_dev + 'js/vendor.js'
         ,
@@ -405,6 +409,7 @@ module.exports = (grunt) ->
             'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.css'
             'bower_components/angular-loading-bar/build/loading-bar.css'
             'bower_components/perfect-scrollbar/src/perfect-scrollbar.css'
+            'bower_components/bootstrap-vertical-tabs/bootstrap.vertical-tabs.css'
           ]
           dest: out_dev + 'css/vendor.css'
         ,
@@ -419,6 +424,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.history.css'
             'bower_components/pines-notify/pnotify.picon.css'
             'bower_components/perfect-scrollbar/src/perfect-scrollbar.css'
+            'bower_components/bootstrap-vertical-tabs/bootstrap.vertical-tabs.css'
           ]
           dest: out_dev + 'css/index.css'
         ]
@@ -445,6 +451,7 @@ module.exports = (grunt) ->
             'bower_components/angular-resource/angular-resource.min.js'
             'bower_components/angular-animate/angular-animate.min.js'
             'bower_components/angular-ui-router/release/angular-ui-router.min.js'
+            'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'
             'bower_components/i18next/i18next.min.js'
             'bower_components/ng-i18next/dist/ng-i18next.min.js'
             'bower_components/restangular/dist/restangular.min.js'
@@ -455,7 +462,6 @@ module.exports = (grunt) ->
             'bower_components/jquery-maskedinput/dist/jquery.maskedinput.min.js'
             'bower_components/angular-webstorage/angular-webstorage.js'
             'bower_components/jquery-switchbutton/jquery.switchButton.js'
-            'bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js'
             'bower_components/multiselect/js/jquery.multi-select.js'
             'bower_components/angular-filters/dist/angular-filters.min.js'
             'bower_components/angular-lodash/angular-lodash.js'
@@ -494,12 +500,16 @@ module.exports = (grunt) ->
             'bower_components/tv4/tv4.js'
             'bower_components/objectpath/lib/ObjectPath.js'
             'bower_components/angular-schema-form/dist/schema-form.min.js'
-            'bower_components/angular-schema-form/dist/bootstrap-decorator.min.js'
+#            'bower_components/angular-input-modified/dist/angular-input-modified.min.js'
+            'bower_components/ng-click-select/ng-click-select.js'
+            'bower_components/ng-scope/ng-scope.js'
+            'bower_components/angular-blocks/dist/angular-blocks.min.js'
             'node_modules/diff/diff.js'
             'node_modules/flat/index.js'
             'node_modules/acorn/acorn.js'
             'bower_components/requirejs/require.js'
             tmp + '/dynFormTemplates.js'
+            tmp + '/decorators.js'
           ]
           dest: out + 'js/vendor.js'
         ,
@@ -553,6 +563,7 @@ module.exports = (grunt) ->
             'bower_components/fontawesome-iconpicker/dist/css/fontawesome-iconpicker.min.css'
             'bower_components/angular-loading-bar/build/loading-bar.min.css'
             'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.css'
+            'bower_components/bootstrap-vertical-tabs/bootstrap.vertical-tabs.min.css'
           ]
           dest: out + 'css/vendor.css'
         ,
@@ -567,6 +578,7 @@ module.exports = (grunt) ->
             'bower_components/pines-notify/pnotify.history.css'
             'bower_components/pines-notify/pnotify.picon.css'
             'bower_components/perfect-scrollbar/min/perfect-scrollbar.min.css'
+            'bower_components/bootstrap-vertical-tabs/bootstrap.vertical-tabs.min.css'
           ]
           dest: out + 'css/index.css'
         ]
@@ -574,25 +586,39 @@ module.exports = (grunt) ->
     "file-creator":
       options:
         openFlags: 'w'
+      dev: {}
+      prod: {}
+
+    html2js:
+      options:
+        module: 'schemaFormCustomDecorators'
+        singleModule: true
+        jade:
+          doctype: 'html'
+        base: 'app/'
+        rename: (moduleName) ->
+          return '/partials/' + moduleName.replace('.jade', '.html')
 
       dev:
-        "{tmp}dynFormTemplates.js": (fs, fd, done) ->
-          _ = grunt.util._
-          grunt.file.glob(tmp_dev + '/partials/dynFormTemplates/*.html', (err, files) ->
-            fs.writeSync(fd, "define('dynFormTemplates', function() {\n")
-            fs.writeSync(fd, "  return {\n")
-            t = []
-            _.each(files, (file) ->
-              c = fs.readFileSync(file, 'utf8')
-              c = c.replace(/'/g, "\\\'").replace(/\n/g, "\\n' + " + "\n      '")
-              n = file.split('.').shift().split('\/').pop()
-              t.push("    '" + n + "': '" + c + "'")
-            )
-            fs.writeSync(fd, t.join(',\n\n') + '\n')
-            fs.writeSync(fd, '  }\n')
-            fs.writeSync(fd, '});\n')
-            done()
-          )
+        options:
+          jade:
+            pretty: true
+        src: ['app/decorators/**/*.jade']
+        dest: tmp_dev + 'decorators.js'
+
+      prod:
+        options:
+          htmlmin:
+            collapseBooleanAttributes: true
+            collapseWhitespace: true
+            removeAttributeQuotes: true
+            removeComments: true
+            removeEmptyAttributes: true
+            removeRedundantAttributes: true
+            removeScriptTypeAttributes: true
+            removeStyleLinkTypeAttributes: true
+        src: ['app/decorators/**/*.jade']
+        dest: tmp + 'decorators.js'
 
     watch:
       options:
@@ -618,6 +644,10 @@ module.exports = (grunt) ->
       app_jadeDynForm:
         files: ['app/dynFormTemplates/*.jade']
         tasks: ['jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'reload']
+
+      app_jadeDecorators:
+        files: ['app/decorators/*.jade']
+        tasks: ['html2js:dev', 'concat:dev', 'reload']
 
 #      bower:
 #        files: ['bower_components/**/*']
@@ -690,17 +720,54 @@ module.exports = (grunt) ->
 #        app: '/Applications/Firefox.app'
   )
 
-  d = grunt.config.data['file-creator'].dev
-  if d
-    for k of d
-      d[k.replace(/\{tmp\}/g, tmp_dev)] = d[k]
-      delete d[k]
+  grunt.config.data['file-creator'].dev[tmp_dev + 'dynFormTemplates.js'] = (fs, fd, done) ->
+      _ = grunt.util._
+      grunt.file.glob(tmp_dev + '/partials/dynFormTemplates/*.html', (err, files) ->
+        fs.writeSync(fd, "define('dynFormTemplates', function() {\n")
+        fs.writeSync(fd, "  return {\n")
+        t = []
+        _.each(files, (file) ->
+          c = fs.readFileSync(file, 'utf8')
+          c = c.replace(/'/g, "\\\'").replace(/\n/g, "\\n' + " + "\n      '")
+          n = file.split('.').shift().split('\/').pop()
+          t.push("    '" + n + "': '" + c + "'")
+        )
+        fs.writeSync(fd, t.join(',\n\n') + '\n')
+        fs.writeSync(fd, '  }\n')
+        fs.writeSync(fd, '});\n')
+        done()
+      )
 
-  d = grunt.config.data['file-creator'].prod
-  if d
-    for k of d
-      d[k.replace(/\{tmp\}/g, tmp)] = d[k]
-      delete d[k]
+  grunt.config.data['file-creator'].prod[tmp + 'dynFormTemplates.js'] = (fs, fd, done) ->
+      _ = grunt.util._
+      grunt.file.glob(tmp + '/partials/dynFormTemplates/*.html', (err, files) ->
+        fs.writeSync(fd, "define('dynFormTemplates', function() {\n")
+        fs.writeSync(fd, "  return {\n")
+        t = []
+        _.each(files, (file) ->
+          c = fs.readFileSync(file, 'utf8')
+          c = c.replace(/'/g, "\\\'").replace(/\n/g, "\\n' + " + "\n      '")
+          n = file.split('.').shift().split('\/').pop()
+          t.push("    '" + n + "': '" + c + "'")
+        )
+        fs.writeSync(fd, t.join(',\n\n') + '\n')
+        fs.writeSync(fd, '  }\n')
+        fs.writeSync(fd, '});\n')
+        done()
+      )
+
+#  d = grunt.config.data['file-creator'].dev
+#  if d
+#    for k of d
+#      d[k.replace(/\{tmp_dev\}/g, tmp_dev)] = d[k]
+#      delete d[k]
+#
+#  d = grunt.config.data['file-creator'].prod
+#  if d
+#    for k of d
+#      d[k.replace(/\{tmp\}/g, tmp)] = d[k]
+#      delete d[k]
+
 
   #  Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks('grunt-contrib-clean')
@@ -714,6 +781,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks('grunt-contrib-watch')
   grunt.loadNpmTasks('grunt-express-server')
   grunt.loadNpmTasks('grunt-file-creator')
+  grunt.loadNpmTasks('grunt-html2js')
 #  grunt.loadNpmTasks('grunt-env')
 #  grunt.loadNpmTasks('grunt-open')
 #  grunt.loadNpmTasks('grunt-curl')
@@ -757,8 +825,8 @@ module.exports = (grunt) ->
 
 
   #  Default task(s).
-  grunt.registerTask('default', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'express:dev', 'reload', 'watch'])
+  grunt.registerTask('default', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'html2js:dev', 'file-creator:dev', 'concat:dev', 'express:dev', 'reload', 'watch'])
 
-  grunt.registerTask('prod', ['clean:server_prod', 'coffee:server_prod', 'copy:server_prod', 'clean:prod', 'less:prod', 'coffee:prod', 'copy:prod', 'jade:prod', 'jade:prodDynForm', 'file-creator:prod', 'concat:prod'])
+  grunt.registerTask('prod', ['clean:server_prod', 'coffee:server_prod', 'copy:server_prod', 'clean:prod', 'less:prod', 'coffee:prod', 'copy:prod', 'jade:prod', 'jade:prodDynForm', 'html2js:prod', 'file-creator:prod', 'concat:prod'])
 
-  grunt.registerTask('debug', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'file-creator:dev', 'concat:dev', 'reload', 'watch'])
+  grunt.registerTask('debug', ['clean:server_dev', 'coffee:server_dev', 'copy:server_dev', 'clean:dev', 'less:dev', 'coffee:dev', 'copy:dev', 'jade:dev', 'jade:devDynForm', 'html2js:dev', 'file-creator:dev', 'concat:dev', 'reload', 'watch'])

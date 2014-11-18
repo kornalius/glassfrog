@@ -1,0 +1,8 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+
+    .switch-wrapper
+      input(dyn-model-value, ng-show="form.key", type="checkbox", style="background-color: white", sf-changed="form", ng-model-options="form.ngModelOptions", schema-validate="form", ng-model="$$value$$", ng-disabled="form.readonly", switch)
+
+    label.control-label(ng-show="showTitle()", ng-bind-html="form.title")

@@ -1,0 +1,9 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label.control-label(ng-show='showTitle()') {{form.title}}
+
+    div
+      label.radio-inline(ng-repeat='item in form.titleMap')
+        input(dyn-model-value, type='radio', sf-changed='form', ng-disabled='form.readonly', ng-model='$$value$$', ng-value='item.value')
+        span(ng-bind-html='item.name')

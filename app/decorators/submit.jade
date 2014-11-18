@@ -1,0 +1,5 @@
+.form-group
+
+  input.btn(type='submit', class="{{ form.style || 'btn-primary' }}", value='{{form.title}}', ng-disabled='form.readonly', ng-if="form.type === 'submit'")
+
+  button.btn(class="{{ form.style || 'btn-default' }}", type='button', ng-click='buttonClick($event,form)', ng-disabled='form.readonly', ng-if="form.type !== 'submit'") {{form.title}}

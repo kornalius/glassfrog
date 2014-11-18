@@ -757,13 +757,13 @@ NodeClass =
     n.setArg = (name, value) ->
       a = @getArg(name)
       if a
-        a.setValue(value)
+        a.setOptionsValue(value)
       else
         d = @getArgDef(name)
         if d
           a = { name: name, component: d.getComponent().getName() }
           NodeClass.VCArg.setData(name, a, @)
-          a.setValue(value)
+          a.setOptionsValue(value)
 
     n.getArgDef = (name) ->
       cc = @getComponent()

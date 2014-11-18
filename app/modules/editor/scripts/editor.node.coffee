@@ -206,7 +206,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
           n.name = ''
           n.setName(newName)
         else if n.$data and n.$data.isArg and @oldEditValue and @oldEditValue != n.value
-          n.setValue(n.value)
+          n.setOptionsValue(n.value)
 
 #        e = n.element()
 #        if e and e.length
@@ -224,7 +224,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
         if n.$data and n.$data.isNode
           n.setName(@oldEditValue)
         else if n.$data and n.$data.isArg
-          n.setValue(@oldEditValue)
+          n.setOptionsValue(@oldEditValue)
       @currentEdit = null
       @oldEditValue = null
 
@@ -591,7 +591,7 @@ angular.module('editor.node', ['app.globals', 'editor.module', 'editor.component
     $scope.$watch('a.value', (newValue, oldValue) ->
       if !_.isEqual(newValue, oldValue)
 #        console.log "$watch a.value", newValue, oldValue
-        $scope.a.setValue(newValue)
+        $scope.a.setOptionsValue(newValue)
         $scope.a.setModified(true)
     )
 

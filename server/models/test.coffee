@@ -1,6 +1,6 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
-ownable = require('mongoose-ownable')
+ownable = require('../mongoose_plugins/mongoose-ownable')
 async = require('async')
 
 TestSchema = mongoose.Schema(
@@ -30,6 +30,7 @@ TestSchema = mongoose.Schema(
     testDict:
       testString:
         type: String
+        required: true
 
       testBoolean:
         type: Boolean

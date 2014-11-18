@@ -51,36 +51,36 @@ angular.module('app.globals', ['ui.router.state'])
 
 .config ($provide, $httpProvider) ->
 
-  $httpProvider.responseInterceptors.push(($q, Globals) ->
-    (promise) ->
+  $httpProvider.interceptors.push(($q, Globals) ->
+    'responseError': (rejection) ->
 
-      promise.then((successResponse) ->
-        successResponse
+#      if canRecover(rejection)
+#        return responseOrNewPromise
 
-      , (errorResponse) ->
+      return $q.reject(rejection)
 
 #        console.log "ERROR", errorResponse.status, errorResponse.data
 
-        switch errorResponse.status
-          when 401
-            Globals.showMessage("Invalid usename or password", 'error')
-
-          when 403
-            Globals.showMessage("You do not have the necessary permissions", 'error')
-
-          when 404
-            Globals.showMessage("Not found error " + errorResponse.data, 'error')
-
-          when 500
-            Globals.showMessage("Internal server error: " + errorResponse.data, 'error')
-
-          else
-            if errorResponse.status
-              if errorResponse.data
-                Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, 'error')
-              else
-                Globals.showMessage("Error " + errorResponse.status, 'error')
-
-        $q.reject(errorResponse)
-      )
+#        switch errorResponse.status
+#          when 401
+#            Globals.showMessage("Invalid usename or password", 'error')
+#
+#          when 403
+#            Globals.showMessage("You do not have the necessary permissions", 'error')
+#
+#          when 404
+#            Globals.showMessage("Not found error " + errorResponse.data, 'error')
+#
+#          when 500
+#            Globals.showMessage("Internal server error: " + errorResponse.data, 'error')
+#
+#          else
+#            if errorResponse.status
+#              if errorResponse.data
+#                Globals.showMessage("Error " + errorResponse.status + ": " + errorResponse.data, 'error')
+#              else
+#                Globals.showMessage("Error " + errorResponse.status, 'error')
+#
+#        $q.reject(rejection)
+#      )
   )

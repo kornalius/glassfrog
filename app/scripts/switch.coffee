@@ -25,11 +25,18 @@ angular.module('switch.services', ['app', 'app.globals'])
 
       (scope, element, attrs, ctrl) ->
 
-        if attrs.field?
-          field = $parse(attrs.field)(scope)
+        config =
+          show_labels: false
+          width: 40
+          height: 16
+          button_width: 20
+
+        if attrs.options?
+          o = $parse(attrs.options)(scope)
         else
-          field =
-            config: {}
+          o = {}
+
+        _.extend(config, o)
 
 #      ctrl.$render = ->
 #        newValue = (if ctrl.$viewValue then ctrl.$viewValue else [])
@@ -52,9 +59,7 @@ angular.module('switch.services', ['app', 'app.globals'])
           )
         )
 
-        o = angular.extend({ show_labels: false, width: 40, height: 16, button_width: 20 }, field.config)
-
-        $timeout( ->
-          element.switchButton(o)
+        $timeout(->
+          element.switchButton(config)
         )
 ])

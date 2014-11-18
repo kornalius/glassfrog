@@ -1,0 +1,6 @@
+div(data-extend-template="/partials/decorators/form-group-layout.html")
+
+  div(data-block="content")
+    label.control-label(ng-show="showTitle()") {{form.title}}
+
+    input.form-control(dyn-model-value, ng-show="form.key", type="text", style="background-color: white;", schema-validate="form", ng-disabled="form.readonly", ng-model="$$value$$", date-time-picker, date-time-picker-options="{pickTime: false, format: 'YYYY/MM/DD'}", placeholder="{{form.placeholder}}")

@@ -1,0 +1,9 @@
+.clearfix.schema-form-callout.bs-callout(class="bs-callout-{{form.style || 'default'}}", ng-disabled='form.readonly')
+
+  div(ng-class="{'col-xs-6': form.inline }")
+    h4(ng-show="showTitle()", ng-bind="form.title")
+    p.description(ng-show="form.description", ng-bind-html="form.description")
+
+  div(ng-class="{'col-xs-6': form.inline, 'schema-form-callout-fields': !form.inline }")
+    div(ng-class="{'pull-right': form.inline}")
+      sf-decorator(ng-repeat='item in form.items', form='item')

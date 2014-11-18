@@ -1,7 +1,7 @@
 mongoose = require("mongoose")
 timestamps = require('mongoose-time')()
 Version = require('../mongoose_plugins/mongoose-version')()
-ownable = require('mongoose-ownable')
+ownable = require('../mongoose_plugins/mongoose-ownable')
 comments = require('../mongoose_plugins/mongoose-comments')
 likes = require('../mongoose_plugins/mongoose-likes')
 Moment = require('moment')
